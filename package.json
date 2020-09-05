@@ -2,8 +2,10 @@
     "name": "jsso2",
     "version": "0.0.0-pre",
     "scripts": {
+        "all": "concurrently -c blue.dim,magenta.dim,green.dim -k npm:backend npm:envoy npm:dev",
         "generate": "go generate ./...",
-        "backend": "go run ./cmd/jsso2 --debug_address=0.0.0.0:8081 2>&1 | jlog",
+        "backend": "go run ./cmd/jsso2 --debug_address=0.0.0.0:8081 2>&1 | jlog -C",
+        "envoy": "envoy -c envoy.yaml -l critical",
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "start": "sirv public --host",
@@ -24,5 +26,8 @@
         "svelte-preprocess": "^4.0.0",
         "tslib": "^2.0.0",
         "typescript": "^3.9.3"
+    },
+    "dependencies": {
+        "concurrently": "^5.3.0"
     }
 }
