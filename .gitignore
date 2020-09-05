@@ -1,0 +1,18 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool.
+*.out
+*.html
+
+# Random pieces of test data I accumuate while writing this program.
+testlog
+log
+*.log
