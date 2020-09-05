@@ -2,6 +2,8 @@
     "name": "jsso2",
     "version": "0.0.0-pre",
     "scripts": {
+        "generate": "go generate ./...",
+        "backend": "go run ./cmd/jsso2 2>&1 | jlog",
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "start": "sirv public --host",

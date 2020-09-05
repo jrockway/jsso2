@@ -1,0 +1,17 @@
+syntax = "proto3";
+package foo;
+option go_package = "github.com/jrockway/jsso2/pkg/foopb";
+
+service NameService {
+    // Transform a name.
+    rpc TransformName(TransformNameRequest) returns (TransformNameReply) {
+    }
+}
+
+message TransformNameRequest {
+    string name = 1;
+}
+
+message TransformNameReply {
+    string result = 1;
+}
