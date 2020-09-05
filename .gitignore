@@ -10,9 +10,11 @@
 
 # Output of the go coverage tool.
 *.out
-*.html
+coverage.html
+cover.html
 
-# Random pieces of test data I accumuate while writing this program.
-testlog
-log
-*.log
+# Node
+node_modules/
+
+# Svelte
+public/build/
