@@ -4,12 +4,17 @@
     "scripts": {
         "all": "concurrently -c blue.dim,magenta.dim,green.dim -k npm:backend npm:envoy npm:dev",
         "generate": "go generate ./...",
-        "backend": "go run ./cmd/jsso2 --debug_address=0.0.0.0:8081 2>&1 | jlog -C",
+        "backend": "go run ./cmd/jsso2 2>&1 | jlog -C",
         "envoy": "envoy -c envoy.yaml -l critical",
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "start": "sirv public",
-        "validate": "svelte-check"
+        "test:go": "go test ./... -race",
+        "cover:go": "go test ./... -coverprofile=cover.out -covermode=atomic && go tool cover -html cover.out -o coverage.html",
+        "test": "concurrently npm:test:go",
+        "lint:svelte": "svelte-check",
+        "lint:go": "golangci-lint run",
+        "lint": "concurrently npm:lint:svelte npm:lint:go"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^14.0.0",

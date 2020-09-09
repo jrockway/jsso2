@@ -100,6 +100,7 @@ static_resources:
                         - header:
                               key: user-agent
                               value: kube-probe/not-really
+                          append: false
           load_assignment:
               cluster_name: localhost:backend:debug
               endpoints:
