@@ -71,7 +71,13 @@ export default {
 
         // Watch the `public` directory and refresh the
         // browser on changes when not in production
-        !production && livereload("public"),
+        !production &&
+            livereload({
+                clientUrl: "/livereload.js",
+                watch: "public",
+                //debug: true,
+                port: 35729, // the default but listed for consistency
+            }),
 
         // If we're building for production (npm run build
         // instead of npm run dev), minify

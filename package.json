@@ -1,9 +1,11 @@
 {
     "name": "jsso2",
     "version": "0.0.0-pre",
+    "license": "LICENSE",
     "scripts": {
         "all": "concurrently -c blue.dim,magenta.dim,green.dim -k npm:backend npm:envoy npm:dev",
-        "generate": "go generate ./...",
+        "generate:go": "go generate ./...",
+        "generate:ts": "protoc -Iprotos --js_out=import_style=commonjs:src/protos --grpc-web_out=import_style=typescript,mode=grpcwebtext:src/protos protos/foo.proto",
         "backend": "go run ./cmd/jsso2 2>&1 | jlog -C",
         "envoy": "envoy -c envoy.yaml -l critical",
         "build": "rollup -c",
@@ -21,6 +23,7 @@
         "@rollup/plugin-node-resolve": "^8.0.0",
         "@rollup/plugin-typescript": "^4.0.0",
         "@tsconfig/svelte": "^1.0.0",
+        "concurrently": "^5.3.0",
         "rollup": "^2.3.4",
         "rollup-plugin-livereload": "^2.0.0",
         "rollup-plugin-svelte": "^6.0.0",
@@ -30,9 +33,10 @@
         "svelte-check": "^1.0.0",
         "svelte-preprocess": "^4.0.0",
         "tslib": "^2.0.0",
-        "typescript": "^3.9.3"
+        "typescript": "^4.0.2"
     },
     "dependencies": {
-        "concurrently": "^5.3.0"
+        "google-protobuf": "^3.13.0",
+        "grpc-web": "^1.2.1"
     }
 }

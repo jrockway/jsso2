@@ -24,12 +24,36 @@ static_resources:
                               virtual_hosts:
                                   - name: localhost
                                     domains: ["*"]
+                                    retry_policy:
+                                        num_retries: 3
+                                        retry_on: "5xx,reset"
+                                        retry_host_predicate:
+                                            - name: "envoy.retry_host_predicates.previous_hosts"
+                                        host_selection_retry_max_attempts: 3
                                     routes:
                                         - match:
                                               prefix: "/"
                                               grpc: {}
                                           route:
                                               cluster: localhost:backend:grpc
+                                        - match:
+                                              prefix: "/"
+                                              headers:
+                                                  - name: x-grpc-web
+                                                    exact_match: "1"
+                                          route:
+                                              cluster: localhost:backend:grpc
+                                        - match:
+                                              prefix: "/livereload.js"
+                                          route:
+                                              cluster: localhost:livereload:http
+                                        - match:
+                                              prefix: "/livereload"
+                                          route:
+                                              cluster: localhost:livereload:http
+                                              upgrade_configs:
+                                                  - upgrade_type: websocket
+                                                    enabled: true
                                         - match:
                                               prefix: "/grpcui"
                                           route:
@@ -56,7 +80,16 @@ static_resources:
                                               prefix: "/"
                                           route:
                                               cluster: localhost:frontend:http
+                                    cors:
+                                        allow_origin_string_match:
+                                            - prefix: "*" # don't copy this into production!
+                                        allow_methods: GET, PUT, DELETE, POST, OPTIONS
+                                        allow_headers: keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
+                                        max_age: "1728000"
+                                        expose_headers: custom-header-1,grpc-status,grpc-message
                           http_filters:
+                              - name: envoy.filters.http.grpc_web
+                              - name: envoy.filters.http.cors
                               - name: envoy.filters.http.router
     clusters:
         - name: localhost:backend:grpc
@@ -73,11 +106,6 @@ static_resources:
           load_assignment:
               cluster_name: localhost:backend:grpc
               endpoints:
-                  - lb_endpoints:
-                        - endpoint:
-                              address:
-                                  pipe:
-                                      path: "app.socket"
                   - lb_endpoints:
                         - endpoint:
                               address:
@@ -124,6 +152,20 @@ static_resources:
                                   socket_address:
                                       address: 127.0.0.1
                                       port_value: 5000
+        - name: localhost:livereload:http
+          type: static
+          lb_policy: random
+          connect_timeout: 1s
+          health_checks:
+          load_assignment:
+              cluster_name: localhost:livereload:http
+              endpoints:
+                  - lb_endpoints:
+                        - endpoint:
+                              address:
+                                  socket_address:
+                                      address: 127.0.0.1
+                                      port_value: 35729
         - name: localhost:envoy:admin
           type: static
           lb_policy: random
