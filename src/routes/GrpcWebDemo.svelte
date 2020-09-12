@@ -1,0 +1,51 @@
+<script lang="ts">
+    import * as grpcWeb from "grpc-web";
+    import { NameServiceClient } from "../protos/FooServiceClientPb";
+    import { TransformNameRequest, TransformNameReply } from "../protos/foo_pb";
+    const nameServiceClient = new NameServiceClient("", null, null);
+
+    function sendName(name: string): Promise<TransformNameReply> {
+        let req = new TransformNameRequest();
+        req.setName(name);
+        return nameServiceClient.transformName(req, null);
+    }
+
+    let name: string = "world";
+    let reply: Promise<TransformNameReply>;
+    async function send() {
+        reply = sendName(name).then((r) => (name = r.getResult()));
+    }
+</script>
+
+<style>
+    main {
+        text-align: center;
+        padding: 1em;
+        max-width: 240px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        color: #00aa22;
+        text-transform: uppercase;
+        font-size: 4em;
+        font-weight: 100;
+    }
+
+    @media (min-width: 640px) {
+        main {
+            max-width: none;
+        }
+    }
+</style>
+
+<main>
+    <h1>Hello {name}!</h1>
+    <p>Type something: <input bind:value={name} /></p>
+    <button on:click={send}>Submit</button>
+    {#await reply}
+        <p>Processing.</p>
+    {:catch error}
+        <p>Whoa! An error: {error.message}</p>
+    {/await}
+</main>

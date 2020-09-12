@@ -1,7 +1,8 @@
 {
     "name": "jsso2",
     "version": "0.0.0-pre",
-    "license": "LICENSE",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/jrockway/jsso2",
     "scripts": {
         "all": "concurrently -c blue.dim,magenta.dim,green.dim -k npm:backend npm:envoy npm:dev",
         "generate:go": "go generate ./...",
@@ -32,6 +33,7 @@
         "svelte": "^3.0.0",
         "svelte-check": "^1.0.0",
         "svelte-preprocess": "^4.0.0",
+        "svelte-spa-router": "^2.2.0",
         "tslib": "^2.0.0",
         "typescript": "^4.0.2"
     },
