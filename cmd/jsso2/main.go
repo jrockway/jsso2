@@ -21,6 +21,7 @@ import (
 type fooServer struct {
 }
 
+// nolint: unparam
 func (*fooServer) TransformName(ctx context.Context, req *foopb.TransformNameRequest) (*foopb.TransformNameReply, error) {
 	result := new(strings.Builder)
 	for _, c := range req.GetName() {

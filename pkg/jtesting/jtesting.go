@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
-	_ "github.com/jackc/pgx/v4/stdlib"
+	_ "github.com/jackc/pgx/v4/stdlib" // This is the only driver we support.
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )
@@ -102,10 +102,10 @@ func newTestDB(ctx context.Context, pc uintptr, name, databaseURL string) (strin
 		return "", fmt.Errorf("parse databse url: %w", err)
 	}
 	c, err := sql.Open("pgx", cfg.ConnString())
-	defer c.Close()
 	if err != nil {
 		return "", fmt.Errorf("connect %s: %w", cfg.ConnString(), err)
 	}
+	defer c.Close()
 	if _, err := c.ExecContext(ctx, fmt.Sprintf("drop database if exists %q", name)); err != nil {
 		return "", fmt.Errorf("drop old database %s: %w", name, err)
 	}
