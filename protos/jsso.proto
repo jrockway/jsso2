@@ -1,0 +1,47 @@
+syntax = "proto3";
+package jsso;
+import "types.proto";
+
+option go_package = "github.com/jrockway/jsso2/pkg/jssopb";
+
+// Service User manages user accounts.
+service User {
+    // Add a new user.  The user won't be able to log in until they visit the
+    // enrollment URL.
+    rpc Add(AddUserRequest) returns (AddUserReply) {
+    }
+}
+
+// Service Login manages the WebAuthn login ceremony.
+service Login {
+    rpc Start(StartLoginRequest) returns (StartLoginReply) {
+    }
+}
+
+// Service Enrollment manages the WebAuthn enrollment ceremony.
+service Enrollment {
+    rpc Start(StartEnrollmentRequest) returns (StartEnrollmentReply) {
+    }
+}
+
+message AddUserRequest {
+    string username = 1;
+}
+
+message AddUserReply {
+    types.User user = 1;
+    string enrollment_token = 2;
+    string enrollment_url = 3;
+}
+
+message StartLoginRequest {
+}
+message StartLoginReply {
+}
+
+message StartEnrollmentRequest {
+    string enrollment_token = 1;
+}
+
+message StartEnrollmentReply {
+}

@@ -9,6 +9,10 @@ import (
 
 	"github.com/fullstorydev/grpcui/standalone"
 	"github.com/jrockway/jsso2/pkg/foopb"
+	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
+	"github.com/jrockway/jsso2/pkg/jsso/login"
+	"github.com/jrockway/jsso2/pkg/jsso/user"
+	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/opinionated-server/server"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -31,9 +35,11 @@ func (*fooServer) TransformName(ctx context.Context, req *foopb.TransformNameReq
 
 func main() {
 	server.AppName = "jsso2"
-	foo := new(fooServer)
 	server.AddService(func(s *grpc.Server) {
-		foopb.RegisterNameServiceService(s, foopb.NewNameServiceService(foo))
+		foopb.RegisterNameServiceService(s, foopb.NewNameServiceService(&fooServer{}))
+		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(&enrollment.Service{}))
+		jssopb.RegisterUserService(s, jssopb.NewUserService(&user.Service{}))
+		jssopb.RegisterLoginService(s, jssopb.NewLoginService(&login.Service{}))
 	})
 	server.SetStartupCallback(func(info server.Info) {
 		// This starts up grpcui on the debug port.
