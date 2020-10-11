@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"runtime"
 	"testing"
 	"time"
@@ -22,7 +23,7 @@ type Config struct {
 
 func makeConfig() *Config {
 	return &Config{
-		SuperuserDSN: "user=postgres host=localhost port=5432 sslmode=disable",
+		SuperuserDSN: os.Getenv("SUPERUSER_DATABASE_URL"),
 	}
 }
 
