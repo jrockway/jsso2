@@ -10,6 +10,7 @@ import (
 
 	"github.com/fullstorydev/grpcui/standalone"
 	"github.com/jrockway/jsso2/pkg/foopb"
+	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
 	"github.com/jrockway/jsso2/pkg/jsso/login"
 	"github.com/jrockway/jsso2/pkg/jsso/user"
@@ -41,6 +42,8 @@ func main() {
 
 	dbConfig := &store.Config{}
 	server.AddFlagGroup("database", dbConfig)
+	authConfig := &internalauth.Config{}
+	server.AddFlagGroup("authorization", authConfig)
 
 	server.Setup()
 
@@ -55,6 +58,11 @@ func main() {
 			zap.L().Warn("failed to run database migrations; continuing anyway", zap.Error(err))
 		}
 	}
+
+	auth := internalauth.NewFromConfig(authConfig)
+	server.AddUnaryInterceptor(auth.UnaryServerInterceptor())
+	server.AddStreamInterceptor(auth.StreamServerInterceptor())
+
 	c()
 
 	server.AddService(func(s *grpc.Server) {
