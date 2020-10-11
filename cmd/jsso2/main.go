@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/fullstorydev/grpcui/standalone"
@@ -13,6 +14,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/jsso/login"
 	"github.com/jrockway/jsso2/pkg/jsso/user"
 	"github.com/jrockway/jsso2/pkg/jssopb"
+	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/opinionated-server/server"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -36,6 +38,25 @@ func (*fooServer) TransformName(ctx context.Context, req *foopb.TransformNameReq
 
 func main() {
 	server.AppName = "jsso2"
+
+	dbConfig := &store.Config{}
+	server.AddFlagGroup("database", dbConfig)
+
+	server.Setup()
+
+	startupCtx, c := context.WithTimeout(context.Background(), time.Minute)
+	db, err := store.Connect(startupCtx, dbConfig.DatabaseURL)
+	if err != nil {
+		zap.L().Fatal("failed to connect to database", zap.String("database_url", dbConfig.DatabaseURL), zap.Error(err))
+	}
+	if dbConfig.RunMigrations {
+		zap.L().Info("running database migrations")
+		if err := db.MigrateDB(startupCtx); err != nil {
+			zap.L().Warn("failed to run database migrations; continuing anyway", zap.Error(err))
+		}
+	}
+	c()
+
 	server.AddService(func(s *grpc.Server) {
 		foopb.RegisterNameServiceService(s, foopb.NewNameServiceService(&fooServer{}))
 		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(&enrollment.Service{}))
@@ -54,6 +75,5 @@ func main() {
 		}
 		http.Handle("/grpcui/", http.StripPrefix("/grpcui", h))
 	})
-	server.Setup()
 	server.ListenAndServe()
 }

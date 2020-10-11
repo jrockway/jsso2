@@ -4,10 +4,10 @@
     "license": "Apache-2.0",
     "repository": "https://github.com/jrockway/jsso2",
     "scripts": {
-        "all": "env-path -p env.test concurrently -c blue.dim,magenta.dim,green.dim -k npm:backend npm:envoy npm:dev",
+        "all": "concurrently -c blue.dim,magenta.dim,green.dim -k npm:backend npm:envoy npm:dev",
         "generate:go": "go generate ./...",
         "generate:ts": "protoc -Iprotos --js_out=import_style=commonjs:src/protos --grpc-web_out=import_style=typescript,mode=grpcwebtext:src/protos protos/*.proto",
-        "backend": "go run ./cmd/jsso2 2>&1 | jlog -C",
+        "backend": "env-path -p env.test go run ./cmd/jsso2 2>&1 | jlog -C",
         "envoy": "envoy -c envoy.yaml -l critical",
         "build": "rollup -c",
         "dev": "rollup -c -w",

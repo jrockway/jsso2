@@ -19,6 +19,12 @@ const (
 	TxDelay    = 10 * time.Millisecond
 )
 
+// Config is environment/command-line config for storage.
+type Config struct {
+	DatabaseURL   string `long:"database_url" description:"Postgres connection string pointing at the database" env:"DATABASE_URL"`
+	RunMigrations bool   `long:"run_migrations" description:"If true, migrate the database after connecting." env:"RUN_MIGRATIONS"`
+}
+
 // Connection is a connection to storage for jsso.
 type Connection struct {
 	db *sqlx.DB
