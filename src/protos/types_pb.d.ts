@@ -6,6 +6,9 @@ export class User extends jspb.Message {
   getId(): number;
   setId(value: number): User;
 
+  getUsername(): string;
+  setUsername(value: string): User;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): User.AsObject;
   static toObject(includeInstance: boolean, msg: User): User.AsObject;
@@ -17,6 +20,7 @@ export class User extends jspb.Message {
 export namespace User {
   export type AsObject = {
     id: number,
+    username: string,
   }
 }
 

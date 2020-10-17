@@ -66,7 +66,8 @@ proto.types.User.prototype.toObject = function(opt_includeInstance) {
  */
 proto.types.User.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    username: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -107,6 +108,10 @@ proto.types.User.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {number} */ (reader.readInt64());
       msg.setId(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setUsername(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -143,6 +148,13 @@ proto.types.User.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getUsername();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
 };
 
 
@@ -161,6 +173,24 @@ proto.types.User.prototype.getId = function() {
  */
 proto.types.User.prototype.setId = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string username = 2;
+ * @return {string}
+ */
+proto.types.User.prototype.getUsername = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.types.User} returns this
+ */
+proto.types.User.prototype.setUsername = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 

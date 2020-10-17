@@ -4,4 +4,5 @@ option go_package = "github.com/jrockway/jsso2/pkg/types";
 
 message User {
     int64 id = 1;
+    string username = 2;
 }
