@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jackc/pgx/v4"
 	_ "github.com/jackc/pgx/v4/stdlib" // This is the only driver we support.
 	"go.uber.org/zap"
@@ -34,8 +35,8 @@ type R struct {
 	Database bool
 }
 
-// Extras holds per-test "extras".
-type Extras struct {
+// E holds per-test "extras".
+type E struct {
 	Context context.Context
 	Logger  *zap.Logger
 	Config  *Config
@@ -44,13 +45,13 @@ type Extras struct {
 }
 
 // Run runs the provided test function as a subtest with the desired Extras available.
-func Run(t *testing.T, name string, r R, f func(t *testing.T, extras *Extras)) {
+func Run(t *testing.T, name string, r R, f func(t *testing.T, e *E)) {
 	t.Helper()
 	pc, _, _, pcOk := runtime.Caller(1)
 	t.Run(name, func(t *testing.T) {
 		var ctx context.Context
 		var c func()
-		extras := &Extras{
+		extras := &E{
 			Config: makeConfig(),
 		}
 		if r.Timeout > 0 {
@@ -58,13 +59,13 @@ func Run(t *testing.T, name string, r R, f func(t *testing.T, extras *Extras)) {
 		} else {
 			ctx, c = context.WithCancel(context.Background())
 		}
-		extras.Context = ctx
 		if r.Logger {
 			logger := zaptest.NewLogger(t, zaptest.Level(zap.DebugLevel))
 			defer logger.Sync()
 			restoreLogger := zap.ReplaceGlobals(logger.Named("global"))
 			defer restoreLogger()
 			extras.Logger = logger.Named("test." + name)
+			ctx = ctxzap.ToContext(ctx, logger)
 		}
 		if r.Database {
 			if !pcOk {
@@ -81,6 +82,7 @@ func Run(t *testing.T, name string, r R, f func(t *testing.T, extras *Extras)) {
 			}
 			extras.DB = db
 		}
+		extras.Context = ctx
 		f(t, extras)
 		select {
 		case <-ctx.Done():

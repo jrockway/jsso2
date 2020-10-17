@@ -9,12 +9,12 @@ import (
 )
 
 func TestDoTx(t *testing.T) {
-	jtesting.Run(t, "updateusers", jtesting.R{Logger: true, Database: true}, func(t *testing.T, extras *jtesting.Extras) {
-		c := MustGetTestDB(t, extras)
+	jtesting.Run(t, "do tx", jtesting.R{Logger: true, Database: true}, func(t *testing.T, e *jtesting.E) {
+		c := MustGetTestDB(t, e)
 
 		// Don't retry non-retryable errors.
 		var n int
-		err := c.DoTx(extras.Context, extras.Logger, false, func(tx *sqlx.Tx) error {
+		err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
 			n++
 			return errors.New("oh no")
 		})
@@ -27,7 +27,7 @@ func TestDoTx(t *testing.T) {
 
 		// Retry retryable errors.
 		n = 0
-		err = c.DoTx(extras.Context, extras.Logger, false, func(tx *sqlx.Tx) error {
+		err = c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
 			n++
 			return WrapRetryable(errors.New("oh no"))
 		})
@@ -40,7 +40,7 @@ func TestDoTx(t *testing.T) {
 
 		// Retry if the transaction gets into the "already committed or rolled back" state.
 		n = 0
-		err = c.DoTx(extras.Context, extras.Logger, false, func(tx *sqlx.Tx) error {
+		err = c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
 			n++
 			if n < 2 {
 				tx.Rollback()

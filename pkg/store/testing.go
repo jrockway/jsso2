@@ -6,10 +6,10 @@ import (
 	"github.com/jrockway/jsso2/pkg/jtesting"
 )
 
-func MustGetTestDB(t *testing.T, extras *jtesting.Extras) *Connection {
+func MustGetTestDB(t *testing.T, e *jtesting.E) *Connection {
 	t.Helper()
-	ctx := extras.Context
-	c, err := Wrap(ctx, extras.DB)
+	ctx := e.Context
+	c, err := Wrap(ctx, e.DB)
 	if err != nil {
 		t.Fatalf("wrap: %v", err)
 	}
