@@ -12,13 +12,13 @@
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "start": "sirv public",
-        "test:go": "env-path -p env.test go test ./... -race",
+        "test:go": "go test ./... -race",
         "cover:go": "go test ./... -coverprofile=cover.out -covermode=atomic && go tool cover -html cover.out -o coverage.html",
-        "test": "concurrently npm:test:go",
+        "test": "concurrently --raw -m 1 npm:test:go",
         "tern:new": "tern new -m migrations",
         "lint:svelte": "svelte-check",
         "lint:go": "golangci-lint run",
-        "lint": "concurrently npm:lint:svelte npm:lint:go"
+        "lint": "concurrently --raw -m 1 npm:lint:svelte npm:lint:go"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^14.0.0",

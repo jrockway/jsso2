@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"testing"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jackc/pgx/v4"
 	_ "github.com/jackc/pgx/v4/stdlib" // This is the only driver we support.
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 )
@@ -20,12 +22,6 @@ import (
 // Config contains test-specific configuration.
 type Config struct {
 	SuperuserDSN string // The DSN to use to create databases.
-}
-
-func makeConfig() *Config {
-	return &Config{
-		SuperuserDSN: os.Getenv("SUPERUSER_DATABASE_URL"),
-	}
 }
 
 // R requests specific extras during a test run.
@@ -47,12 +43,20 @@ type E struct {
 // Run runs the provided test function as a subtest with the desired Extras available.
 func Run(t *testing.T, name string, r R, f func(t *testing.T, e *E)) {
 	t.Helper()
-	pc, _, _, pcOk := runtime.Caller(1)
+	pc, file, _, pcOk := runtime.Caller(1)
 	t.Run(name, func(t *testing.T) {
 		var ctx context.Context
 		var c func()
+
+		envFile := filepath.Clean(filepath.Join(file, "..", "..", "..", "env.test"))
+		if err := godotenv.Load(envFile); err != nil {
+			t.Fatalf("failed to load %s: %v", envFile, err)
+		}
+
 		extras := &E{
-			Config: makeConfig(),
+			Config: &Config{
+				SuperuserDSN: os.Getenv("SUPERUSER_DATABASE_URL"),
+			},
 		}
 		if r.Timeout > 0 {
 			ctx, c = context.WithTimeout(context.Background(), r.Timeout)

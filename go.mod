@@ -14,6 +14,7 @@ require (
 	github.com/jackc/pgx/v4 v4.9.0
 	github.com/jackc/tern v1.12.1
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/joho/godotenv v1.3.0
 	github.com/jrockway/opinionated-server v0.0.13
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
 	go.uber.org/zap v1.15.0
