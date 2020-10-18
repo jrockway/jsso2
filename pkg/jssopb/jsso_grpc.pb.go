@@ -17,9 +17,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserClient interface {
-	// Add a new user.  The user won't be able to log in until they visit the
-	// enrollment URL.
-	Add(ctx context.Context, in *AddUserRequest, opts ...grpc.CallOption) (*AddUserReply, error)
+	// Edit adds a new user if the ID is 0, or updates an existing user.
+	Edit(ctx context.Context, in *EditUserRequest, opts ...grpc.CallOption) (*EditUserReply, error)
 }
 
 type userClient struct {
@@ -30,13 +29,13 @@ func NewUserClient(cc grpc.ClientConnInterface) UserClient {
 	return &userClient{cc}
 }
 
-var userAddStreamDesc = &grpc.StreamDesc{
-	StreamName: "Add",
+var userEditStreamDesc = &grpc.StreamDesc{
+	StreamName: "Edit",
 }
 
-func (c *userClient) Add(ctx context.Context, in *AddUserRequest, opts ...grpc.CallOption) (*AddUserReply, error) {
-	out := new(AddUserReply)
-	err := c.cc.Invoke(ctx, "/jsso.User/Add", in, out, opts...)
+func (c *userClient) Edit(ctx context.Context, in *EditUserRequest, opts ...grpc.CallOption) (*EditUserReply, error) {
+	out := new(EditUserReply)
+	err := c.cc.Invoke(ctx, "/jsso.User/Edit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -48,25 +47,24 @@ func (c *userClient) Add(ctx context.Context, in *AddUserRequest, opts ...grpc.C
 // RegisterUserService is called.  Any unassigned fields will result in the
 // handler for that method returning an Unimplemented error.
 type UserService struct {
-	// Add a new user.  The user won't be able to log in until they visit the
-	// enrollment URL.
-	Add func(context.Context, *AddUserRequest) (*AddUserReply, error)
+	// Edit adds a new user if the ID is 0, or updates an existing user.
+	Edit func(context.Context, *EditUserRequest) (*EditUserReply, error)
 }
 
-func (s *UserService) add(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddUserRequest)
+func (s *UserService) edit(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return s.Add(ctx, in)
+		return s.Edit(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     s,
-		FullMethod: "/jsso.User/Add",
+		FullMethod: "/jsso.User/Edit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.Add(ctx, req.(*AddUserRequest))
+		return s.Edit(ctx, req.(*EditUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -74,17 +72,17 @@ func (s *UserService) add(_ interface{}, ctx context.Context, dec func(interface
 // RegisterUserService registers a service implementation with a gRPC server.
 func RegisterUserService(s grpc.ServiceRegistrar, srv *UserService) {
 	srvCopy := *srv
-	if srvCopy.Add == nil {
-		srvCopy.Add = func(context.Context, *AddUserRequest) (*AddUserReply, error) {
-			return nil, status.Errorf(codes.Unimplemented, "method Add not implemented")
+	if srvCopy.Edit == nil {
+		srvCopy.Edit = func(context.Context, *EditUserRequest) (*EditUserReply, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method Edit not implemented")
 		}
 	}
 	sd := grpc.ServiceDesc{
 		ServiceName: "jsso.User",
 		Methods: []grpc.MethodDesc{
 			{
-				MethodName: "Add",
-				Handler:    srvCopy.add,
+				MethodName: "Edit",
+				Handler:    srvCopy.edit,
 			},
 		},
 		Streams:  []grpc.StreamDesc{},
@@ -103,9 +101,9 @@ func RegisterUserService(s grpc.ServiceRegistrar, srv *UserService) {
 func NewUserService(s interface{}) *UserService {
 	ns := &UserService{}
 	if h, ok := s.(interface {
-		Add(context.Context, *AddUserRequest) (*AddUserReply, error)
+		Edit(context.Context, *EditUserRequest) (*EditUserReply, error)
 	}); ok {
-		ns.Add = h.Add
+		ns.Edit = h.Edit
 	}
 	return ns
 }
@@ -115,9 +113,8 @@ func NewUserService(s interface{}) *UserService {
 // definition, which is not a backward-compatible change.  For this reason,
 // use of this type is not recommended.
 type UnstableUserService interface {
-	// Add a new user.  The user won't be able to log in until they visit the
-	// enrollment URL.
-	Add(context.Context, *AddUserRequest) (*AddUserReply, error)
+	// Edit adds a new user if the ID is 0, or updates an existing user.
+	Edit(context.Context, *EditUserRequest) (*EditUserReply, error)
 }
 
 // LoginClient is the client API for Login service.

@@ -6,9 +6,8 @@ option go_package = "github.com/jrockway/jsso2/pkg/jssopb";
 
 // Service User manages user accounts.
 service User {
-    // Add a new user.  The user won't be able to log in until they visit the
-    // enrollment URL.
-    rpc Add(AddUserRequest) returns (AddUserReply) {
+    // Edit adds a new user if the ID is 0, or updates an existing user.
+    rpc Edit(EditUserRequest) returns (EditUserReply) {
     }
 }
 
@@ -24,14 +23,12 @@ service Enrollment {
     }
 }
 
-message AddUserRequest {
-    string username = 1;
+message EditUserRequest {
+    types.User user = 1;
 }
 
-message AddUserReply {
+message EditUserReply {
     types.User user = 1;
-    string enrollment_token = 2;
-    string enrollment_url = 3;
 }
 
 message StartLoginRequest {

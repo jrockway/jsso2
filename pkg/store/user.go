@@ -10,7 +10,10 @@ import (
 )
 
 // UpdateUser edits the provided user, creating it if it doesn't exist.
-func (c *Connection) UpdateUser(ctx context.Context, db sqlx.ExtContext, user *types.User) error {
+func UpdateUser(ctx context.Context, db sqlx.ExtContext, user *types.User) error {
+	if user.Username == "" {
+		return fmt.Errorf("username must not be empty")
+	}
 	if user.Id == 0 {
 		rows, err := sqlx.NamedQueryContext(ctx, db, `insert into "user" (username) values (:username) returning (id)`, user)
 		if err != nil {
@@ -35,6 +38,9 @@ func (c *Connection) UpdateUser(ctx context.Context, db sqlx.ExtContext, user *t
 		return fmt.Errorf("update: get affected rows: %w", err)
 	}
 	if got, want := affected, int64(1); got != want {
+		if got == 0 {
+			return fmt.Errorf("update user: %w", ErrNothingToUpdate)
+		}
 		return fmt.Errorf("update: affected rows: got %v want %v", got, want)
 	}
 	return nil

@@ -22,7 +22,7 @@ func TestUpdateUser(t *testing.T) {
 				afterCount:  1,
 				f: func(t *testing.T) {
 					user := &types.User{Username: "foo"}
-					if err := c.UpdateUser(e.Context, c.db, user); err != nil {
+					if err := UpdateUser(e.Context, c.db, user); err != nil {
 						t.Fatalf("create user: %v", err)
 					}
 					if user.Id == 0 {
@@ -31,12 +31,36 @@ func TestUpdateUser(t *testing.T) {
 				},
 			},
 			{
+				name:        "edit user",
+				beforeCount: 1,
+				afterCount:  1,
+				f: func(t *testing.T) {
+					user := &types.User{Id: 1, Username: "bar"}
+					if err := UpdateUser(e.Context, c.db, user); err != nil {
+						t.Fatalf("update user: %v", err)
+					}
+				},
+			},
+			{
+				name:        "edit nonexistent user",
+				beforeCount: 1,
+				afterCount:  1,
+				f: func(t *testing.T) {
+					user := &types.User{Id: 999, Username: "does not exist"}
+					if err := UpdateUser(e.Context, c.db, user); err == nil {
+						t.Error("update user: expecting an error")
+					} else {
+						t.Log(err)
+					}
+				},
+			},
+			{
 				name:        "add duplicate user",
 				beforeCount: 1,
 				afterCount:  1,
 				f: func(t *testing.T) {
-					user := &types.User{Username: "foo"}
-					if err := c.UpdateUser(e.Context, c.db, user); err == nil {
+					user := &types.User{Username: "bar"}
+					if err := UpdateUser(e.Context, c.db, user); err == nil {
 						t.Errorf("expected error when adding a duplicate user")
 					}
 				},

@@ -68,7 +68,7 @@ func main() {
 	server.AddService(func(s *grpc.Server) {
 		foopb.RegisterNameServiceService(s, foopb.NewNameServiceService(&fooServer{}))
 		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(&enrollment.Service{}))
-		jssopb.RegisterUserService(s, jssopb.NewUserService(&user.Service{}))
+		jssopb.RegisterUserService(s, jssopb.NewUserService(&user.Service{DB: db}))
 		jssopb.RegisterLoginService(s, jssopb.NewLoginService(&login.Service{}))
 	})
 	server.SetStartupCallback(func(info server.Info) {

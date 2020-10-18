@@ -3,49 +3,43 @@ import * as jspb from 'google-protobuf'
 import * as types_pb from './types_pb';
 
 
-export class AddUserRequest extends jspb.Message {
-  getUsername(): string;
-  setUsername(value: string): AddUserRequest;
+export class EditUserRequest extends jspb.Message {
+  getUser(): types_pb.User | undefined;
+  setUser(value?: types_pb.User): EditUserRequest;
+  hasUser(): boolean;
+  clearUser(): EditUserRequest;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): AddUserRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: AddUserRequest): AddUserRequest.AsObject;
-  static serializeBinaryToWriter(message: AddUserRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): AddUserRequest;
-  static deserializeBinaryFromReader(message: AddUserRequest, reader: jspb.BinaryReader): AddUserRequest;
+  toObject(includeInstance?: boolean): EditUserRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: EditUserRequest): EditUserRequest.AsObject;
+  static serializeBinaryToWriter(message: EditUserRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): EditUserRequest;
+  static deserializeBinaryFromReader(message: EditUserRequest, reader: jspb.BinaryReader): EditUserRequest;
 }
 
-export namespace AddUserRequest {
+export namespace EditUserRequest {
   export type AsObject = {
-    username: string,
+    user?: types_pb.User.AsObject,
   }
 }
 
-export class AddUserReply extends jspb.Message {
+export class EditUserReply extends jspb.Message {
   getUser(): types_pb.User | undefined;
-  setUser(value?: types_pb.User): AddUserReply;
+  setUser(value?: types_pb.User): EditUserReply;
   hasUser(): boolean;
-  clearUser(): AddUserReply;
-
-  getEnrollmentToken(): string;
-  setEnrollmentToken(value: string): AddUserReply;
-
-  getEnrollmentUrl(): string;
-  setEnrollmentUrl(value: string): AddUserReply;
+  clearUser(): EditUserReply;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): AddUserReply.AsObject;
-  static toObject(includeInstance: boolean, msg: AddUserReply): AddUserReply.AsObject;
-  static serializeBinaryToWriter(message: AddUserReply, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): AddUserReply;
-  static deserializeBinaryFromReader(message: AddUserReply, reader: jspb.BinaryReader): AddUserReply;
+  toObject(includeInstance?: boolean): EditUserReply.AsObject;
+  static toObject(includeInstance: boolean, msg: EditUserReply): EditUserReply.AsObject;
+  static serializeBinaryToWriter(message: EditUserReply, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): EditUserReply;
+  static deserializeBinaryFromReader(message: EditUserReply, reader: jspb.BinaryReader): EditUserReply;
 }
 
-export namespace AddUserReply {
+export namespace EditUserReply {
   export type AsObject = {
     user?: types_pb.User.AsObject,
-    enrollmentToken: string,
-    enrollmentUrl: string,
   }
 }
 

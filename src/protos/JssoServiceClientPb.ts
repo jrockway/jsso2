@@ -35,44 +35,44 @@ export class UserClient {
     this.options_ = options;
   }
 
-  methodInfoAdd = new grpcWeb.AbstractClientBase.MethodInfo(
-    jsso_pb.AddUserReply,
-    (request: jsso_pb.AddUserRequest) => {
+  methodInfoEdit = new grpcWeb.AbstractClientBase.MethodInfo(
+    jsso_pb.EditUserReply,
+    (request: jsso_pb.EditUserRequest) => {
       return request.serializeBinary();
     },
-    jsso_pb.AddUserReply.deserializeBinary
+    jsso_pb.EditUserReply.deserializeBinary
   );
 
-  add(
-    request: jsso_pb.AddUserRequest,
-    metadata: grpcWeb.Metadata | null): Promise<jsso_pb.AddUserReply>;
+  edit(
+    request: jsso_pb.EditUserRequest,
+    metadata: grpcWeb.Metadata | null): Promise<jsso_pb.EditUserReply>;
 
-  add(
-    request: jsso_pb.AddUserRequest,
+  edit(
+    request: jsso_pb.EditUserRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: jsso_pb.AddUserReply) => void): grpcWeb.ClientReadableStream<jsso_pb.AddUserReply>;
+               response: jsso_pb.EditUserReply) => void): grpcWeb.ClientReadableStream<jsso_pb.EditUserReply>;
 
-  add(
-    request: jsso_pb.AddUserRequest,
+  edit(
+    request: jsso_pb.EditUserRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
-               response: jsso_pb.AddUserReply) => void) {
+               response: jsso_pb.EditUserReply) => void) {
     if (callback !== undefined) {
       return this.client_.rpcCall(
         this.hostname_ +
-          '/jsso.User/Add',
+          '/jsso.User/Edit',
         request,
         metadata || {},
-        this.methodInfoAdd,
+        this.methodInfoEdit,
         callback);
     }
     return this.client_.unaryCall(
     this.hostname_ +
-      '/jsso.User/Add',
+      '/jsso.User/Edit',
     request,
     metadata || {},
-    this.methodInfoAdd);
+    this.methodInfoEdit);
   }
 
 }

@@ -14,7 +14,11 @@ func AddClientset(c *cobra.Command) {
 		panic("command already has a pre-run function")
 	}
 	c.PreRunE = func(cmd *cobra.Command, args []string) error {
-		set, err := client.Connect(cmd.Context(), address, token)
+		if clientset != nil {
+			// Skip dialing for the tests.
+			return nil
+		}
+		set, err := client.Dial(cmd.Context(), address, token)
 		if err != nil {
 			return fmt.Errorf("connect: %v", err)
 		}
