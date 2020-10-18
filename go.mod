@@ -17,6 +17,9 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/jrockway/opinionated-server v0.0.13
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
+	github.com/spf13/cobra v1.0.0
+	github.com/spf13/pflag v1.0.3
+	github.com/spf13/viper v1.4.0
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect

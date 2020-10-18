@@ -18,7 +18,8 @@
         "tern:new": "tern new -m migrations",
         "lint:svelte": "svelte-check",
         "lint:go": "golangci-lint run",
-        "lint": "concurrently --raw -m 1 npm:lint:svelte npm:lint:go"
+        "lint": "concurrently --raw -m 1 npm:lint:svelte npm:lint:go",
+        "jssoctl": "env-path -p env.test go run ./cmd/jssoctl"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^14.0.0",
