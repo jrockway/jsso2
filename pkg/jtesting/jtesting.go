@@ -111,9 +111,7 @@ func newTestDB(ctx context.Context, pc uintptr, name, databaseURL string) (strin
 	// Name the database for the test.  Try very hard to keep it under 64 characters, so that
 	// database names don't collide.
 	candidate := fmt.Sprintf("%s-%s", f.Name(), name)
-	if strings.HasPrefix(candidate, pkgPrefix) {
-		candidate = candidate[len(pkgPrefix):]
-	}
+	candidate = strings.TrimPrefix(candidate, pkgPrefix)
 	name = fmt.Sprintf("jsso-test-%s", candidate)
 	if len(name) > 64 {
 		hash := md5.Sum([]byte(candidate))
