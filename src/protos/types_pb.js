@@ -535,7 +535,7 @@ proto.types.Session.prototype.toObject = function(opt_includeInstance) {
 proto.types.Session.toObject = function(includeInstance, msg) {
   var f, obj = {
     id: msg.getId_asB64(),
-    userId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    user: (f = msg.getUser()) && proto.types.User.toObject(includeInstance, f),
     metadata: (f = msg.getMetadata()) && proto.types.SessionMetadata.toObject(includeInstance, f),
     createdAt: (f = msg.getCreatedAt()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     expiresAt: (f = msg.getExpiresAt()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f)
@@ -580,8 +580,9 @@ proto.types.Session.deserializeBinaryFromReader = function(msg, reader) {
       msg.setId(value);
       break;
     case 2:
-      var value = /** @type {number} */ (reader.readInt64());
-      msg.setUserId(value);
+      var value = new proto.types.User;
+      reader.readMessage(value,proto.types.User.deserializeBinaryFromReader);
+      msg.setUser(value);
       break;
     case 3:
       var value = new proto.types.SessionMetadata;
@@ -634,11 +635,12 @@ proto.types.Session.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getUserId();
-  if (f !== 0) {
-    writer.writeInt64(
+  f = message.getUser();
+  if (f != null) {
+    writer.writeMessage(
       2,
-      f
+      f,
+      proto.types.User.serializeBinaryToWriter
     );
   }
   f = message.getMetadata();
@@ -711,20 +713,39 @@ proto.types.Session.prototype.setId = function(value) {
 
 
 /**
- * optional int64 user_id = 2;
- * @return {number}
+ * optional User user = 2;
+ * @return {?proto.types.User}
  */
-proto.types.Session.prototype.getUserId = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+proto.types.Session.prototype.getUser = function() {
+  return /** @type{?proto.types.User} */ (
+    jspb.Message.getWrapperField(this, proto.types.User, 2));
 };
 
 
 /**
- * @param {number} value
+ * @param {?proto.types.User|undefined} value
+ * @return {!proto.types.Session} returns this
+*/
+proto.types.Session.prototype.setUser = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
  * @return {!proto.types.Session} returns this
  */
-proto.types.Session.prototype.setUserId = function(value) {
-  return jspb.Message.setProto3IntField(this, 2, value);
+proto.types.Session.prototype.clearUser = function() {
+  return this.setUser(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.types.Session.prototype.hasUser = function() {
+  return jspb.Message.getField(this, 2) != null;
 };
 
 

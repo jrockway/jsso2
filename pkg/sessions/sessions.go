@@ -26,6 +26,19 @@ func GenerateID() ([]byte, error) {
 	return buf, nil
 }
 
+// IsZero returns true if the session ID is all zeros (or is the wrong length).
+func IsZero(s *types.Session) bool {
+	if len(s.GetId()) != sessionSize {
+		return true
+	}
+	for _, b := range s.Id {
+		if b != 0 {
+			return false
+		}
+	}
+	return true
+}
+
 // FromBase64 extracts a session from a base64-encoded session ID.
 func FromBase64(in string) (*types.Session, error) {
 	id, err := encoder.DecodeString(in)

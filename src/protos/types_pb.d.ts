@@ -65,8 +65,10 @@ export class Session extends jspb.Message {
   getId_asB64(): string;
   setId(value: Uint8Array | string): Session;
 
-  getUserId(): number;
-  setUserId(value: number): Session;
+  getUser(): User | undefined;
+  setUser(value?: User): Session;
+  hasUser(): boolean;
+  clearUser(): Session;
 
   getMetadata(): SessionMetadata | undefined;
   setMetadata(value?: SessionMetadata): Session;
@@ -94,7 +96,7 @@ export class Session extends jspb.Message {
 export namespace Session {
   export type AsObject = {
     id: Uint8Array | string,
-    userId: number,
+    user?: User.AsObject,
     metadata?: SessionMetadata.AsObject,
     createdAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     expiresAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,

@@ -3,24 +3,16 @@ package store
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib" // This is the only driver we support.
 	"github.com/jmoiron/sqlx"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
 	MaxRetries = 3
 	TxDelay    = 10 * time.Millisecond
-)
-
-var (
-	ErrNothingToUpdate = errors.New("nothing to update")
 )
 
 // Config is environment/command-line config for storage.
@@ -50,25 +42,4 @@ func Connect(ctx context.Context, dsn string) (*Connection, error) {
 		return nil, fmt.Errorf("sqlx connect: %w", err)
 	}
 	return &Connection{db: db}, nil
-}
-
-// AsGRPCError converts a store error to one with a gRPC status code.  Is is valid to call with a
-// nil error.
-func AsGRPCError(err error) error {
-	if err == nil {
-		return nil
-	}
-	if errors.Is(err, ErrNothingToUpdate) {
-		return status.Error(codes.NotFound, err.Error())
-	}
-	if isRetryable(err) {
-		// From codes: "Use Unavailable if the client can retry just the failing call."
-		return status.Error(codes.Unavailable, err.Error())
-	}
-	// SQLSTATE 23XXX is a referential integrity violation; duplicate unique index, null where
-	// the schema dictates non-null, etc.
-	if strings.Contains(err.Error(), "(SQLSTATE 23") {
-		return status.Error(codes.FailedPrecondition, err.Error())
-	}
-	return status.Error(codes.Unknown, err.Error())
 }

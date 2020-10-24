@@ -12,7 +12,7 @@ import (
 // UpdateUser edits the provided user, creating it if it doesn't exist.
 func UpdateUser(ctx context.Context, db sqlx.ExtContext, user *types.User) error {
 	if user.Username == "" {
-		return fmt.Errorf("username must not be empty")
+		return &ErrEmpty{Field: "username"}
 	}
 	if user.Id == 0 {
 		rows, err := sqlx.NamedQueryContext(ctx, db, `insert into "user" (username) values (:username) returning (id)`, user)
@@ -39,7 +39,7 @@ func UpdateUser(ctx context.Context, db sqlx.ExtContext, user *types.User) error
 	}
 	if got, want := affected, int64(1); got != want {
 		if got == 0 {
-			return fmt.Errorf("update user: %w", ErrNothingToUpdate)
+			return ErrNothingToUpdate
 		}
 		return fmt.Errorf("update: affected rows: got %v want %v", got, want)
 	}
