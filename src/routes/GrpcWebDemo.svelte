@@ -1,5 +1,4 @@
 <script lang="ts">
-    import * as grpcWeb from "grpc-web";
     import { NameServiceClient } from "../protos/FooServiceClientPb";
     import { TransformNameRequest, TransformNameReply } from "../protos/foo_pb";
     const nameServiceClient = new NameServiceClient("", null, null);
@@ -11,7 +10,7 @@
     }
 
     let name: string = "world";
-    let reply: Promise<TransformNameReply>;
+    let reply: Promise<string>;
     async function send() {
         reply = sendName(name).then((r) => (name = r.getResult()));
     }
