@@ -9,7 +9,7 @@ require (
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/mock v1.4.4 // indirect
 	github.com/golang/protobuf v1.4.2
-	github.com/google/go-cmp v0.5.1 // indirect
+	github.com/google/go-cmp v0.5.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/jackc/pgx/v4 v4.9.0
 	github.com/jackc/tern v1.12.1
