@@ -5,4 +5,7 @@
 <style>
 </style>
 
-<header><a href="/#/">Home</a></header>
+<header>
+    <a href="/#/">Home</a>
+    {#if $location.length > 0}&gt; {$location.slice(1)}{/if}
+</header>
