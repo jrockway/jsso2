@@ -2,7 +2,33 @@ syntax = "proto3";
 package types;
 option go_package = "github.com/jrockway/jsso2/pkg/types";
 
+import "google/protobuf/timestamp.proto";
+
+// User represents something that can log in.
 message User {
     int64 id = 1;
     string username = 2;
+    google.protobuf.Timestamp created_at = 3;
+    google.protobuf.Timestamp disabled_at = 4;
+    // Next id: 5
+}
+
+// SessionMetadata stores extra information about a session.  Extra information
+// isn't used by JSSO itself, but might be useful for audit logs, evaluating
+// policy rules, etc.
+message SessionMetadata {
+    string ip_address = 1;
+    string user_agent = 2;
+    // Next id: 3
+}
+
+// Session links a token (the id) and a user.  If expires_at is less than or
+// equal to the current time, the session is expired.
+message Session {
+    bytes id = 1;
+    int64 user_id = 2;
+    SessionMetadata metadata = 3;
+    google.protobuf.Timestamp created_at = 4;
+    google.protobuf.Timestamp expires_at = 5;
+    // Next id: 6
 }
