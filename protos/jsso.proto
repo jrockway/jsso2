@@ -9,6 +9,10 @@ service User {
     // Edit adds a new user if the ID is 0, or updates an existing user.
     rpc Edit(EditUserRequest) returns (EditUserReply) {
     }
+    // GenerateEnrollmentLink generates an enrollment token for the user.
+    rpc GenerateEnrollmentLink(GenerateEnrollmentLinkRequest)
+        returns (GenerateEnrollmentLinkReply) {
+    }
 }
 
 // Service Login manages the WebAuthn login ceremony.
@@ -29,6 +33,15 @@ message EditUserRequest {
 
 message EditUserReply {
     types.User user = 1;
+}
+
+message GenerateEnrollmentLinkRequest {
+    types.User target = 1;
+}
+
+message GenerateEnrollmentLinkReply {
+    string url = 1;
+    string token = 2;
 }
 
 message StartLoginRequest {

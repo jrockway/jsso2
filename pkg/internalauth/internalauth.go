@@ -139,3 +139,13 @@ func (p *Permissions) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		return handler(ctx, req)
 	}
 }
+
+// The per-operation permissions start here.
+
+func (p *Permissions) AllowUserEdit(ctx context.Context, target *types.User, actor *types.Session) error {
+	return nil
+}
+
+func (p *Permissions) AllowGenerateEnrollmentLink(ctx context.Context, target *types.User, actor *types.Session) error {
+	return nil
+}

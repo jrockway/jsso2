@@ -31,11 +31,12 @@ type Config struct {
 
 // R requests specific extras during a test run.
 type R struct {
-	Timeout     time.Duration
-	Logger      bool
-	Database    bool
-	GRPC        func(t *testing.T, e *E, s *grpc.Server)
-	GRPCOptions []grpc.ServerOption
+	Timeout           time.Duration
+	Logger            bool
+	Database          bool
+	GRPC              func(t *testing.T, e *E, s *grpc.Server)
+	GRPCOptions       func(e *E) []grpc.ServerOption
+	GRPCClientOptions func(e *E) []grpc.DialOption
 }
 
 // E holds per-test "extras".
@@ -107,12 +108,20 @@ func Run(t *testing.T, name string, r R, f func(t *testing.T, e *E)) {
 			defer l.Close()
 			defer os.Remove(name)
 
-			s := grpc.NewServer(r.GRPCOptions...)
+			var serverOpts []grpc.ServerOption
+			if r.GRPCOptions != nil {
+				serverOpts = r.GRPCOptions(extras)
+			}
+			s := grpc.NewServer(serverOpts...)
 			r.GRPC(t, extras, s)
 			go s.Serve(l)
 			defer s.Stop()
 
-			cc, err := grpc.DialContext(ctx, "unix:///"+name, grpc.WithInsecure())
+			clientOpts := []grpc.DialOption{grpc.WithInsecure()}
+			if r.GRPCClientOptions != nil {
+				clientOpts = r.GRPCClientOptions(extras)
+			}
+			cc, err := grpc.DialContext(ctx, "unix:///"+name, clientOpts...)
 			if err != nil {
 				t.Fatalf("dial grpc server: %v", err)
 			}

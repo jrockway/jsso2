@@ -65,9 +65,11 @@ func TestInterceptor(t *testing.T) {
 		Logger:   true,
 		Database: false,
 		GRPC:     setupGRPC,
-		GRPCOptions: []grpc.ServerOption{
-			grpc.UnaryInterceptor(p.UnaryServerInterceptor()),
-			grpc.StreamInterceptor(p.StreamServerInterceptor()),
+		GRPCOptions: func(e *jtesting.E) []grpc.ServerOption {
+			return []grpc.ServerOption{
+				grpc.UnaryInterceptor(p.UnaryServerInterceptor()),
+				grpc.StreamInterceptor(p.StreamServerInterceptor()),
+			}
 		},
 	}
 	jtesting.Run(t, "testinterceptor", r, func(t *testing.T, e *jtesting.E) {

@@ -36,7 +36,7 @@ func AddSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) error
 		"id":         s.GetId(),
 		"user_id":    s.GetUser().GetId(),
 		"metadata":   metadataJSON,
-		"created_at": s.GetCreatedAt().AsTime(), // TODO: write a drive.Valuer generator for protos.
+		"created_at": s.GetCreatedAt().AsTime(), // TODO: write a driver.Valuer generator for protos.
 		"expires_at": s.GetExpiresAt().AsTime(),
 	}
 	if _, err := sqlx.NamedExecContext(ctx, db, `insert into session (id, user_id, metadata, created_at, expires_at) values(:id, :user_id, :metadata, :created_at, :expires_at)`, obj); err != nil {

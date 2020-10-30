@@ -1,6 +1,7 @@
 package store
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -36,6 +37,9 @@ func AsGRPCError(err error) error {
 		return nil
 	}
 	if errors.Is(err, ErrNothingToUpdate) {
+		return status.Error(codes.NotFound, err.Error())
+	}
+	if errors.Is(err, sql.ErrNoRows) {
 		return status.Error(codes.NotFound, err.Error())
 	}
 	if IsErrEmpty(err) {

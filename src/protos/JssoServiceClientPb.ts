@@ -75,6 +75,46 @@ export class UserClient {
     this.methodInfoEdit);
   }
 
+  methodInfoGenerateEnrollmentLink = new grpcWeb.AbstractClientBase.MethodInfo(
+    jsso_pb.GenerateEnrollmentLinkReply,
+    (request: jsso_pb.GenerateEnrollmentLinkRequest) => {
+      return request.serializeBinary();
+    },
+    jsso_pb.GenerateEnrollmentLinkReply.deserializeBinary
+  );
+
+  generateEnrollmentLink(
+    request: jsso_pb.GenerateEnrollmentLinkRequest,
+    metadata: grpcWeb.Metadata | null): Promise<jsso_pb.GenerateEnrollmentLinkReply>;
+
+  generateEnrollmentLink(
+    request: jsso_pb.GenerateEnrollmentLinkRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: jsso_pb.GenerateEnrollmentLinkReply) => void): grpcWeb.ClientReadableStream<jsso_pb.GenerateEnrollmentLinkReply>;
+
+  generateEnrollmentLink(
+    request: jsso_pb.GenerateEnrollmentLinkRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: jsso_pb.GenerateEnrollmentLinkReply) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/jsso.User/GenerateEnrollmentLink',
+        request,
+        metadata || {},
+        this.methodInfoGenerateEnrollmentLink,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/jsso.User/GenerateEnrollmentLink',
+    request,
+    metadata || {},
+    this.methodInfoGenerateEnrollmentLink);
+  }
+
 }
 
 export class LoginClient {

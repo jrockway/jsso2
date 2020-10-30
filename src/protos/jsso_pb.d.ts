@@ -43,6 +43,48 @@ export namespace EditUserReply {
   }
 }
 
+export class GenerateEnrollmentLinkRequest extends jspb.Message {
+  getTarget(): types_pb.User | undefined;
+  setTarget(value?: types_pb.User): GenerateEnrollmentLinkRequest;
+  hasTarget(): boolean;
+  clearTarget(): GenerateEnrollmentLinkRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GenerateEnrollmentLinkRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GenerateEnrollmentLinkRequest): GenerateEnrollmentLinkRequest.AsObject;
+  static serializeBinaryToWriter(message: GenerateEnrollmentLinkRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GenerateEnrollmentLinkRequest;
+  static deserializeBinaryFromReader(message: GenerateEnrollmentLinkRequest, reader: jspb.BinaryReader): GenerateEnrollmentLinkRequest;
+}
+
+export namespace GenerateEnrollmentLinkRequest {
+  export type AsObject = {
+    target?: types_pb.User.AsObject,
+  }
+}
+
+export class GenerateEnrollmentLinkReply extends jspb.Message {
+  getUrl(): string;
+  setUrl(value: string): GenerateEnrollmentLinkReply;
+
+  getToken(): string;
+  setToken(value: string): GenerateEnrollmentLinkReply;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GenerateEnrollmentLinkReply.AsObject;
+  static toObject(includeInstance: boolean, msg: GenerateEnrollmentLinkReply): GenerateEnrollmentLinkReply.AsObject;
+  static serializeBinaryToWriter(message: GenerateEnrollmentLinkReply, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GenerateEnrollmentLinkReply;
+  static deserializeBinaryFromReader(message: GenerateEnrollmentLinkReply, reader: jspb.BinaryReader): GenerateEnrollmentLinkReply;
+}
+
+export namespace GenerateEnrollmentLinkReply {
+  export type AsObject = {
+    url: string,
+    token: string,
+  }
+}
+
 export class StartLoginRequest extends jspb.Message {
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): StartLoginRequest.AsObject;

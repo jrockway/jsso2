@@ -19,6 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 type UserClient interface {
 	// Edit adds a new user if the ID is 0, or updates an existing user.
 	Edit(ctx context.Context, in *EditUserRequest, opts ...grpc.CallOption) (*EditUserReply, error)
+	// GenerateEnrollmentLink generates an enrollment token for the user.
+	GenerateEnrollmentLink(ctx context.Context, in *GenerateEnrollmentLinkRequest, opts ...grpc.CallOption) (*GenerateEnrollmentLinkReply, error)
 }
 
 type userClient struct {
@@ -42,6 +44,19 @@ func (c *userClient) Edit(ctx context.Context, in *EditUserRequest, opts ...grpc
 	return out, nil
 }
 
+var userGenerateEnrollmentLinkStreamDesc = &grpc.StreamDesc{
+	StreamName: "GenerateEnrollmentLink",
+}
+
+func (c *userClient) GenerateEnrollmentLink(ctx context.Context, in *GenerateEnrollmentLinkRequest, opts ...grpc.CallOption) (*GenerateEnrollmentLinkReply, error) {
+	out := new(GenerateEnrollmentLinkReply)
+	err := c.cc.Invoke(ctx, "/jsso.User/GenerateEnrollmentLink", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserService is the service API for User service.
 // Fields should be assigned to their respective handler implementations only before
 // RegisterUserService is called.  Any unassigned fields will result in the
@@ -49,6 +64,8 @@ func (c *userClient) Edit(ctx context.Context, in *EditUserRequest, opts ...grpc
 type UserService struct {
 	// Edit adds a new user if the ID is 0, or updates an existing user.
 	Edit func(context.Context, *EditUserRequest) (*EditUserReply, error)
+	// GenerateEnrollmentLink generates an enrollment token for the user.
+	GenerateEnrollmentLink func(context.Context, *GenerateEnrollmentLinkRequest) (*GenerateEnrollmentLinkReply, error)
 }
 
 func (s *UserService) edit(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -68,6 +85,23 @@ func (s *UserService) edit(_ interface{}, ctx context.Context, dec func(interfac
 	}
 	return interceptor(ctx, in, info, handler)
 }
+func (s *UserService) generateEnrollmentLink(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateEnrollmentLinkRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.GenerateEnrollmentLink(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/jsso.User/GenerateEnrollmentLink",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.GenerateEnrollmentLink(ctx, req.(*GenerateEnrollmentLinkRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 // RegisterUserService registers a service implementation with a gRPC server.
 func RegisterUserService(s grpc.ServiceRegistrar, srv *UserService) {
@@ -77,12 +111,21 @@ func RegisterUserService(s grpc.ServiceRegistrar, srv *UserService) {
 			return nil, status.Errorf(codes.Unimplemented, "method Edit not implemented")
 		}
 	}
+	if srvCopy.GenerateEnrollmentLink == nil {
+		srvCopy.GenerateEnrollmentLink = func(context.Context, *GenerateEnrollmentLinkRequest) (*GenerateEnrollmentLinkReply, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method GenerateEnrollmentLink not implemented")
+		}
+	}
 	sd := grpc.ServiceDesc{
 		ServiceName: "jsso.User",
 		Methods: []grpc.MethodDesc{
 			{
 				MethodName: "Edit",
 				Handler:    srvCopy.edit,
+			},
+			{
+				MethodName: "GenerateEnrollmentLink",
+				Handler:    srvCopy.generateEnrollmentLink,
 			},
 		},
 		Streams:  []grpc.StreamDesc{},
@@ -105,6 +148,11 @@ func NewUserService(s interface{}) *UserService {
 	}); ok {
 		ns.Edit = h.Edit
 	}
+	if h, ok := s.(interface {
+		GenerateEnrollmentLink(context.Context, *GenerateEnrollmentLinkRequest) (*GenerateEnrollmentLinkReply, error)
+	}); ok {
+		ns.GenerateEnrollmentLink = h.GenerateEnrollmentLink
+	}
 	return ns
 }
 
@@ -115,6 +163,8 @@ func NewUserService(s interface{}) *UserService {
 type UnstableUserService interface {
 	// Edit adds a new user if the ID is 0, or updates an existing user.
 	Edit(context.Context, *EditUserRequest) (*EditUserReply, error)
+	// GenerateEnrollmentLink generates an enrollment token for the user.
+	GenerateEnrollmentLink(context.Context, *GenerateEnrollmentLinkRequest) (*GenerateEnrollmentLinkReply, error)
 }
 
 // LoginClient is the client API for Login service.

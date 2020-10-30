@@ -1,20 +1,72 @@
 package testserver
 
 import (
+	"net/url"
 	"testing"
 
+	gzap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	"github.com/jrockway/jsso2/pkg/client"
+	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
 	"github.com/jrockway/jsso2/pkg/jsso/login"
 	"github.com/jrockway/jsso2/pkg/jsso/user"
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/jtesting"
 	"github.com/jrockway/jsso2/pkg/store"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
-func Setup(t *testing.T, e *jtesting.E, s *grpc.Server) {
+type S struct {
+	Permissions *internalauth.Permissions
+	Logger      *zap.Logger
+}
+
+func New() *S {
+	return &S{
+		Logger:      zap.NewNop(),
+		Permissions: internalauth.NewFromConfig(&internalauth.Config{RootPassword: "root"}, nil),
+	}
+}
+
+func (s *S) Options(e *jtesting.E) []grpc.ServerOption {
+	//gzap.ReplaceGrpcLoggerV2WithVerbosity(e.Logger.Named("grpc").WithOptions(zap.AddCallerSkip(2)), 999)
+	return []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(
+			s.Permissions.UnaryServerInterceptor(),
+			gzap.UnaryServerInterceptor(e.Logger.Named("server")),
+		),
+		grpc.ChainStreamInterceptor(
+			s.Permissions.StreamServerInterceptor(),
+			gzap.StreamServerInterceptor(e.Logger.Named("server")),
+		),
+	}
+}
+
+func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 	db := store.MustGetTestDB(t, e)
-	jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(&enrollment.Service{}))
-	jssopb.RegisterUserService(s, jssopb.NewUserService(&user.Service{DB: db}))
-	jssopb.RegisterLoginService(s, jssopb.NewLoginService(&login.Service{}))
+	s.Permissions.Store = db
+	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{}))
+	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"}}))
+	jssopb.RegisterLoginService(server, jssopb.NewLoginService(&login.Service{}))
+}
+
+// OK, maybe I went overboard with single-letter type names.
+func (s *S) ToR(r *jtesting.R) {
+	r.GRPCOptions = s.Options
+	r.GRPCClientOptions = func(e *jtesting.E) []grpc.DialOption {
+		return []grpc.DialOption{
+			grpc.WithInsecure(),
+			grpc.WithPerRPCCredentials(&client.Credentials{
+				Token: "root " + s.Permissions.RootPassword,
+			}),
+			grpc.WithChainUnaryInterceptor(
+				gzap.UnaryClientInterceptor(e.Logger.Named("client")),
+			),
+			grpc.WithChainStreamInterceptor(
+				gzap.StreamClientInterceptor(e.Logger.Named("client")),
+			),
+		}
+	}
+	r.GRPC = s.Setup
 }

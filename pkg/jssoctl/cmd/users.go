@@ -37,9 +37,43 @@ var (
 			return nil
 		},
 	}
+
+	generateEnrollmentLinkCmd = &cobra.Command{
+		Use:     "generate-enrollment-link",
+		Aliases: []string{"enroll"},
+		Short:   "Generate a link for a user to enroll their security token.",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			user := &types.User{}
+			if id, err := cmd.Flags().GetInt64("id"); err != nil {
+				return fmt.Errorf("get id: %w", err)
+			} else if id != 0 {
+				user.Id = id
+			}
+			if username, err := cmd.Flags().GetString("username"); err != nil {
+				return fmt.Errorf("get username: %w", err)
+			} else if username != "" {
+				user.Username = username
+			}
+
+			req := &jssopb.GenerateEnrollmentLinkRequest{
+				Target: user,
+			}
+			reply, err := clientset.UserClient.GenerateEnrollmentLink(cmd.Context(), req)
+			if err != nil {
+				return fmt.Errorf("generate enrollment link: %w", err)
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), protojson.Format(reply))
+			fmt.Fprintln(cmd.ErrOrStderr(), "OK")
+			return nil
+		},
+	}
 )
 
 func init() {
-	usersCmd.AddCommand(addUserCmd)
+	generateEnrollmentLinkCmd.Flags().String("username", "", "the name of the user to enroll")
+	generateEnrollmentLinkCmd.Flags().Int64("id", 0, "the id of the user to enroll")
+	usersCmd.AddCommand(addUserCmd, generateEnrollmentLinkCmd)
 	AddClientset(addUserCmd)
+	AddClientset(generateEnrollmentLinkCmd)
 }

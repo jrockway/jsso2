@@ -7,7 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var clientset *client.Set
+var (
+	clientset *client.Set
+	noClose   bool
+)
 
 func AddClientset(c *cobra.Command) {
 	if c.PreRun != nil || c.PreRunE != nil {
@@ -29,8 +32,10 @@ func AddClientset(c *cobra.Command) {
 		panic("command already has a post-run function")
 	}
 	c.PostRun = func(cmd *cobra.Command, args []string) {
-		if err := clientset.Close(); err != nil {
-			cmd.PrintErrf("while closing client: %v\n", err)
+		if !noClose {
+			if err := clientset.Close(); err != nil {
+				cmd.PrintErrf("while closing client: %v\n", err)
+			}
 		}
 	}
 }

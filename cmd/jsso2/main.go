@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/fullstorydev/grpcui/standalone"
@@ -17,9 +18,15 @@ import (
 	"google.golang.org/grpc"
 )
 
+type Config struct {
+	BaseURL *url.URL `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
+}
+
 func main() {
 	server.AppName = "jsso2"
 
+	appConfig := &Config{}
+	server.AddFlagGroup("application", appConfig)
 	dbConfig := &store.Config{}
 	server.AddFlagGroup("database", dbConfig)
 	authConfig := &internalauth.Config{}
@@ -47,7 +54,7 @@ func main() {
 
 	server.AddService(func(s *grpc.Server) {
 		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(&enrollment.Service{}))
-		jssopb.RegisterUserService(s, jssopb.NewUserService(&user.Service{DB: db}))
+		jssopb.RegisterUserService(s, jssopb.NewUserService(&user.Service{DB: db, Permissions: auth, BaseURL: appConfig.BaseURL}))
 		jssopb.RegisterLoginService(s, jssopb.NewLoginService(&login.Service{}))
 	})
 	server.SetStartupCallback(func(info server.Info) {

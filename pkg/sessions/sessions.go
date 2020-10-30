@@ -131,3 +131,11 @@ func FromContext(ctx context.Context) (*types.Session, bool) {
 	val, ok := ctx.Value(sessionContextKey).(*types.Session)
 	return val, ok
 }
+
+// MustFromContext gets the session in the context, or panics.
+func MustFromContext(ctx context.Context) *types.Session {
+	if val, ok := FromContext(ctx); ok {
+		return val
+	}
+	panic("no session in context")
+}
