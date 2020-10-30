@@ -2,14 +2,10 @@ package main
 
 import (
 	"context"
-	"math/rand"
 	"net/http"
-	"strings"
 	"time"
-	"unicode"
 
 	"github.com/fullstorydev/grpcui/standalone"
-	"github.com/jrockway/jsso2/pkg/foopb"
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
 	"github.com/jrockway/jsso2/pkg/jsso/login"
@@ -20,22 +16,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
-
-type fooServer struct {
-}
-
-// nolint: unparam
-func (*fooServer) TransformName(ctx context.Context, req *foopb.TransformNameRequest) (*foopb.TransformNameReply, error) {
-	result := new(strings.Builder)
-	for _, c := range req.GetName() {
-		if rand.Float64() < 0.5 {
-			result.WriteRune(unicode.ToLower(c))
-		} else {
-			result.WriteRune(unicode.ToUpper(c))
-		}
-	}
-	return &foopb.TransformNameReply{Result: result.String()}, nil
-}
 
 func main() {
 	server.AppName = "jsso2"
@@ -66,7 +46,6 @@ func main() {
 	c()
 
 	server.AddService(func(s *grpc.Server) {
-		foopb.RegisterNameServiceService(s, foopb.NewNameServiceService(&fooServer{}))
 		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(&enrollment.Service{}))
 		jssopb.RegisterUserService(s, jssopb.NewUserService(&user.Service{DB: db}))
 		jssopb.RegisterLoginService(s, jssopb.NewLoginService(&login.Service{}))
