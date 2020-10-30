@@ -35,7 +35,7 @@ type User struct {
 	Id         int64                `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Username   string               `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	CreatedAt  *timestamp.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	DisabledAt *timestamp.Timestamp `protobuf:"bytes,4,opt,name=disabled_at,json=disabledAt,proto3" json:"disabled_at,omitempty"` // Next id: 5
+	DisabledAt *timestamp.Timestamp `protobuf:"bytes,4,opt,name=disabled_at,json=disabledAt,proto3" json:"disabled_at,omitempty"`
 }
 
 func (x *User) Reset() {
@@ -107,7 +107,7 @@ type SessionMetadata struct {
 	unknownFields protoimpl.UnknownFields
 
 	IpAddress string `protobuf:"bytes,1,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`
-	UserAgent string `protobuf:"bytes,2,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"` // Next id: 3
+	UserAgent string `protobuf:"bytes,2,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
 }
 
 func (x *SessionMetadata) Reset() {
@@ -167,7 +167,7 @@ type Session struct {
 	User      *User                `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	Metadata  *SessionMetadata     `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	CreatedAt *timestamp.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	ExpiresAt *timestamp.Timestamp `protobuf:"bytes,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"` // Next id: 6
+	ExpiresAt *timestamp.Timestamp `protobuf:"bytes,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 }
 
 func (x *Session) Reset() {

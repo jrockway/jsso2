@@ -59,7 +59,7 @@ func main() {
 		}
 	}
 
-	auth := internalauth.NewFromConfig(authConfig)
+	auth := internalauth.NewFromConfig(authConfig, db)
 	server.AddUnaryInterceptor(auth.UnaryServerInterceptor())
 	server.AddStreamInterceptor(auth.StreamServerInterceptor())
 

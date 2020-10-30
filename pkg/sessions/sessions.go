@@ -1,19 +1,24 @@
 package sessions
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jrockway/jsso2/pkg/types"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const sessionSize = 64
 
 var encoder = base64.URLEncoding.WithPadding(base64.NoPadding)
+
+var ErrSessionMissing = errors.New("no session id")
 
 // GenerateID generates a valid session ID.
 func GenerateID() ([]byte, error) {
@@ -86,7 +91,7 @@ func ToHeaderString(s *types.Session) string {
 func FromMetadata(md metadata.MD) (*types.Session, error) {
 	auths := md.Get("Authorization")
 	if len(auths) == 0 {
-		return nil, errors.New("no authorization header")
+		return nil, fmt.Errorf("no authorization header in metadata: %w", ErrSessionMissing)
 	} else if len(auths) > 1 {
 		// This will probably be too restrictive in general.
 		return nil, errors.New("multiple authorization headers provided")
@@ -97,4 +102,32 @@ func FromMetadata(md metadata.MD) (*types.Session, error) {
 // ToMetadata adds a session ID to gRPC metadata.
 func ToMetadata(dst metadata.MD, s *types.Session) {
 	dst.Append("Authorization", ToHeaderString(s))
+}
+
+// Root returns a session for the root user.
+func Root() *types.Session {
+	return &types.Session{
+		Id:        make([]byte, sessionSize),
+		CreatedAt: timestamppb.Now(),
+		ExpiresAt: timestamppb.New(time.Unix(1<<63-1, 0)),
+		User: &types.User{
+			Id:       -1, // It pains me to make root not 0, but 0 means other things.
+			Username: "root",
+		},
+	}
+}
+
+type sessionKey struct{}
+
+var sessionContextKey = sessionKey{}
+
+// NewContext adds the session to the provided context.
+func NewContext(ctx context.Context, s *types.Session) context.Context {
+	return context.WithValue(ctx, sessionContextKey, s)
+}
+
+// FromContext gets the session in the context.
+func FromContext(ctx context.Context) (*types.Session, bool) {
+	val, ok := ctx.Value(sessionContextKey).(*types.Session)
+	return val, ok
 }

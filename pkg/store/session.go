@@ -31,6 +31,7 @@ func AddSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) error
 	if err != nil {
 		return fmt.Errorf("marshal metadata: %w", err)
 	}
+
 	obj := map[string]interface{}{
 		"id":         s.GetId(),
 		"user_id":    s.GetUser().GetId(),

@@ -31,10 +31,11 @@ type Config struct {
 
 // R requests specific extras during a test run.
 type R struct {
-	Timeout  time.Duration
-	Logger   bool
-	Database bool
-	GRPC     func(t *testing.T, e *E, s *grpc.Server)
+	Timeout     time.Duration
+	Logger      bool
+	Database    bool
+	GRPC        func(t *testing.T, e *E, s *grpc.Server)
+	GRPCOptions []grpc.ServerOption
 }
 
 // E holds per-test "extras".
@@ -106,7 +107,7 @@ func Run(t *testing.T, name string, r R, f func(t *testing.T, e *E)) {
 			defer l.Close()
 			defer os.Remove(name)
 
-			s := grpc.NewServer()
+			s := grpc.NewServer(r.GRPCOptions...)
 			r.GRPC(t, extras, s)
 			go s.Serve(l)
 			defer s.Stop()
