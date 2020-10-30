@@ -50,12 +50,12 @@ func TestEncode(t *testing.T) {
 		t.Errorf("to base64 on nil session:\n  got: %v\n want: %v", got, want)
 	}
 
-	if got, want := ToHeaderString(session), "Bearer "+b64; got != want {
+	if got, want := ToHeaderString(session), "SessionID "+b64; got != want {
 		t.Errorf("to header string:\n  got: %v\n want: %v", got, want)
 	}
 
 	gotMD := metadata.MD{}
-	wantMD := metadata.MD{"authorization": []string{"Bearer " + b64}}
+	wantMD := metadata.MD{"authorization": []string{"SessionID " + b64}}
 	ToMetadata(gotMD, session)
 	if diff := cmp.Diff(gotMD, wantMD); diff != "" {
 		t.Errorf("to metadata:\n%s", diff)
@@ -88,7 +88,7 @@ func TestDecode(t *testing.T) {
 		t.Errorf("invalid base64: error message\n  got: %v\n want: %v", got, want)
 	}
 
-	got, err = FromHeaderString("Bearer " + wantBase64)
+	got, err = FromHeaderString("SessionID " + wantBase64)
 	if err != nil {
 		t.Fatalf("from header string: %v", err)
 	}
@@ -112,14 +112,14 @@ func TestDecode(t *testing.T) {
 		{
 			name: "capital",
 			md: func(md metadata.MD) {
-				md.Set("Authorization", "Bearer "+wantBase64)
+				md.Set("Authorization", "SessionID "+wantBase64)
 			},
 			wantSession: wantSession,
 		},
 		{
 			name: "lowercase",
 			md: func(md metadata.MD) {
-				md.Set("authorization", "Bearer "+wantBase64)
+				md.Set("authorization", "SessionID "+wantBase64)
 			},
 			wantSession: wantSession,
 		},
@@ -132,7 +132,7 @@ func TestDecode(t *testing.T) {
 		{
 			name: "multiple headers",
 			md: func(md metadata.MD) {
-				md.Set("authorization", "Bearer "+wantBase64, "Foo bar")
+				md.Set("authorization", "SessionID "+wantBase64, "Foo bar")
 			},
 			wantErr: true,
 		},

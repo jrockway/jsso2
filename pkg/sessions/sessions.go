@@ -75,7 +75,7 @@ func FromHeaderString(header string) (*types.Session, error) {
 	}
 	typ, tok := parts[0], parts[1]
 	switch typ {
-	case "Bearer":
+	case "SessionID":
 		return FromBase64(tok)
 	default:
 		return nil, fmt.Errorf("unknown token type %q", typ)
@@ -84,7 +84,7 @@ func FromHeaderString(header string) (*types.Session, error) {
 
 // ToHeaderString formats a session as an Authorization header.
 func ToHeaderString(s *types.Session) string {
-	return fmt.Sprintf("Bearer %s", ToBase64(s))
+	return fmt.Sprintf("SessionID %s", ToBase64(s))
 }
 
 // FromMetadata extracts a session from gRPC metadata.
