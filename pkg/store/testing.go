@@ -60,8 +60,6 @@ func ValidSession(t *testing.T, e *jtesting.E, c *Connection) *types.Session {
 	session.ExpiresAt = &timestamppb.Timestamp{
 		Seconds: 1<<57 - 1,
 	}
-	t.Log(session)
-
 	err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
 		user := &types.User{
 			Username: "test",
