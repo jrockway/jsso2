@@ -96,8 +96,7 @@ func TestDecode(t *testing.T) {
 		t.Errorf("from header string:\n%s", diff)
 	}
 
-	got, err = FromHeaderString(wantBase64)
-	if err == nil {
+	if _, err := FromHeaderString(wantBase64); err == nil {
 		t.Fatal("from header string without type: expected error")
 	} else if got, want := err.Error(), `header "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0-Pw" did not contain a type and a token; got 1 parts, want 2 parts`; got != want {
 		t.Errorf("header without type:\n  got: %v\n want: %v", got, want)

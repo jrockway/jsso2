@@ -63,7 +63,6 @@ func TestAddSession_Validation(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestSessions(t *testing.T) {
@@ -108,7 +107,7 @@ func TestSessions(t *testing.T) {
 			t.Errorf("expected no session rows; got %v", err)
 		}
 		expired := &types.Session{
-			Id: id[:],
+			Id: id,
 			User: &types.User{
 				Id: 1,
 			},

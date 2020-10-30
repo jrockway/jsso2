@@ -46,8 +46,8 @@ func AddSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) error
 }
 
 type rawSession struct {
-	Id       []byte
-	UserId   int64
+	ID       []byte
+	UserID   int64
 	Username string
 	Metadata []byte
 	// UserCreatedAt    sql.NullTime
@@ -58,8 +58,8 @@ type rawSession struct {
 
 func (raw *rawSession) toSession() (*types.Session, error) {
 	result := &types.Session{User: &types.User{}, Metadata: &types.SessionMetadata{}}
-	result.Id = raw.Id
-	result.User.Id = raw.UserId
+	result.Id = raw.ID
+	result.User.Id = raw.UserID
 	result.User.Username = raw.Username
 	if err := protojson.Unmarshal(raw.Metadata, result.Metadata); err != nil {
 		return nil, fmt.Errorf("unmarshal metadata: %w", err)
