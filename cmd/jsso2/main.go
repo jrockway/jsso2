@@ -53,7 +53,7 @@ func main() {
 	c()
 
 	server.AddService(func(s *grpc.Server) {
-		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(&enrollment.Service{}))
+		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(&enrollment.Service{Permissions: auth}))
 		jssopb.RegisterUserService(s, jssopb.NewUserService(&user.Service{DB: db, Permissions: auth, BaseURL: appConfig.BaseURL}))
 		jssopb.RegisterLoginService(s, jssopb.NewLoginService(&login.Service{}))
 	})

@@ -50,8 +50,8 @@ message StartLoginReply {
 }
 
 message StartEnrollmentRequest {
-    string enrollment_token = 1;
 }
 
 message StartEnrollmentReply {
+    types.User user = 1;
 }

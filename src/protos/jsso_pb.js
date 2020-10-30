@@ -1037,7 +1037,7 @@ proto.jsso.StartEnrollmentRequest.prototype.toObject = function(opt_includeInsta
  */
 proto.jsso.StartEnrollmentRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    enrollmentToken: jspb.Message.getFieldWithDefault(msg, 1, "")
+
   };
 
   if (includeInstance) {
@@ -1074,10 +1074,6 @@ proto.jsso.StartEnrollmentRequest.deserializeBinaryFromReader = function(msg, re
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setEnrollmentToken(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -1107,31 +1103,6 @@ proto.jsso.StartEnrollmentRequest.prototype.serializeBinary = function() {
  */
 proto.jsso.StartEnrollmentRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getEnrollmentToken();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string enrollment_token = 1;
- * @return {string}
- */
-proto.jsso.StartEnrollmentRequest.prototype.getEnrollmentToken = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.jsso.StartEnrollmentRequest} returns this
- */
-proto.jsso.StartEnrollmentRequest.prototype.setEnrollmentToken = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
@@ -1167,7 +1138,7 @@ proto.jsso.StartEnrollmentReply.prototype.toObject = function(opt_includeInstanc
  */
 proto.jsso.StartEnrollmentReply.toObject = function(includeInstance, msg) {
   var f, obj = {
-
+    user: (f = msg.getUser()) && types_pb.User.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -1204,6 +1175,11 @@ proto.jsso.StartEnrollmentReply.deserializeBinaryFromReader = function(msg, read
     }
     var field = reader.getFieldNumber();
     switch (field) {
+    case 1:
+      var value = new types_pb.User;
+      reader.readMessage(value,types_pb.User.deserializeBinaryFromReader);
+      msg.setUser(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1233,6 +1209,51 @@ proto.jsso.StartEnrollmentReply.prototype.serializeBinary = function() {
  */
 proto.jsso.StartEnrollmentReply.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getUser();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      types_pb.User.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional types.User user = 1;
+ * @return {?proto.types.User}
+ */
+proto.jsso.StartEnrollmentReply.prototype.getUser = function() {
+  return /** @type{?proto.types.User} */ (
+    jspb.Message.getWrapperField(this, types_pb.User, 1));
+};
+
+
+/**
+ * @param {?proto.types.User|undefined} value
+ * @return {!proto.jsso.StartEnrollmentReply} returns this
+*/
+proto.jsso.StartEnrollmentReply.prototype.setUser = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.jsso.StartEnrollmentReply} returns this
+ */
+proto.jsso.StartEnrollmentReply.prototype.clearUser = function() {
+  return this.setUser(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.jsso.StartEnrollmentReply.prototype.hasUser = function() {
+  return jspb.Message.getField(this, 1) != null;
 };
 
 

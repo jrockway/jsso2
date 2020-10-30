@@ -7,5 +7,5 @@
 
 <header>
     <a href="/#/">Home</a>
-    {#if $location.length > 0}&gt; {$location.slice(1)}{/if}
+    {#if $location.length > 1}&gt; {$location.split('/')[1]}{/if}
 </header>

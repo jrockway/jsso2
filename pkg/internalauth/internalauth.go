@@ -149,3 +149,7 @@ func (p *Permissions) AllowUserEdit(ctx context.Context, target *types.User, act
 func (p *Permissions) AllowGenerateEnrollmentLink(ctx context.Context, target *types.User, actor *types.Session) error {
 	return nil
 }
+
+func (p *Permissions) AllowEnrollment(ctx context.Context, target *types.Session) error {
+	return nil
+}

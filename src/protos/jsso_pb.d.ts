@@ -114,9 +114,6 @@ export namespace StartLoginReply {
 }
 
 export class StartEnrollmentRequest extends jspb.Message {
-  getEnrollmentToken(): string;
-  setEnrollmentToken(value: string): StartEnrollmentRequest;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): StartEnrollmentRequest.AsObject;
   static toObject(includeInstance: boolean, msg: StartEnrollmentRequest): StartEnrollmentRequest.AsObject;
@@ -127,11 +124,15 @@ export class StartEnrollmentRequest extends jspb.Message {
 
 export namespace StartEnrollmentRequest {
   export type AsObject = {
-    enrollmentToken: string,
   }
 }
 
 export class StartEnrollmentReply extends jspb.Message {
+  getUser(): types_pb.User | undefined;
+  setUser(value?: types_pb.User): StartEnrollmentReply;
+  hasUser(): boolean;
+  clearUser(): StartEnrollmentReply;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): StartEnrollmentReply.AsObject;
   static toObject(includeInstance: boolean, msg: StartEnrollmentReply): StartEnrollmentReply.AsObject;
@@ -142,6 +143,7 @@ export class StartEnrollmentReply extends jspb.Message {
 
 export namespace StartEnrollmentReply {
   export type AsObject = {
+    user?: types_pb.User.AsObject,
   }
 }
 

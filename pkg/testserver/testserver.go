@@ -30,7 +30,6 @@ func New() *S {
 }
 
 func (s *S) Options(e *jtesting.E) []grpc.ServerOption {
-	//gzap.ReplaceGrpcLoggerV2WithVerbosity(e.Logger.Named("grpc").WithOptions(zap.AddCallerSkip(2)), 999)
 	return []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
 			s.Permissions.UnaryServerInterceptor(),
@@ -46,7 +45,7 @@ func (s *S) Options(e *jtesting.E) []grpc.ServerOption {
 func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 	db := store.MustGetTestDB(t, e)
 	s.Permissions.Store = db
-	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{}))
+	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{Permissions: s.Permissions}))
 	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"}}))
 	jssopb.RegisterLoginService(server, jssopb.NewLoginService(&login.Service{}))
 }
