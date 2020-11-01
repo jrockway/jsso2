@@ -6,6 +6,7 @@
     import NotFound from "./routes/NotFound.svelte";
     const routes = {
         "/": Index,
+        "/enroll": Enrollment,
         "/enroll/:token": Enrollment,
         "*": NotFound,
     };

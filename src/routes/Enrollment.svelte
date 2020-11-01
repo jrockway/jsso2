@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Metadata } from "grpc-web";
     import { EnrollmentClient } from "../protos/JssoServiceClientPb";
     import { StartEnrollmentRequest } from "../protos/jsso_pb";
     import AddCredential from "../components/AddCredential.svelte";
@@ -9,10 +10,13 @@
         token: "",
     };
 
+    const metadata: Metadata = {};
+    if (params.token) {
+        metadata.authorization = "SessionID " + params.token;
+    }
+
     let getUser = enrollmentClient
-        .start(new StartEnrollmentRequest(), {
-            authorization: "SessionID " + params.token,
-        })
+        .start(new StartEnrollmentRequest(), metadata)
         .then((response) => {
             if (response == null || response.getUser() == null) {
                 throw "no user in response";
