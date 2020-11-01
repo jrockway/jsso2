@@ -25,11 +25,8 @@ static_resources:
                                   - name: localhost
                                     domains: ["*"]
                                     retry_policy:
-                                        num_retries: 3
+                                        num_retries: 5
                                         retry_on: "5xx,reset"
-                                        retry_host_predicate:
-                                            - name: "envoy.retry_host_predicates.previous_hosts"
-                                        host_selection_retry_max_attempts: 3
                                     routes:
                                         - match:
                                               prefix: "/"
