@@ -1,6 +1,7 @@
 import * as jspb from 'google-protobuf'
 
 import * as types_pb from './types_pb';
+import * as webauthn_pb from './webauthn_pb';
 
 
 export class EditUserRequest extends jspb.Message {
@@ -133,6 +134,11 @@ export class StartEnrollmentReply extends jspb.Message {
   hasUser(): boolean;
   clearUser(): StartEnrollmentReply;
 
+  getCredentialCreationOptions(): webauthn_pb.PublicKeyCredentialCreationOptions | undefined;
+  setCredentialCreationOptions(value?: webauthn_pb.PublicKeyCredentialCreationOptions): StartEnrollmentReply;
+  hasCredentialCreationOptions(): boolean;
+  clearCredentialCreationOptions(): StartEnrollmentReply;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): StartEnrollmentReply.AsObject;
   static toObject(includeInstance: boolean, msg: StartEnrollmentReply): StartEnrollmentReply.AsObject;
@@ -144,6 +150,7 @@ export class StartEnrollmentReply extends jspb.Message {
 export namespace StartEnrollmentReply {
   export type AsObject = {
     user?: types_pb.User.AsObject,
+    credentialCreationOptions?: webauthn_pb.PublicKeyCredentialCreationOptions.AsObject,
   }
 }
 

@@ -1,6 +1,7 @@
 syntax = "proto3";
 package jsso;
 import "types.proto";
+import "webauthn.proto";
 
 option go_package = "github.com/jrockway/jsso2/pkg/jssopb";
 
@@ -54,4 +55,5 @@ message StartEnrollmentRequest {
 
 message StartEnrollmentReply {
     types.User user = 1;
+    webauthn.PublicKeyCredentialCreationOptions credential_creation_options = 3;
 }

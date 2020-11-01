@@ -375,7 +375,8 @@ proto.types.SessionMetadata.prototype.toObject = function(opt_includeInstance) {
 proto.types.SessionMetadata.toObject = function(includeInstance, msg) {
   var f, obj = {
     ipAddress: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    userAgent: jspb.Message.getFieldWithDefault(msg, 2, "")
+    userAgent: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    enrollmentChallenge: jspb.Message.getFieldWithDefault(msg, 3, "")
   };
 
   if (includeInstance) {
@@ -420,6 +421,10 @@ proto.types.SessionMetadata.deserializeBinaryFromReader = function(msg, reader) 
       var value = /** @type {string} */ (reader.readString());
       msg.setUserAgent(value);
       break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEnrollmentChallenge(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -463,6 +468,13 @@ proto.types.SessionMetadata.serializeBinaryToWriter = function(message, writer) 
       f
     );
   }
+  f = message.getEnrollmentChallenge();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
 };
 
 
@@ -499,6 +511,24 @@ proto.types.SessionMetadata.prototype.getUserAgent = function() {
  */
 proto.types.SessionMetadata.prototype.setUserAgent = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string enrollment_challenge = 3;
+ * @return {string}
+ */
+proto.types.SessionMetadata.prototype.getEnrollmentChallenge = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.types.SessionMetadata} returns this
+ */
+proto.types.SessionMetadata.prototype.setEnrollmentChallenge = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 

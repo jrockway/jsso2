@@ -1,0 +1,80 @@
+syntax = "proto3";
+package webauthn;
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/jrockway/jsso2/pkg/webauthnpb";
+
+// These messages are from the WebAuthn spec.
+// https://www.w3.org/TR/webauthn/
+
+message PublicKeyCredentialCreationOptions {
+    enum AttestationConveyancePreference {
+        NONE = 0;
+        DIRECT = 1;
+        INDIRECT = 2;
+    }
+    AttestationConveyancePreference attestation = 1;
+
+    AuthenticatorSelectionCriteria authenticator_selection = 2;
+    bytes challenge = 3;
+    repeated PublicKeyCredentialDescriptor exclude_credentials = 4;
+    // This is commented out because we don't use it, and it avoids having to
+    // define another nested hierarcy of types.
+    // AuthenticationExtensionsClientInputs extensions = 5;
+    repeated PublicKeyCredentialParameters pub_key_cred_params = 6;
+    PublicKeyCredentialRpEntity rp = 7;
+    google.protobuf.Duration timeout = 8;
+    PublicKeyCredentialUserEntity user = 9;
+}
+
+message AuthenticatorSelectionCriteria {
+    enum AuthenticatorAttachment {
+        MISSING_AUTHENTICATOR_ATTACHMENT = 0;
+        CROSS_PLATFORM = 1;
+        PLATFORM = 2;
+    }
+    AuthenticatorAttachment authenticator_attachment = 1;
+    bool require_resident_key = 2;
+    enum UserVerificationRequirement {
+        MISSING_USER_VERIFICATION_REQUIREMENT = 0;
+        DISCOURAGED = 1;
+        PREFERRED = 2;
+        REQUIRED = 3;
+    }
+    UserVerificationRequirement user_verification = 3;
+}
+
+message PublicKeyCredentialDescriptor {
+    bytes id = 1;
+    enum AuthenticatorTransport {
+        MISSING_AUTHENTICATOR_TRANSPORT = 0;
+        BLE = 1;
+        INTERNAL = 2;
+        NFC = 3;
+        USB = 4;
+    }
+    repeated AuthenticatorTransport transports = 2;
+    // Type is always "public-key".
+    string type = 3;
+}
+
+message PublicKeyCredentialParameters {
+    // Actually a COSEAlgorithmIdentifier, not an integer.
+    int32 alg = 1;
+    // Type is always "public-key".
+    string type = 2;
+}
+
+message PublicKeyCredentialRpEntity {
+    string name = 1;
+    // URL to the icon, not the bytes of the icon.
+    string icon = 2;
+    string id = 3;
+}
+
+message PublicKeyCredentialUserEntity {
+    string name = 1;
+    string icon = 2;
+    string display_name = 3;
+    bytes id = 4;
+}

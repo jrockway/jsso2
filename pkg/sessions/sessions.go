@@ -24,9 +24,9 @@ var ErrSessionMissing = errors.New("no session id")
 func GenerateID() ([]byte, error) {
 	buf := make([]byte, sessionSize)
 	if n, err := rand.Read(buf); err != nil {
-		return nil, fmt.Errorf("read entropy: %w", err)
+		return nil, fmt.Errorf("read entropy into session ID: %w", err)
 	} else if got, want := n, sessionSize; got != want {
-		return nil, fmt.Errorf("did not produce the correct amount of entropy; read %d bytes, want %d bytes", got, want)
+		return nil, fmt.Errorf("did not produce the correct amount of session entropy; read %d bytes, want %d bytes", got, want)
 	}
 	return buf, nil
 }

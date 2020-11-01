@@ -1,8 +1,8 @@
 syntax = "proto3";
 package types;
-option go_package = "github.com/jrockway/jsso2/pkg/types";
-
 import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/jrockway/jsso2/pkg/types";
 
 // User represents something that can log in.
 message User {
@@ -18,6 +18,8 @@ message User {
 message SessionMetadata {
     string ip_address = 1;
     string user_agent = 2;
+    // TODO: split metadata and data; add restricted sessions.
+    string enrollment_challenge = 3;
 }
 
 // Session links a token (the id) and a user.  If expires_at is less than or

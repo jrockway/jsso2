@@ -21,3 +21,6 @@ public/build/
 
 # Typescript
 .log/
+
+# Jest
+coverage/

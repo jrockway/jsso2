@@ -19,7 +19,7 @@ import (
 )
 
 type Config struct {
-	BaseURL *url.URL `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
+	BaseURL string `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
 }
 
 func main() {
@@ -45,16 +45,31 @@ func main() {
 			zap.L().Warn("failed to run database migrations; continuing anyway", zap.Error(err))
 		}
 	}
+	c()
 
 	auth := internalauth.NewFromConfig(authConfig, db)
 	server.AddUnaryInterceptor(auth.UnaryServerInterceptor())
 	server.AddStreamInterceptor(auth.StreamServerInterceptor())
 
-	c()
+	baseURL, err := url.Parse(appConfig.BaseURL)
+	if err != nil {
+		zap.L().Fatal("failed to parse base URL", zap.String("base_url", appConfig.BaseURL), zap.Error(err))
+	}
+
+	userService := &user.Service{
+		DB:          db,
+		Permissions: auth,
+		BaseURL:     baseURL,
+	}
+
+	enrollmentService := &enrollment.Service{
+		Permissions: auth,
+		Origin:      baseURL.Host,
+	}
 
 	server.AddService(func(s *grpc.Server) {
-		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(&enrollment.Service{Permissions: auth}))
-		jssopb.RegisterUserService(s, jssopb.NewUserService(&user.Service{DB: db, Permissions: auth, BaseURL: appConfig.BaseURL}))
+		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(enrollmentService))
+		jssopb.RegisterUserService(s, jssopb.NewUserService(userService))
 		jssopb.RegisterLoginService(s, jssopb.NewLoginService(&login.Service{}))
 	})
 	server.SetStartupCallback(func(info server.Info) {

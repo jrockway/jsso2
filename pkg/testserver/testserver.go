@@ -15,11 +15,14 @@ import (
 	"github.com/jrockway/jsso2/pkg/store"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 type S struct {
-	Permissions *internalauth.Permissions
-	Logger      *zap.Logger
+	WantRootClient bool
+	Credentials    credentials.PerRPCCredentials
+	Permissions    *internalauth.Permissions
+	Logger         *zap.Logger
 }
 
 func New() *S {
@@ -44,6 +47,11 @@ func (s *S) Options(e *jtesting.E) []grpc.ServerOption {
 
 func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 	db := store.MustGetTestDB(t, e)
+	if s.WantRootClient {
+		s.Credentials = &client.Credentials{
+			Token: "root root",
+		}
+	}
 	s.Permissions.Store = db
 	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{Permissions: s.Permissions}))
 	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"}}))
@@ -54,11 +62,8 @@ func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 func (s *S) ToR(r *jtesting.R) {
 	r.GRPCOptions = s.Options
 	r.GRPCClientOptions = func(e *jtesting.E) []grpc.DialOption {
-		return []grpc.DialOption{
+		result := []grpc.DialOption{
 			grpc.WithInsecure(),
-			grpc.WithPerRPCCredentials(&client.Credentials{
-				Token: "root " + s.Permissions.RootPassword,
-			}),
 			grpc.WithChainUnaryInterceptor(
 				gzap.UnaryClientInterceptor(e.Logger.Named("client")),
 			),
@@ -66,6 +71,10 @@ func (s *S) ToR(r *jtesting.R) {
 				gzap.StreamClientInterceptor(e.Logger.Named("client")),
 			),
 		}
+		if s.Credentials != nil {
+			result = append(result, grpc.WithPerRPCCredentials(s.Credentials))
+		}
+		return result
 	}
 	r.GRPC = s.Setup
 }

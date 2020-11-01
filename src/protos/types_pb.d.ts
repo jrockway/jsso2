@@ -44,6 +44,9 @@ export class SessionMetadata extends jspb.Message {
   getUserAgent(): string;
   setUserAgent(value: string): SessionMetadata;
 
+  getEnrollmentChallenge(): string;
+  setEnrollmentChallenge(value: string): SessionMetadata;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SessionMetadata.AsObject;
   static toObject(includeInstance: boolean, msg: SessionMetadata): SessionMetadata.AsObject;
@@ -56,6 +59,7 @@ export namespace SessionMetadata {
   export type AsObject = {
     ipAddress: string,
     userAgent: string,
+    enrollmentChallenge: string,
   }
 }
 

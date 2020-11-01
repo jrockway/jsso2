@@ -14,6 +14,8 @@ var global = Function('return this')();
 
 var types_pb = require('./types_pb.js');
 goog.object.extend(proto, types_pb);
+var webauthn_pb = require('./webauthn_pb.js');
+goog.object.extend(proto, webauthn_pb);
 goog.exportSymbol('proto.jsso.EditUserReply', null, global);
 goog.exportSymbol('proto.jsso.EditUserRequest', null, global);
 goog.exportSymbol('proto.jsso.GenerateEnrollmentLinkReply', null, global);
@@ -1138,7 +1140,8 @@ proto.jsso.StartEnrollmentReply.prototype.toObject = function(opt_includeInstanc
  */
 proto.jsso.StartEnrollmentReply.toObject = function(includeInstance, msg) {
   var f, obj = {
-    user: (f = msg.getUser()) && types_pb.User.toObject(includeInstance, f)
+    user: (f = msg.getUser()) && types_pb.User.toObject(includeInstance, f),
+    credentialCreationOptions: (f = msg.getCredentialCreationOptions()) && webauthn_pb.PublicKeyCredentialCreationOptions.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -1180,6 +1183,11 @@ proto.jsso.StartEnrollmentReply.deserializeBinaryFromReader = function(msg, read
       reader.readMessage(value,types_pb.User.deserializeBinaryFromReader);
       msg.setUser(value);
       break;
+    case 3:
+      var value = new webauthn_pb.PublicKeyCredentialCreationOptions;
+      reader.readMessage(value,webauthn_pb.PublicKeyCredentialCreationOptions.deserializeBinaryFromReader);
+      msg.setCredentialCreationOptions(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1215,6 +1223,14 @@ proto.jsso.StartEnrollmentReply.serializeBinaryToWriter = function(message, writ
       1,
       f,
       types_pb.User.serializeBinaryToWriter
+    );
+  }
+  f = message.getCredentialCreationOptions();
+  if (f != null) {
+    writer.writeMessage(
+      3,
+      f,
+      webauthn_pb.PublicKeyCredentialCreationOptions.serializeBinaryToWriter
     );
   }
 };
@@ -1254,6 +1270,43 @@ proto.jsso.StartEnrollmentReply.prototype.clearUser = function() {
  */
 proto.jsso.StartEnrollmentReply.prototype.hasUser = function() {
   return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional webauthn.PublicKeyCredentialCreationOptions credential_creation_options = 3;
+ * @return {?proto.webauthn.PublicKeyCredentialCreationOptions}
+ */
+proto.jsso.StartEnrollmentReply.prototype.getCredentialCreationOptions = function() {
+  return /** @type{?proto.webauthn.PublicKeyCredentialCreationOptions} */ (
+    jspb.Message.getWrapperField(this, webauthn_pb.PublicKeyCredentialCreationOptions, 3));
+};
+
+
+/**
+ * @param {?proto.webauthn.PublicKeyCredentialCreationOptions|undefined} value
+ * @return {!proto.jsso.StartEnrollmentReply} returns this
+*/
+proto.jsso.StartEnrollmentReply.prototype.setCredentialCreationOptions = function(value) {
+  return jspb.Message.setWrapperField(this, 3, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.jsso.StartEnrollmentReply} returns this
+ */
+proto.jsso.StartEnrollmentReply.prototype.clearCredentialCreationOptions = function() {
+  return this.setCredentialCreationOptions(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.jsso.StartEnrollmentReply.prototype.hasCredentialCreationOptions = function() {
+  return jspb.Message.getField(this, 3) != null;
 };
 
 
