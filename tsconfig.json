@@ -1,8 +1,18 @@
 {
-    "extends": "@tsconfig/svelte/tsconfig.json",
-    "include": ["src/**/*"],
-    "exclude": ["node_modules/*", "__sapper__/*", "public/*"],
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "display": "Svelte",
     "compilerOptions": {
-        "types": ["jest"]
-    }
+        "moduleResolution": "node",
+        "target": "es2017",
+        "importsNotUsedAsValues": "error",
+        "isolatedModules": true,
+        "sourceMap": true,
+        "types": ["svelte", "jest"],
+        "strict": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
 }
