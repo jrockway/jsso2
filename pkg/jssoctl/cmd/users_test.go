@@ -53,7 +53,7 @@ func TestUsers(t *testing.T) {
 				args: []string{"users", "enroll", "--username=test"},
 				wantOutProto: &jssopb.GenerateEnrollmentLinkReply{
 					Token: sessions.ToBase64(&types.Session{Id: make([]byte, 64)}),
-					Url:   "http://jsso.example.com/#/enroll?token=",
+					Url:   "http://jsso.example.com/#/enroll/",
 				},
 				cmpopts: []cmp.Option{
 					protocmp.FilterField(

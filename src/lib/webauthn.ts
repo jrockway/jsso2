@@ -2,6 +2,7 @@ import {
     PublicKeyCredentialCreationOptions as CCO,
     PublicKeyCredentialDescriptor as CD,
     AuthenticatorSelectionCriteria as ASC,
+    PublicKeyCredential as C,
 } from "../protos/webauthn_pb";
 
 export function creationOptionsFromProto(rawOpts: CCO): PublicKeyCredentialCreationOptions {
@@ -93,4 +94,25 @@ export function creationOptionsFromProto(rawOpts: CCO): PublicKeyCredentialCreat
     }
 
     return opts;
+}
+
+function fillClientDataJSON(credential: C, response: AuthenticatorResponse): void {
+    credential.setClientDataJson(new Uint8Array(response.clientDataJSON));
+}
+
+function fillAttestationObject(
+    credential: C,
+    response: AuthenticatorAttestationResponse | AuthenticatorResponse
+): void {
+    if ("attestationObject" in response) {
+        credential.setAttestationObject(new Uint8Array(response.attestationObject));
+    }
+}
+
+export function credentialFromJS(input: PublicKeyCredential): C {
+    const result = new C();
+    result.setId(input.id);
+    fillClientDataJSON(result, input.response);
+    fillAttestationObject(result, input.response);
+    return result;
 }

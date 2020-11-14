@@ -78,3 +78,11 @@ message PublicKeyCredentialUserEntity {
     string display_name = 3;
     bytes id = 4;
 }
+
+message PublicKeyCredential {
+    string id = 1;
+    // Type is always "public-key".
+    string type = 2;
+    bytes client_data_json = 3;
+    bytes attestation_object = 4;
+}

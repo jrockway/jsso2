@@ -226,3 +226,37 @@ export namespace PublicKeyCredentialUserEntity {
   }
 }
 
+export class PublicKeyCredential extends jspb.Message {
+  getId(): string;
+  setId(value: string): PublicKeyCredential;
+
+  getType(): string;
+  setType(value: string): PublicKeyCredential;
+
+  getClientDataJson(): Uint8Array | string;
+  getClientDataJson_asU8(): Uint8Array;
+  getClientDataJson_asB64(): string;
+  setClientDataJson(value: Uint8Array | string): PublicKeyCredential;
+
+  getAttestationObject(): Uint8Array | string;
+  getAttestationObject_asU8(): Uint8Array;
+  getAttestationObject_asB64(): string;
+  setAttestationObject(value: Uint8Array | string): PublicKeyCredential;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PublicKeyCredential.AsObject;
+  static toObject(includeInstance: boolean, msg: PublicKeyCredential): PublicKeyCredential.AsObject;
+  static serializeBinaryToWriter(message: PublicKeyCredential, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PublicKeyCredential;
+  static deserializeBinaryFromReader(message: PublicKeyCredential, reader: jspb.BinaryReader): PublicKeyCredential;
+}
+
+export namespace PublicKeyCredential {
+  export type AsObject = {
+    id: string,
+    type: string,
+    clientDataJson: Uint8Array | string,
+    attestationObject: Uint8Array | string,
+  }
+}
+

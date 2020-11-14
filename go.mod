@@ -6,6 +6,7 @@ require (
 	github.com/duo-labs/webauthn v0.0.0-20200714211715-1daaee874e43
 	github.com/fullstorydev/grpcui v1.0.0
 	github.com/fullstorydev/grpcurl v1.7.0 // indirect
+	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/gogo/status v1.1.0

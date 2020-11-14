@@ -70,6 +70,6 @@ func (s *Service) GenerateEnrollmentLink(ctx context.Context, req *jssopb.Genera
 		return reply, store.AsGRPCError(fmt.Errorf("store session: %w", err))
 	}
 	reply.Token = sessions.ToBase64(session)
-	reply.Url = s.BaseURL.String() + "#/enroll?token=" + reply.Token
+	reply.Url = s.BaseURL.String() + "#/enroll/" + reply.Token
 	return reply, nil
 }

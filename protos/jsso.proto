@@ -26,6 +26,8 @@ service Login {
 service Enrollment {
     rpc Start(StartEnrollmentRequest) returns (StartEnrollmentReply) {
     }
+    rpc Finish(FinishEnrollmentRequest) returns (FinishEnrollmentReply) {
+    }
 }
 
 message EditUserRequest {
@@ -56,4 +58,11 @@ message StartEnrollmentRequest {
 message StartEnrollmentReply {
     types.User user = 1;
     webauthn.PublicKeyCredentialCreationOptions credential_creation_options = 3;
+}
+
+message FinishEnrollmentRequest {
+    webauthn.PublicKeyCredential credential = 1;
+}
+message FinishEnrollmentReply {
+    string login_url = 1;
 }

@@ -273,6 +273,7 @@ type UnstableLoginService interface {
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EnrollmentClient interface {
 	Start(ctx context.Context, in *StartEnrollmentRequest, opts ...grpc.CallOption) (*StartEnrollmentReply, error)
+	Finish(ctx context.Context, in *FinishEnrollmentRequest, opts ...grpc.CallOption) (*FinishEnrollmentReply, error)
 }
 
 type enrollmentClient struct {
@@ -296,12 +297,26 @@ func (c *enrollmentClient) Start(ctx context.Context, in *StartEnrollmentRequest
 	return out, nil
 }
 
+var enrollmentFinishStreamDesc = &grpc.StreamDesc{
+	StreamName: "Finish",
+}
+
+func (c *enrollmentClient) Finish(ctx context.Context, in *FinishEnrollmentRequest, opts ...grpc.CallOption) (*FinishEnrollmentReply, error) {
+	out := new(FinishEnrollmentReply)
+	err := c.cc.Invoke(ctx, "/jsso.Enrollment/Finish", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EnrollmentService is the service API for Enrollment service.
 // Fields should be assigned to their respective handler implementations only before
 // RegisterEnrollmentService is called.  Any unassigned fields will result in the
 // handler for that method returning an Unimplemented error.
 type EnrollmentService struct {
-	Start func(context.Context, *StartEnrollmentRequest) (*StartEnrollmentReply, error)
+	Start  func(context.Context, *StartEnrollmentRequest) (*StartEnrollmentReply, error)
+	Finish func(context.Context, *FinishEnrollmentRequest) (*FinishEnrollmentReply, error)
 }
 
 func (s *EnrollmentService) start(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -321,6 +336,23 @@ func (s *EnrollmentService) start(_ interface{}, ctx context.Context, dec func(i
 	}
 	return interceptor(ctx, in, info, handler)
 }
+func (s *EnrollmentService) finish(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FinishEnrollmentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.Finish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/jsso.Enrollment/Finish",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.Finish(ctx, req.(*FinishEnrollmentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 // RegisterEnrollmentService registers a service implementation with a gRPC server.
 func RegisterEnrollmentService(s grpc.ServiceRegistrar, srv *EnrollmentService) {
@@ -330,12 +362,21 @@ func RegisterEnrollmentService(s grpc.ServiceRegistrar, srv *EnrollmentService) 
 			return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
 		}
 	}
+	if srvCopy.Finish == nil {
+		srvCopy.Finish = func(context.Context, *FinishEnrollmentRequest) (*FinishEnrollmentReply, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method Finish not implemented")
+		}
+	}
 	sd := grpc.ServiceDesc{
 		ServiceName: "jsso.Enrollment",
 		Methods: []grpc.MethodDesc{
 			{
 				MethodName: "Start",
 				Handler:    srvCopy.start,
+			},
+			{
+				MethodName: "Finish",
+				Handler:    srvCopy.finish,
 			},
 		},
 		Streams:  []grpc.StreamDesc{},
@@ -358,6 +399,11 @@ func NewEnrollmentService(s interface{}) *EnrollmentService {
 	}); ok {
 		ns.Start = h.Start
 	}
+	if h, ok := s.(interface {
+		Finish(context.Context, *FinishEnrollmentRequest) (*FinishEnrollmentReply, error)
+	}); ok {
+		ns.Finish = h.Finish
+	}
 	return ns
 }
 
@@ -367,4 +413,5 @@ func NewEnrollmentService(s interface{}) *EnrollmentService {
 // use of this type is not recommended.
 type UnstableEnrollmentService interface {
 	Start(context.Context, *StartEnrollmentRequest) (*StartEnrollmentReply, error)
+	Finish(context.Context, *FinishEnrollmentRequest) (*FinishEnrollmentReply, error)
 }

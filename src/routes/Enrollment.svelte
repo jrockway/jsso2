@@ -4,6 +4,7 @@
     import { StartEnrollmentRequest } from "../protos/jsso_pb";
     import AddCredential from "../components/AddCredential.svelte";
     import { creationOptionsFromProto } from "../lib/webauthn";
+    import GrpcError from "../components/GrpcError.svelte";
 
     const enrollmentClient = new EnrollmentClient("", null, null);
 
@@ -13,7 +14,7 @@
     let clicked = false;
 
     const metadata: Metadata = {};
-    if (params.token) {
+    if (params.token != "") {
         metadata.authorization = "SessionID " + params.token;
     }
 
@@ -47,18 +48,15 @@
             credential. We can't pick which one will be selected, but if you don't see the one you
             want pop up, pressing cancel will move on to the next one. When you find the one you
             want, enroll it. When you log in, you won't have to do this, and if you visit this
-            enrollment page again, the credential you successfully enrolled will not be considered.
+            enrollment page again, the credential you successfully enrolled will not be presented
+            again.
         </p>
         <button on:click={() => (clicked = true)} disabled={clicked}>Enroll</button>
         {#if clicked}
-            <AddCredential opts={reply.opts} />
+            <AddCredential token={params.token} opts={reply.opts} />
         {/if}
     {:catch error}
-        <p>We can't validate your token:</p>
-        {#if error.message != undefined && error.code != undefined}
-            <p>{error.message} ({error.code})</p>
-        {:else}
-            <p>{error}</p>
-        {/if}
+        <p>There was a problem validating your token:</p>
+        <GrpcError {error} />
     {/await}
 </main>

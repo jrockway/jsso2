@@ -656,6 +656,78 @@ func (x *PublicKeyCredentialUserEntity) GetId() []byte {
 	return nil
 }
 
+type PublicKeyCredential struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Type is always "public-key".
+	Type              string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	ClientDataJson    []byte `protobuf:"bytes,3,opt,name=client_data_json,json=clientDataJson,proto3" json:"client_data_json,omitempty"`
+	AttestationObject []byte `protobuf:"bytes,4,opt,name=attestation_object,json=attestationObject,proto3" json:"attestation_object,omitempty"`
+}
+
+func (x *PublicKeyCredential) Reset() {
+	*x = PublicKeyCredential{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_webauthn_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PublicKeyCredential) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PublicKeyCredential) ProtoMessage() {}
+
+func (x *PublicKeyCredential) ProtoReflect() protoreflect.Message {
+	mi := &file_webauthn_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PublicKeyCredential.ProtoReflect.Descriptor instead.
+func (*PublicKeyCredential) Descriptor() ([]byte, []int) {
+	return file_webauthn_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *PublicKeyCredential) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *PublicKeyCredential) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *PublicKeyCredential) GetClientDataJson() []byte {
+	if x != nil {
+		return x.ClientDataJson
+	}
+	return nil
+}
+
+func (x *PublicKeyCredential) GetAttestationObject() []byte {
+	if x != nil {
+		return x.AttestationObject
+	}
+	return nil
+}
+
 var File_webauthn_proto protoreflect.FileDescriptor
 
 var file_webauthn_proto_rawDesc = []byte{
@@ -774,10 +846,20 @@ var file_webauthn_proto_rawDesc = []byte{
 	0x01, 0x28, 0x09, 0x52, 0x04, 0x69, 0x63, 0x6f, 0x6e, 0x12, 0x21, 0x0a, 0x0c, 0x64, 0x69, 0x73,
 	0x70, 0x6c, 0x61, 0x79, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x0b, 0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x0e, 0x0a, 0x02,
-	0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x69, 0x64, 0x42, 0x2a, 0x5a, 0x28,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x72, 0x6f, 0x63, 0x6b,
-	0x77, 0x61, 0x79, 0x2f, 0x6a, 0x73, 0x73, 0x6f, 0x32, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x77, 0x65,
-	0x62, 0x61, 0x75, 0x74, 0x68, 0x6e, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x69, 0x64, 0x22, 0x92, 0x01, 0x0a,
+	0x13, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e,
+	0x74, 0x69, 0x61, 0x6c, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x28, 0x0a, 0x10, 0x63, 0x6c, 0x69, 0x65,
+	0x6e, 0x74, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x6a, 0x73, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0c, 0x52, 0x0e, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x44, 0x61, 0x74, 0x61, 0x4a, 0x73,
+	0x6f, 0x6e, 0x12, 0x2d, 0x0a, 0x12, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x5f, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x11,
+	0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4f, 0x62, 0x6a, 0x65, 0x63,
+	0x74, 0x42, 0x2a, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x6a, 0x72, 0x6f, 0x63, 0x6b, 0x77, 0x61, 0x79, 0x2f, 0x6a, 0x73, 0x73, 0x6f, 0x32, 0x2f, 0x70,
+	0x6b, 0x67, 0x2f, 0x77, 0x65, 0x62, 0x61, 0x75, 0x74, 0x68, 0x6e, 0x70, 0x62, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -793,7 +875,7 @@ func file_webauthn_proto_rawDescGZIP() []byte {
 }
 
 var file_webauthn_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_webauthn_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_webauthn_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_webauthn_proto_goTypes = []interface{}{
 	(PublicKeyCredentialCreationOptions_AttestationConveyancePreference)(0), // 0: webauthn.PublicKeyCredentialCreationOptions.AttestationConveyancePreference
 	(AuthenticatorSelectionCriteria_AuthenticatorAttachment)(0),             // 1: webauthn.AuthenticatorSelectionCriteria.AuthenticatorAttachment
@@ -805,7 +887,8 @@ var file_webauthn_proto_goTypes = []interface{}{
 	(*PublicKeyCredentialParameters)(nil),                                   // 7: webauthn.PublicKeyCredentialParameters
 	(*PublicKeyCredentialRpEntity)(nil),                                     // 8: webauthn.PublicKeyCredentialRpEntity
 	(*PublicKeyCredentialUserEntity)(nil),                                   // 9: webauthn.PublicKeyCredentialUserEntity
-	(*duration.Duration)(nil),                                               // 10: google.protobuf.Duration
+	(*PublicKeyCredential)(nil),                                             // 10: webauthn.PublicKeyCredential
+	(*duration.Duration)(nil),                                               // 11: google.protobuf.Duration
 }
 var file_webauthn_proto_depIdxs = []int32{
 	0,  // 0: webauthn.PublicKeyCredentialCreationOptions.attestation:type_name -> webauthn.PublicKeyCredentialCreationOptions.AttestationConveyancePreference
@@ -813,7 +896,7 @@ var file_webauthn_proto_depIdxs = []int32{
 	6,  // 2: webauthn.PublicKeyCredentialCreationOptions.exclude_credentials:type_name -> webauthn.PublicKeyCredentialDescriptor
 	7,  // 3: webauthn.PublicKeyCredentialCreationOptions.pub_key_cred_params:type_name -> webauthn.PublicKeyCredentialParameters
 	8,  // 4: webauthn.PublicKeyCredentialCreationOptions.rp:type_name -> webauthn.PublicKeyCredentialRpEntity
-	10, // 5: webauthn.PublicKeyCredentialCreationOptions.timeout:type_name -> google.protobuf.Duration
+	11, // 5: webauthn.PublicKeyCredentialCreationOptions.timeout:type_name -> google.protobuf.Duration
 	9,  // 6: webauthn.PublicKeyCredentialCreationOptions.user:type_name -> webauthn.PublicKeyCredentialUserEntity
 	1,  // 7: webauthn.AuthenticatorSelectionCriteria.authenticator_attachment:type_name -> webauthn.AuthenticatorSelectionCriteria.AuthenticatorAttachment
 	2,  // 8: webauthn.AuthenticatorSelectionCriteria.user_verification:type_name -> webauthn.AuthenticatorSelectionCriteria.UserVerificationRequirement
@@ -903,6 +986,18 @@ func file_webauthn_proto_init() {
 				return nil
 			}
 		}
+		file_webauthn_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PublicKeyCredential); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -910,7 +1005,7 @@ func file_webauthn_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_webauthn_proto_rawDesc,
 			NumEnums:      4,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

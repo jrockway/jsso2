@@ -64,7 +64,8 @@ func main() {
 
 	enrollmentService := &enrollment.Service{
 		Permissions: auth,
-		Origin:      baseURL.Hostname(),
+		Domain:      baseURL.Hostname(),
+		Origin:      baseURL.Scheme + "://" + baseURL.Host,
 	}
 
 	server.AddService(func(s *grpc.Server) {

@@ -154,3 +154,41 @@ export namespace StartEnrollmentReply {
   }
 }
 
+export class FinishEnrollmentRequest extends jspb.Message {
+  getCredential(): webauthn_pb.PublicKeyCredential | undefined;
+  setCredential(value?: webauthn_pb.PublicKeyCredential): FinishEnrollmentRequest;
+  hasCredential(): boolean;
+  clearCredential(): FinishEnrollmentRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): FinishEnrollmentRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: FinishEnrollmentRequest): FinishEnrollmentRequest.AsObject;
+  static serializeBinaryToWriter(message: FinishEnrollmentRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): FinishEnrollmentRequest;
+  static deserializeBinaryFromReader(message: FinishEnrollmentRequest, reader: jspb.BinaryReader): FinishEnrollmentRequest;
+}
+
+export namespace FinishEnrollmentRequest {
+  export type AsObject = {
+    credential?: webauthn_pb.PublicKeyCredential.AsObject,
+  }
+}
+
+export class FinishEnrollmentReply extends jspb.Message {
+  getLoginUrl(): string;
+  setLoginUrl(value: string): FinishEnrollmentReply;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): FinishEnrollmentReply.AsObject;
+  static toObject(includeInstance: boolean, msg: FinishEnrollmentReply): FinishEnrollmentReply.AsObject;
+  static serializeBinaryToWriter(message: FinishEnrollmentReply, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): FinishEnrollmentReply;
+  static deserializeBinaryFromReader(message: FinishEnrollmentReply, reader: jspb.BinaryReader): FinishEnrollmentReply;
+}
+
+export namespace FinishEnrollmentReply {
+  export type AsObject = {
+    loginUrl: string,
+  }
+}
+

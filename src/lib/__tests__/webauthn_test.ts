@@ -4,13 +4,14 @@ import {
     PublicKeyCredentialUserEntity,
     PublicKeyCredentialRpEntity,
     AuthenticatorSelectionCriteria,
+    PublicKeyCredential as C,
 } from "../../protos/webauthn_pb";
 
-import { creationOptionsFromProto } from "../webauthn";
+import { creationOptionsFromProto, credentialFromJS } from "../webauthn";
 
 import * as google_protobuf_duration_pb from "google-protobuf/google/protobuf/duration_pb";
 
-test("can do a basic conversion", () => {
+test("can covert a creation request in proto form to javascript form", () => {
     const input = new CCO();
 
     const challenge = Uint8Array.from("challenge", (c) => c.charCodeAt(0));
@@ -73,4 +74,25 @@ test("can do a basic conversion", () => {
 
     const got = creationOptionsFromProto(input);
     expect(got).toStrictEqual(want);
+});
+
+test("can covert a public key to a proto", () => {
+    const input: PublicKeyCredential = {
+        id: "abc",
+        type: "public-key",
+        rawId: Uint8Array.from("abc", (c) => c.charCodeAt(0)),
+        response: {
+            clientDataJSON: Uint8Array.from("{}", (c) => c.charCodeAt(0)),
+            attestationObject: Uint8Array.from("foo", (c) => c.charCodeAt(0)),
+        } as AuthenticatorAttestationResponse,
+        getClientExtensionResults: () => {
+            return {};
+        },
+    };
+    const want = new C();
+    want.setId("abc");
+    want.setClientDataJson(Uint8Array.from("{}", (c) => c.charCodeAt(0)));
+    want.setAttestationObject(Uint8Array.from("foo", (c) => c.charCodeAt(0)));
+    const got = credentialFromJS(input);
+    expect(got.toObject()).toStrictEqual(want.toObject());
 });
