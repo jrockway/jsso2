@@ -11,7 +11,7 @@ import { creationOptionsFromProto, credentialFromJS } from "../webauthn";
 
 import * as google_protobuf_duration_pb from "google-protobuf/google/protobuf/duration_pb";
 
-test("can covert a creation request in proto form to javascript form", () => {
+test("can convert a creation request in proto form to javascript form", () => {
     const input = new CCO();
 
     const challenge = Uint8Array.from("challenge", (c) => c.charCodeAt(0));
@@ -76,7 +76,7 @@ test("can covert a creation request in proto form to javascript form", () => {
     expect(got).toStrictEqual(want);
 });
 
-test("can covert a public key to a proto", () => {
+test("can convert a public key to a proto", () => {
     const input: PublicKeyCredential = {
         id: "abc",
         type: "public-key",
