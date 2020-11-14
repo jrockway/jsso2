@@ -41,6 +41,13 @@ export default {
         name: "app",
         file: "public/build/bundle.js",
     },
+    onwarn: function (x) {
+        if (/Use of eval is strongly discouraged/.test(x.message) && /google-protobuf/.test(x.id)) {
+            return;
+        }
+        console.error(x);
+    },
+
     plugins: [
         svelte({
             // enable run-time checks when not in production
