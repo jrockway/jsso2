@@ -31,3 +31,34 @@ message Session {
     google.protobuf.Timestamp created_at = 4;
     google.protobuf.Timestamp expires_at = 5;
 }
+
+// Credential represents a WebAuthn public-key credential.
+message Credential {
+    // A synthetic identifier to distingish between cases where a credential is
+    // revoked and re-added, or two users have the same credential.
+    int64 id = 1;
+
+    // The id of the credential, as determined by the authenticator.
+    bytes credential_id = 2;
+
+    // The public key of the credential, used to verify signataures from an
+    // authenticator.
+    bytes public_key = 3;
+
+    // The user that enrolled this credential.
+    User user = 4;
+
+    // The name that the user gave this; for display purposes only.
+    string name = 5;
+
+    // When this credential was enrolled.
+    google.protobuf.Timestamp created_at = 6;
+
+    // When this credential was revoked, or zero if not revoked.
+    google.protobuf.Timestamp deleted_at = 7;
+
+    // The session id that was in use to access the enrollment page.  We don't
+    // use this anywhere, it's just for audit purposes.  (That's why it's just
+    // the ID and not the full Session object.)
+    bytes created_by_session_id = 8;
+}

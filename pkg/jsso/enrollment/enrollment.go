@@ -10,6 +10,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/webauthn"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Service struct {
@@ -41,6 +42,11 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishEnrollmentReques
 	if err != nil {
 		return reply, fmt.Errorf("validate credential: %w", err)
 	}
+	credential.Id = 0
+	credential.Name = "not implemented yet"
+	credential.User = session.GetUser()
+	credential.CreatedAt = timestamppb.Now()
+	credential.CreatedBySessionId = session.GetId()
 	ctxzap.Extract(ctx).Debug("added credential", zap.Any("credential", credential))
 	return reply, nil
 }

@@ -107,3 +107,61 @@ export namespace Session {
   }
 }
 
+export class Credential extends jspb.Message {
+  getId(): number;
+  setId(value: number): Credential;
+
+  getCredentialId(): Uint8Array | string;
+  getCredentialId_asU8(): Uint8Array;
+  getCredentialId_asB64(): string;
+  setCredentialId(value: Uint8Array | string): Credential;
+
+  getPublicKey(): Uint8Array | string;
+  getPublicKey_asU8(): Uint8Array;
+  getPublicKey_asB64(): string;
+  setPublicKey(value: Uint8Array | string): Credential;
+
+  getUser(): User | undefined;
+  setUser(value?: User): Credential;
+  hasUser(): boolean;
+  clearUser(): Credential;
+
+  getName(): string;
+  setName(value: string): Credential;
+
+  getCreatedAt(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setCreatedAt(value?: google_protobuf_timestamp_pb.Timestamp): Credential;
+  hasCreatedAt(): boolean;
+  clearCreatedAt(): Credential;
+
+  getDeletedAt(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setDeletedAt(value?: google_protobuf_timestamp_pb.Timestamp): Credential;
+  hasDeletedAt(): boolean;
+  clearDeletedAt(): Credential;
+
+  getCreatedBySessionId(): Uint8Array | string;
+  getCreatedBySessionId_asU8(): Uint8Array;
+  getCreatedBySessionId_asB64(): string;
+  setCreatedBySessionId(value: Uint8Array | string): Credential;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Credential.AsObject;
+  static toObject(includeInstance: boolean, msg: Credential): Credential.AsObject;
+  static serializeBinaryToWriter(message: Credential, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Credential;
+  static deserializeBinaryFromReader(message: Credential, reader: jspb.BinaryReader): Credential;
+}
+
+export namespace Credential {
+  export type AsObject = {
+    id: number,
+    credentialId: Uint8Array | string,
+    publicKey: Uint8Array | string,
+    user?: User.AsObject,
+    name: string,
+    createdAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    deletedAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    createdBySessionId: Uint8Array | string,
+  }
+}
+

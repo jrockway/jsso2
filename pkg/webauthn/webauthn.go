@@ -15,7 +15,6 @@ import (
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/types"
 	"github.com/jrockway/jsso2/pkg/webauthnpb"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
@@ -69,12 +68,6 @@ func BeginEnrollment(domain string, session *types.Session) (*webauthnpb.PublicK
 	return opts, nil
 }
 
-type Credential struct {
-	AAGUID              []byte
-	CredentialID        []byte
-	CredentialPublicKey []byte
-}
-
 type ClientData struct {
 	Challenge   string `json:"challenge"`
 	CrossOrigin bool   `json:"crossOrigin"`
@@ -86,7 +79,7 @@ type ClientData struct {
 // RPC format than Duo's webauthn library, we do the non-crypto things here, and delegate to that
 // library to verify signations.  The steps below are from:
 // https://www.w3.org/TR/webauthn/#registering-a-new-credential
-func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb.FinishEnrollmentRequest) (*Credential, error) {
+func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb.FinishEnrollmentRequest) (*types.Credential, error) {
 	// Step 1: Let JSONtext be the result of running UTF-8 decode on clientDataJSON.  (We
 	// actually do this on the client side since gRPC lets use send raw bytes on the wire unlike
 	// the JSON that the spec assumes you're going to use; see src/lib/webauthn.ts.)
@@ -94,7 +87,6 @@ func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb
 	// Step 2: Let C be the result of running a JSON parser on the clientDataJSON.  (We call it
 	// clientData.)
 	clientDataJSON := req.GetCredential().GetClientDataJson()
-	zap.L().Info("client data json", zap.ByteString("client_data_json", clientDataJSON))
 	var clientData ClientData
 	if err := json.Unmarshal(clientDataJSON, &clientData); err != nil {
 		return nil, fmt.Errorf("unmarshal client data json: %w", err)
@@ -174,9 +166,8 @@ func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb
 	//
 	// Step 19: If the attestation statement is not trustworthy, fail.  (Skipped.)
 	attData := attestation.AttestationObject.AuthData.AttData
-	return &Credential{
-		AAGUID:              attData.AAGUID,
-		CredentialID:        attData.CredentialID,
-		CredentialPublicKey: attData.CredentialPublicKey,
+	return &types.Credential{
+		CredentialId: attData.CredentialID,
+		PublicKey:    attData.CredentialPublicKey,
 	}, nil
 }
