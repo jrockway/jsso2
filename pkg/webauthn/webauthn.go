@@ -1,6 +1,7 @@
 package webauthn
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
@@ -59,12 +60,15 @@ func BeginEnrollment(domain string, session *types.Session, existingCreds []*typ
 	if user.GetId() < 1 {
 		return nil, errors.New("invalid user attempting enrollment")
 	}
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, user.GetId()); err != nil {
+		return nil, fmt.Errorf("write user id to byte buffer: %w", err)
+	}
 	opts.User = &webauthnpb.PublicKeyCredentialUserEntity{
-		Id:          make([]byte, 8),
+		Id:          buf.Bytes(),
 		DisplayName: user.GetUsername(),
 		Name:        user.GetUsername(),
 	}
-	binary.PutVarint(opts.User.Id, user.GetId())
 	for _, c := range existingCreds {
 		opts.ExcludeCredentials = append(opts.ExcludeCredentials, &webauthnpb.PublicKeyCredentialDescriptor{
 			Id:   c.GetCredentialId(),
