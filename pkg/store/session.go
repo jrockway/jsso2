@@ -24,7 +24,7 @@ func AddSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) error
 	if s.GetUser().GetId() < 1 {
 		return &ErrEmpty{Field: "session.user.id"}
 	}
-	if sessions.IsZero(s) {
+	if sessions.IsZero(s.GetId()) {
 		return &ErrEmpty{Field: "session.id"}
 	}
 	metadataJSON, err := protojson.Marshal(s.GetMetadata())

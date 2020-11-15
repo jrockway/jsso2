@@ -48,7 +48,7 @@ var optsPrototype = &webauthnpb.PublicKeyCredentialCreationOptions{
 
 // BeginEnrollment starts the enrollment process, returning a PublicKeyCredentialCreationOptions
 // for the browser.
-func BeginEnrollment(domain string, session *types.Session) (*webauthnpb.PublicKeyCredentialCreationOptions, error) {
+func BeginEnrollment(domain string, session *types.Session, existingCreds []*types.Credential) (*webauthnpb.PublicKeyCredentialCreationOptions, error) {
 	opts := proto.Clone(optsPrototype).(*webauthnpb.PublicKeyCredentialCreationOptions)
 	opts.Challenge = session.GetId()
 	opts.Rp = &webauthnpb.PublicKeyCredentialRpEntity{
@@ -65,6 +65,18 @@ func BeginEnrollment(domain string, session *types.Session) (*webauthnpb.PublicK
 		Name:        user.GetUsername(),
 	}
 	binary.PutVarint(opts.User.Id, user.GetId())
+	for _, c := range existingCreds {
+		opts.ExcludeCredentials = append(opts.ExcludeCredentials, &webauthnpb.PublicKeyCredentialDescriptor{
+			Id:   c.GetCredentialId(),
+			Type: "public-key",
+			Transports: []webauthnpb.PublicKeyCredentialDescriptor_AuthenticatorTransport{
+				webauthnpb.PublicKeyCredentialDescriptor_BLE,
+				webauthnpb.PublicKeyCredentialDescriptor_INTERNAL,
+				webauthnpb.PublicKeyCredentialDescriptor_NFC,
+				webauthnpb.PublicKeyCredentialDescriptor_USB,
+			},
+		})
+	}
 	return opts, nil
 }
 

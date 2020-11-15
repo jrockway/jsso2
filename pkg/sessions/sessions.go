@@ -32,11 +32,11 @@ func GenerateID() ([]byte, error) {
 }
 
 // IsZero returns true if the session ID is all zeros (or is the wrong length).
-func IsZero(s *types.Session) bool {
-	if len(s.GetId()) != sessionSize {
+func IsZero(id []byte) bool {
+	if len(id) != sessionSize {
 		return true
 	}
-	for _, b := range s.Id {
+	for _, b := range id {
 		if b != 0 {
 			return false
 		}

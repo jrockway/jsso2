@@ -47,6 +47,10 @@ export function creationOptionsFromProto(rawOpts: CCO): PublicKeyCredentialCreat
     for (const cred of rawOpts.getExcludeCredentialsList()) {
         const out = new Object() as PublicKeyCredentialDescriptor;
         out.id = cred.getId_asU8();
+        if (cred.getType() == "public-key") {
+            out.type = "public-key";
+        }
+        out.transports = [];
         for (const transport of cred.getTransportsList()) {
             switch (transport) {
                 case CD.AuthenticatorTransport.BLE:

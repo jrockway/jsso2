@@ -63,6 +63,7 @@ func main() {
 	}
 
 	enrollmentService := &enrollment.Service{
+		DB:          db,
 		Permissions: auth,
 		Domain:      baseURL.Hostname(),
 		Origin:      baseURL.Scheme + "://" + baseURL.Host,

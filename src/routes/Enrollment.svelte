@@ -47,9 +47,15 @@
             When you click the button below, your OS or browser will ask you to enroll a WebAuthn
             credential. We can't pick which one will be selected, but if you don't see the one you
             want pop up, pressing cancel will move on to the next one. When you find the one you
-            want, enroll it. When you log in, you won't have to do this, and if you visit this
-            enrollment page again, the credential you successfully enrolled will not be presented
-            again.
+            want, enroll it. When you log in, you won't have to do this.
+        </p>
+        <p>
+            Note that for privacy reasons, even if you have already enrolled a key, your OS or
+            browser will pretend that you've never enrolled that authenticator before, let you
+            enroll it, and then give you an error ("The user attempted to register an authenticator
+            that contains one of the credentials already registered with the relying party.").
+            There's nothing we can do about that. We tell your browser which credentials we already
+            have, but it ignores them until you do the auth dance.
         </p>
         <button on:click={() => (clicked = true)} disabled={clicked}>Enroll</button>
         {#if clicked}

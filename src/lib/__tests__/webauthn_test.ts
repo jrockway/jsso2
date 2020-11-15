@@ -5,6 +5,7 @@ import {
     PublicKeyCredentialRpEntity,
     AuthenticatorSelectionCriteria,
     PublicKeyCredential as C,
+    PublicKeyCredentialDescriptor,
 } from "../../protos/webauthn_pb";
 
 import { creationOptionsFromProto, credentialFromJS } from "../webauthn";
@@ -46,9 +47,22 @@ test("can convert a creation request in proto form to javascript form", () => {
     );
     input.setAuthenticatorSelection(auths);
 
+    const excludedCredential = new PublicKeyCredentialDescriptor();
+    excludedCredential.setId(Uint8Array.of(1, 2, 3, 4));
+    excludedCredential.setType("public-key");
+    excludedCredential.addTransports(PublicKeyCredentialDescriptor.AuthenticatorTransport.BLE);
+    excludedCredential.addTransports(PublicKeyCredentialDescriptor.AuthenticatorTransport.INTERNAL);
+    input.addExcludeCredentials(excludedCredential);
+
     const want: PublicKeyCredentialCreationOptions = {
         challenge: challenge,
-        excludeCredentials: [],
+        excludeCredentials: [
+            {
+                id: Uint8Array.of(1, 2, 3, 4),
+                type: "public-key",
+                transports: ["ble", "internal"],
+            },
+        ],
         pubKeyCredParams: [
             {
                 alg: -1,

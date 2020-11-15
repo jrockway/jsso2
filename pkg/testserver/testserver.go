@@ -53,7 +53,7 @@ func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 		}
 	}
 	s.Permissions.Store = db
-	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{Permissions: s.Permissions}))
+	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{DB: db, Permissions: s.Permissions}))
 	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"}}))
 	jssopb.RegisterLoginService(server, jssopb.NewLoginService(&login.Service{}))
 }
