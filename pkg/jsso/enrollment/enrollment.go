@@ -43,7 +43,6 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartEnrollmentRequest)
 	}); err != nil {
 		return reply, store.AsGRPCError(err)
 	}
-	l.Debug("existing credentials for user", zap.String("username", user.GetUsername()), zap.Any("credentials", creds))
 
 	opts, err := webauthn.BeginEnrollment(s.Domain, session, creds)
 	if err != nil {
@@ -74,6 +73,6 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishEnrollmentReques
 	}); err != nil {
 		return reply, store.AsGRPCError(err)
 	}
-	l.Debug("enrolled new credential", zap.String("username", session.GetUser().GetUsername()), zap.Binary("credential_id", credential.GetCredentialId()))
+	l.Debug("enrolled new credential", zap.Binary("credential_id", credential.GetCredentialId()))
 	return reply, nil
 }
