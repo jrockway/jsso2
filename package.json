@@ -9,7 +9,7 @@
         "generate:go": "go generate ./...",
         "generate:ts": "protoc -Iprotos --js_out=import_style=commonjs:src/protos --grpc-web_out=import_style=typescript,mode=grpcwebtext:src/protos protos/*.proto",
         "generate": "concurrently --raw -m 1 npm:generate:go npm:generate:ts",
-        "backend": "env-path -p env.test go run ./cmd/jsso2 2>&1 | jlog -C",
+        "backend": "env-path -p env.test go run ./cmd/jsso2 2>&1 | jlog -C -l",
         "backend:raw": "env-path -p env.test go run ./cmd/jsso2",
         "envoy": "envoy -c envoy.yaml -l critical",
         "build": "rollup -c",
@@ -25,7 +25,9 @@
         "lint:svelte": "svelte-check",
         "lint:go": "golangci-lint run",
         "lint": "concurrently --raw -m 1 npm:lint:svelte npm:lint:go",
-        "jssoctl": "env-path -p env.test go run ./cmd/jssoctl"
+        "jssoctl": "env-path -p env.test go run ./cmd/jssoctl",
+        "regenerate-database": "env-path -p env.test go run ./cmd/jsso-regenerate-db 2>&1 | jlog -C -l",
+        "regenerate-database:raw": "env-path -p env.test go run ./cmd/jsso-regenerate-db"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^14.0.0",
