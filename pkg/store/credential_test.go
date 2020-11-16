@@ -32,7 +32,7 @@ func TestCredentials(t *testing.T) {
 			User:      user,
 			CreatedAt: now,
 		}
-		if err := AddSession(e.Context, c.db, session); err != nil {
+		if err := UpdateSession(e.Context, c.db, session); err != nil {
 			t.Fatal(err)
 		}
 

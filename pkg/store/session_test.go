@@ -54,7 +54,7 @@ func TestAddSession_Validation(t *testing.T) {
 			if err != nil {
 				t.Fatalf("parse regexp /%v/: %v", test.wantMsg, err)
 			}
-			err = AddSession(context.Background(), EmptyDB{}, test.session)
+			err = UpdateSession(context.Background(), EmptyDB{}, test.session)
 			if err == nil {
 				t.Fatalf("expecting error /%v/", test.wantMsg)
 			}
@@ -90,7 +90,7 @@ func TestSessions(t *testing.T) {
 		if err := UpdateUser(e.Context, c.db, &types.User{Username: "bar"}); err != nil {
 			t.Fatal(err)
 		}
-		if err := AddSession(e.Context, c.db, session); err != nil {
+		if err := UpdateSession(e.Context, c.db, session); err != nil {
 			t.Fatal(err)
 		}
 		got, err := LookupSession(e.Context, c.db, id)
@@ -115,11 +115,19 @@ func TestSessions(t *testing.T) {
 			ExpiresAt: timestamppb.New(time.Now().Add(-time.Minute).Round(time.Millisecond)),
 		}
 		expired.Id[0]++
-		if err := AddSession(e.Context, c.db, expired); err != nil {
+		if err := UpdateSession(e.Context, c.db, expired); err != nil {
 			t.Fatal(err)
 		}
 		if got, err := LookupSession(e.Context, c.db, id); !errors.Is(err, ErrSessionExpired) {
 			t.Errorf("expected expired session; got %v\n  session: %v", err, got)
+		}
+		// Try expiring the original session.
+		session.ExpiresAt = timestamppb.Now()
+		if err := UpdateSession(e.Context, c.db, session); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := LookupSession(e.Context, c.db, session.GetId()); err == nil {
+			t.Error("expected lookup of newly-expired session to fail")
 		}
 	})
 }

@@ -53,7 +53,7 @@ func (s *Service) GenerateEnrollmentLink(ctx context.Context, req *jssopb.Genera
 		if err != nil {
 			return fmt.Errorf("generate session prototype: %w", err)
 		}
-		if err := store.AddSession(ctx, tx, session); err != nil {
+		if err := store.UpdateSession(ctx, tx, session); err != nil {
 			return fmt.Errorf("store session: %w", err)
 		}
 		reply.Token = sessions.ToBase64(session)

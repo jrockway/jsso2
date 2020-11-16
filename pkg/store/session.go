@@ -13,8 +13,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// AddSession writes a session to the database.
-func AddSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) error {
+// UpdateSession writes a session to the database.
+func UpdateSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) error {
 	if s == nil {
 		return &ErrEmpty{Field: "session"}
 	}
@@ -39,7 +39,12 @@ func AddSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) error
 		"created_at": s.GetCreatedAt().AsTime(), // TODO: write a driver.Valuer generator for protos.
 		"expires_at": s.GetExpiresAt().AsTime(),
 	}
-	if _, err := sqlx.NamedExecContext(ctx, db, `insert into session (id, user_id, metadata, created_at, expires_at) values(:id, :user_id, :metadata, :created_at, :expires_at)`, obj); err != nil {
+	if _, err := sqlx.NamedExecContext(ctx, db, `insert into session
+                  ( id,  user_id,  metadata,  created_at,  expires_at)
+            values(:id, :user_id, :metadata, :created_at, :expires_at)
+            on conflict on constraint session_pkey
+               do update set metadata=:metadata, expires_at=:expires_at
+`, obj); err != nil {
 		return fmt.Errorf("insert: %w", err)
 	}
 	return nil

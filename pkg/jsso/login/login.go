@@ -14,6 +14,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/types"
 	"github.com/jrockway/jsso2/pkg/webauthnpb"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Service struct {
@@ -48,7 +49,7 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartLoginRequest) (*js
 		// XXX: We need to taint this session to only allow it to be used to call Finish().
 		// The current state is completely insecure; no authentication is required to act as
 		// any user.  Obviously, this can't remain :)
-		if err := store.AddSession(ctx, tx, session); err != nil {
+		if err := store.UpdateSession(ctx, tx, session); err != nil {
 			return fmt.Errorf("store session: %w", err)
 		}
 		reply.CredentialRequestOptions.Challenge = session.GetId()
@@ -78,5 +79,21 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartLoginRequest) (*js
 
 func (s *Service) Finish(ctx context.Context, req *jssopb.FinishLoginRequest) (*jssopb.FinishLoginReply, error) {
 	reply := &jssopb.FinishLoginReply{}
+	l := ctxzap.Extract(ctx)
+	id := sessions.MustFromContext(ctx).GetId()
+	if err := s.DB.DoTx(ctx, l, false, func(tx *sqlx.Tx) error {
+		// Refresh the session in a transaction, since we will be editing it.
+		session, err := store.LookupSession(ctx, tx, id)
+		if err != nil {
+			return fmt.Errorf("refresh session: %w", err)
+		}
+		session.ExpiresAt = timestamppb.Now()
+		if err := store.UpdateSession(ctx, tx, session); err != nil {
+			return fmt.Errorf("store expired session: %w", err)
+		}
+		return nil
+	}); err != nil {
+		return reply, store.AsGRPCError(fmt.Errorf("upgrade session: %w", err))
+	}
 	return reply, nil
 }

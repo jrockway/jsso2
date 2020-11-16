@@ -73,7 +73,7 @@ func ValidSession(t *testing.T, e *jtesting.E, c *Connection) *types.Session {
 			return fmt.Errorf("generate session id: %w", err)
 		}
 		session.Id = id
-		if err := AddSession(e.Context, tx, session); err != nil {
+		if err := UpdateSession(e.Context, tx, session); err != nil {
 			return fmt.Errorf("add session: %w", err)
 		}
 		return nil
