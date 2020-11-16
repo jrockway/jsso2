@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
@@ -12,6 +11,15 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+type rawSession struct {
+	ID        []byte    `db:"id"`
+	UserID    int64     `db:"user_id"`
+	Username  string    `db:"username"`
+	Metadata  []byte    `db:"metadata"`
+	CreatedAt time.Time `db:"created_at"`
+	ExpiresAt time.Time `db:"expires_at"`
+}
 
 // UpdateSession writes a session to the database.
 func UpdateSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) error {
@@ -27,17 +35,9 @@ func UpdateSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) er
 	if sessions.IsZero(s.GetId()) {
 		return &ErrEmpty{Field: "session.id"}
 	}
-	metadataJSON, err := protojson.Marshal(s.GetMetadata())
+	obj, err := fromSession(s)
 	if err != nil {
-		return fmt.Errorf("marshal metadata: %w", err)
-	}
-
-	obj := map[string]interface{}{
-		"id":         s.GetId(),
-		"user_id":    s.GetUser().GetId(),
-		"metadata":   metadataJSON,
-		"created_at": s.GetCreatedAt().AsTime(), // TODO: write a driver.Valuer generator for protos.
-		"expires_at": s.GetExpiresAt().AsTime(),
+		return fmt.Errorf("marshal session: %w", err)
 	}
 	if _, err := sqlx.NamedExecContext(ctx, db, `insert into session
                   ( id,  user_id,  metadata,  created_at,  expires_at)
@@ -50,15 +50,22 @@ func UpdateSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) er
 	return nil
 }
 
-type rawSession struct {
-	ID       []byte
-	UserID   int64
-	Username string
-	Metadata []byte
-	// UserCreatedAt    sql.NullTime
-	// UserDisabledAt   sql.NullTime
-	SessionCreatedAt sql.NullTime
-	SessionExpiresAt sql.NullTime
+func fromSession(s *types.Session) (*rawSession, error) {
+	result := &rawSession{}
+
+	metadataJSON, err := protojson.Marshal(s.GetMetadata())
+	if err != nil {
+		return nil, fmt.Errorf("marshal metadata: %w", err)
+	}
+
+	result.ID = s.GetId()
+	result.UserID = s.GetUser().GetId()
+	result.Username = s.GetUser().GetUsername()
+	result.CreatedAt = s.GetCreatedAt().AsTime()
+	result.ExpiresAt = s.GetExpiresAt().AsTime()
+	result.Metadata = metadataJSON
+
+	return result, nil
 }
 
 func (raw *rawSession) toSession() (*types.Session, error) {
@@ -69,12 +76,8 @@ func (raw *rawSession) toSession() (*types.Session, error) {
 	if err := protojson.Unmarshal(raw.Metadata, result.Metadata); err != nil {
 		return nil, fmt.Errorf("unmarshal metadata: %w", err)
 	}
-	if t := raw.SessionCreatedAt; t.Valid {
-		result.CreatedAt = timestamppb.New(t.Time)
-	}
-	if t := raw.SessionExpiresAt; t.Valid {
-		result.ExpiresAt = timestamppb.New(t.Time)
-	}
+	result.CreatedAt = timestamppb.New(raw.CreatedAt)
+	result.ExpiresAt = timestamppb.New(raw.ExpiresAt)
 	return result, nil
 }
 
@@ -85,8 +88,8 @@ func LookupSession(ctx context.Context, db sqlx.ExtContext, id []byte) (*types.S
 	}
 	raw := &rawSession{}
 	row := db.QueryRowxContext(ctx, `select
-            s.id AS id, s.metadata AS metadata, s.created_at AS sessioncreatedat, s.expires_at AS sessionexpiresat,
-            u.id AS userid, u.username as username
+            s.id AS id, s.metadata AS metadata, s.created_at AS created_at, s.expires_at AS expires_at,
+            u.id AS user_id, u.username as username
             from session s left join "user" u on u.id=s.user_id where s.id=$1`, id)
 	if err := row.StructScan(raw); err != nil {
 		return nil, fmt.Errorf("select: %w", err)

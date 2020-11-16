@@ -12,7 +12,7 @@ create table session (
     user_id bigint not null,
     metadata jsonb not null,
     created_at timestamp (3) with time zone not null,
-    expires_at timestamp (3) with time zone null,
+    expires_at timestamp (3) with time zone not null,
     constraint fk_user foreign key (user_id) references "user" (id)
 );
 create index idx_session_user on session (user_id);

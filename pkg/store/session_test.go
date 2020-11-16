@@ -128,6 +128,8 @@ func TestSessions(t *testing.T) {
 		}
 		if _, err := LookupSession(e.Context, c.db, session.GetId()); err == nil {
 			t.Error("expected lookup of newly-expired session to fail")
+		} else if got, want := err, ErrSessionExpired; !errors.Is(got, want) {
+			t.Errorf("expired session: lookup error:\n got: %v\nwant: %v", got, want)
 		}
 	})
 }
