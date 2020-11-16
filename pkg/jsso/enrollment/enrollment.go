@@ -73,6 +73,16 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishEnrollmentReques
 		if err := store.AddCredential(ctx, tx, credential); err != nil {
 			return fmt.Errorf("add credential: %w", err)
 		}
+		s, err := store.LookupSession(ctx, tx, session.GetId())
+		if err != nil {
+			return fmt.Errorf("lookup session: %w", err)
+		}
+		if sessions.HasTaint(s, sessions.TaintEnrollment) {
+			s.ExpiresAt = timestamppb.Now()
+			if err := store.UpdateSession(ctx, tx, s); err != nil {
+				return fmt.Errorf("expire session: %w", err)
+			}
+		}
 		return nil
 	}); err != nil {
 		return reply, store.AsGRPCError(err)
