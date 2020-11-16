@@ -71,7 +71,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.types.Session = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.types.Session.repeatedFields_, null);
 };
 goog.inherits(proto.types.Session, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -397,8 +397,7 @@ proto.types.SessionMetadata.prototype.toObject = function(opt_includeInstance) {
 proto.types.SessionMetadata.toObject = function(includeInstance, msg) {
   var f, obj = {
     ipAddress: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    userAgent: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    enrollmentChallenge: jspb.Message.getFieldWithDefault(msg, 3, "")
+    userAgent: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -443,10 +442,6 @@ proto.types.SessionMetadata.deserializeBinaryFromReader = function(msg, reader) 
       var value = /** @type {string} */ (reader.readString());
       msg.setUserAgent(value);
       break;
-    case 3:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setEnrollmentChallenge(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -490,13 +485,6 @@ proto.types.SessionMetadata.serializeBinaryToWriter = function(message, writer) 
       f
     );
   }
-  f = message.getEnrollmentChallenge();
-  if (f.length > 0) {
-    writer.writeString(
-      3,
-      f
-    );
-  }
 };
 
 
@@ -536,24 +524,13 @@ proto.types.SessionMetadata.prototype.setUserAgent = function(value) {
 };
 
 
-/**
- * optional string enrollment_challenge = 3;
- * @return {string}
- */
-proto.types.SessionMetadata.prototype.getEnrollmentChallenge = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
-};
-
 
 /**
- * @param {string} value
- * @return {!proto.types.SessionMetadata} returns this
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
  */
-proto.types.SessionMetadata.prototype.setEnrollmentChallenge = function(value) {
-  return jspb.Message.setProto3StringField(this, 3, value);
-};
-
-
+proto.types.Session.repeatedFields_ = [6];
 
 
 
@@ -590,7 +567,8 @@ proto.types.Session.toObject = function(includeInstance, msg) {
     user: (f = msg.getUser()) && proto.types.User.toObject(includeInstance, f),
     metadata: (f = msg.getMetadata()) && proto.types.SessionMetadata.toObject(includeInstance, f),
     createdAt: (f = msg.getCreatedAt()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
-    expiresAt: (f = msg.getExpiresAt()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f)
+    expiresAt: (f = msg.getExpiresAt()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
+    taintsList: (f = jspb.Message.getRepeatedField(msg, 6)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -650,6 +628,10 @@ proto.types.Session.deserializeBinaryFromReader = function(msg, reader) {
       var value = new google_protobuf_timestamp_pb.Timestamp;
       reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setExpiresAt(value);
+      break;
+    case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addTaints(value);
       break;
     default:
       reader.skipField();
@@ -717,6 +699,13 @@ proto.types.Session.serializeBinaryToWriter = function(message, writer) {
       5,
       f,
       google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
+    );
+  }
+  f = message.getTaintsList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      6,
+      f
     );
   }
 };
@@ -909,6 +898,43 @@ proto.types.Session.prototype.clearExpiresAt = function() {
  */
 proto.types.Session.prototype.hasExpiresAt = function() {
   return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * repeated string taints = 6;
+ * @return {!Array<string>}
+ */
+proto.types.Session.prototype.getTaintsList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 6));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.types.Session} returns this
+ */
+proto.types.Session.prototype.setTaintsList = function(value) {
+  return jspb.Message.setField(this, 6, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.types.Session} returns this
+ */
+proto.types.Session.prototype.addTaints = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 6, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.types.Session} returns this
+ */
+proto.types.Session.prototype.clearTaintsList = function() {
+  return this.setTaintsList([]);
 };
 
 

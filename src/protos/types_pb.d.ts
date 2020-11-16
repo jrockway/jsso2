@@ -44,9 +44,6 @@ export class SessionMetadata extends jspb.Message {
   getUserAgent(): string;
   setUserAgent(value: string): SessionMetadata;
 
-  getEnrollmentChallenge(): string;
-  setEnrollmentChallenge(value: string): SessionMetadata;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SessionMetadata.AsObject;
   static toObject(includeInstance: boolean, msg: SessionMetadata): SessionMetadata.AsObject;
@@ -59,7 +56,6 @@ export namespace SessionMetadata {
   export type AsObject = {
     ipAddress: string,
     userAgent: string,
-    enrollmentChallenge: string,
   }
 }
 
@@ -89,6 +85,11 @@ export class Session extends jspb.Message {
   hasExpiresAt(): boolean;
   clearExpiresAt(): Session;
 
+  getTaintsList(): Array<string>;
+  setTaintsList(value: Array<string>): Session;
+  clearTaintsList(): Session;
+  addTaints(value: string, index?: number): Session;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Session.AsObject;
   static toObject(includeInstance: boolean, msg: Session): Session.AsObject;
@@ -104,6 +105,7 @@ export namespace Session {
     metadata?: SessionMetadata.AsObject,
     createdAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     expiresAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    taintsList: Array<string>,
   }
 }
 

@@ -18,8 +18,6 @@ message User {
 message SessionMetadata {
     string ip_address = 1;
     string user_agent = 2;
-    // TODO: split metadata and data; add restricted sessions.
-    string enrollment_challenge = 3;
 }
 
 // Session links a token (the id) and a user.  If expires_at is less than or
@@ -30,6 +28,8 @@ message Session {
     SessionMetadata metadata = 3;
     google.protobuf.Timestamp created_at = 4;
     google.protobuf.Timestamp expires_at = 5;
+
+    repeated string taints = 6;
 }
 
 // Credential represents a WebAuthn public-key credential.
