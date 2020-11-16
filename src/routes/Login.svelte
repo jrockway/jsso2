@@ -1,24 +1,27 @@
 <script lang="ts">
     import { LoginClient } from "../protos/JssoServiceClientPb";
-    import { StartLoginRequest } from "../protos/jsso_pb";
+    import { StartLoginRequest, StartLoginReply } from "../protos/jsso_pb";
     import GrpcError from "../components/GrpcError.svelte";
 
     let username = "";
     let showLogin = true;
-    let doStartLogin: Promise<StartLoginRequest>;
 
     const loginClient = new LoginClient("", null, null);
 
     function handleKeypress(event: KeyboardEvent) {
         if (event.key == "Enter") {
-            startLogin();
+            showLogin = false;
         }
     }
 
-    function startLogin() {
-        const req = new StartLoginRequest();
-        doStartLogin = loginClient.start(req, null);
+    async function login(u: string) {
         showLogin = false;
+        const req = new StartLoginRequest();
+        req.setUsername(u);
+        const reply = await loginClient.start(req, null);
+        console.log(reply);
+        const details = await navigator.credentials.get({});
+        return details.type;
     }
 </script>
 
@@ -32,10 +35,13 @@
             Enter your username: <input
                 type="text"
                 bind:value={username}
-                on:keydown={handleKeypress} /><button on:click={startLogin}>Login</button>
+                on:keydown={handleKeypress} /><button
+                on:click={() => {
+                    showLogin = false;
+                }}>Login</button>
         </p>
     {:else}
-        {#await doStartLogin}
+        {#await login(username)}
             Hello, <b>{username}</b>.
         {:then reply}
             Here's the reply: {reply}.

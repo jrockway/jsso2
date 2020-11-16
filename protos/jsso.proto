@@ -48,6 +48,7 @@ message GenerateEnrollmentLinkReply {
 }
 
 message StartLoginRequest {
+    string username = 1;
 }
 message StartLoginReply {
 }

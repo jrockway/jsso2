@@ -42,6 +42,7 @@ func NewFromConfig(c *Config, s *store.Connection) *Permissions {
 			"/grpc.health.v1.Health/Check":                                   {},
 			"/grpc.health.v1.Health/Watch":                                   {},
 			"/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo": {},
+			"/jsso.Login/Start":                                              {},
 		},
 	}
 }

@@ -87,6 +87,9 @@ export namespace GenerateEnrollmentLinkReply {
 }
 
 export class StartLoginRequest extends jspb.Message {
+  getUsername(): string;
+  setUsername(value: string): StartLoginRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): StartLoginRequest.AsObject;
   static toObject(includeInstance: boolean, msg: StartLoginRequest): StartLoginRequest.AsObject;
@@ -97,6 +100,7 @@ export class StartLoginRequest extends jspb.Message {
 
 export namespace StartLoginRequest {
   export type AsObject = {
+    username: string,
   }
 }
 

@@ -881,7 +881,7 @@ proto.jsso.StartLoginRequest.prototype.toObject = function(opt_includeInstance) 
  */
 proto.jsso.StartLoginRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-
+    username: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -918,6 +918,10 @@ proto.jsso.StartLoginRequest.deserializeBinaryFromReader = function(msg, reader)
     }
     var field = reader.getFieldNumber();
     switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setUsername(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -947,6 +951,31 @@ proto.jsso.StartLoginRequest.prototype.serializeBinary = function() {
  */
 proto.jsso.StartLoginRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getUsername();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string username = 1;
+ * @return {string}
+ */
+proto.jsso.StartLoginRequest.prototype.getUsername = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.jsso.StartLoginRequest} returns this
+ */
+proto.jsso.StartLoginRequest.prototype.setUsername = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
