@@ -25,7 +25,7 @@ static_resources:
                                   - name: localhost
                                     domains: ["*"]
                                     retry_policy:
-                                        num_retries: 5
+                                        num_retries: 50
                                         retry_on: "5xx,reset"
                                     routes:
                                         - match:
