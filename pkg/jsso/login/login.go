@@ -14,7 +14,6 @@ import (
 	"github.com/jrockway/jsso2/pkg/types"
 	"github.com/jrockway/jsso2/pkg/webauthnpb"
 	"google.golang.org/protobuf/types/known/durationpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Service struct {
@@ -87,9 +86,15 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishLoginRequest) (*
 		if err != nil {
 			return fmt.Errorf("refresh session: %w", err)
 		}
-		session.ExpiresAt = timestamppb.Now()
+		var newTaints []string
+		for _, t := range session.GetTaints() {
+			if t != sessions.TaintStartLogin {
+				newTaints = append(newTaints, t)
+			}
+		}
+		session.Taints = newTaints
 		if err := store.UpdateSession(ctx, tx, session); err != nil {
-			return fmt.Errorf("store expired session: %w", err)
+			return fmt.Errorf("store untainted session: %w", err)
 		}
 		return nil
 	}); err != nil {
