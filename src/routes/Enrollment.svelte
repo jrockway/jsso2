@@ -57,8 +57,9 @@
             There's nothing we can do about that. We tell your browser which credentials we already
             have, but it ignores them until you do the auth dance.
         </p>
-        <button on:click={() => (clicked = true)} disabled={clicked}>Enroll</button>
-        {#if clicked}
+        {#if !clicked}
+            <button on:click={() => (clicked = true)}>Enroll</button>
+        {:else}
             <AddCredential token={params.token} opts={reply.opts} />
         {/if}
     {:catch error}

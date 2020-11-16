@@ -32,8 +32,13 @@
 {#await creationResult then credential}
     {#await submissionResult}
         <p>Your credential "{credential.id}" has been created; sending it to the server...</p>
-    {:then}
-        <p>Successfully submitted the credential.</p>
+    {:then reply}
+        <p>Successfully added a credential.</p>
+        <p>
+            This enrollment link is no longer valid, but you can <a
+                href={reply.getLoginUrl()}>proceed to the login page</a> and login normally to add another
+            authentication method.
+        </p>
     {:catch error}
         <p>There was a problem sending the credential to the server:</p>
         <GrpcError {error} />
