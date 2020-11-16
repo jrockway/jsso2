@@ -146,11 +146,25 @@ func TestDecode(t *testing.T) {
 				t.Fatalf("from md: %v", err)
 			}
 			if err == nil && test.wantErr {
-				t.Fatal("from md: expected errror")
+				t.Fatal("from md: expected error")
 			}
 			if diff := cmp.Diff(got, test.wantSession, protocmp.Transform()); diff != "" {
 				t.Errorf("from md:\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestSpecial(t *testing.T) {
+	root := Root()
+	if !IsZero(root.GetId()) {
+		t.Errorf("root session is not zero: %#v", root)
+	}
+	anon := Anonymous()
+	if !IsZero(anon.GetId()) {
+		t.Errorf("anonymous session is not zero: %#v", anon)
+	}
+	if !HasTaint(anon, TaintAnonymous) {
+		t.Errorf("anonmymous session is missing taint: %#v", anon)
 	}
 }

@@ -162,3 +162,13 @@ func MustFromContext(ctx context.Context) *types.Session {
 	}
 	panic("no session in context")
 }
+
+// HasTaint returns true if the session has the named taint.
+func HasTaint(s *types.Session, taint string) bool {
+	for _, t := range s.GetTaints() {
+		if t == taint {
+			return true
+		}
+	}
+	return false
+}
