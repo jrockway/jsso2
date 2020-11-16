@@ -68,10 +68,15 @@ func main() {
 		Linker:      linker,
 	}
 
+	loginService := &login.Service{
+		DB:          db,
+		Permissions: auth,
+	}
+
 	server.AddService(func(s *grpc.Server) {
 		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(enrollmentService))
 		jssopb.RegisterUserService(s, jssopb.NewUserService(userService))
-		jssopb.RegisterLoginService(s, jssopb.NewLoginService(&login.Service{}))
+		jssopb.RegisterLoginService(s, jssopb.NewLoginService(loginService))
 	})
 	server.SetStartupCallback(func(info server.Info) {
 		// This starts up grpcui on the debug port.

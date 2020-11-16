@@ -1,6 +1,7 @@
 <script lang="ts">
     import { LoginClient } from "../protos/JssoServiceClientPb";
-    import { StartLoginRequest, StartLoginReply } from "../protos/jsso_pb";
+    import { StartLoginRequest } from "../protos/jsso_pb";
+    import { requestOptionsFromProto } from "../lib/webauthn";
     import GrpcError from "../components/GrpcError.svelte";
 
     let username = "";
@@ -19,9 +20,14 @@
         const req = new StartLoginRequest();
         req.setUsername(u);
         const reply = await loginClient.start(req, null);
-        console.log(reply);
-        const details = await navigator.credentials.get({});
-        return details.type;
+        console.log(reply.toObject);
+        const publicKey = requestOptionsFromProto(reply.getCredentialRequestOptions());
+        publicKey.userVerification = "discouraged";
+        const assertion = await navigator.credentials.get({
+            publicKey: publicKey,
+        });
+        console.log(assertion);
+        return assertion;
     }
 </script>
 
@@ -43,10 +49,10 @@
     {:else}
         {#await login(username)}
             Hello, <b>{username}</b>.
-        {:then reply}
-            Here's the reply: {reply}.
+        {:then assertion}
+            Here's the reply: {assertion}.
         {:catch error}
-            <p>There was a problem beginning the login process.</p>
+            <p>There was a problem logging in.</p>
             <GrpcError {error} />
         {/await}
     {/if}

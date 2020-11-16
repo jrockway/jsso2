@@ -51,6 +51,7 @@ message StartLoginRequest {
     string username = 1;
 }
 message StartLoginReply {
+    webauthn.PublicKeyCredentialRequestOptions credential_request_options = 1;
 }
 
 message StartEnrollmentRequest {
@@ -58,7 +59,7 @@ message StartEnrollmentRequest {
 
 message StartEnrollmentReply {
     types.User user = 1;
-    webauthn.PublicKeyCredentialCreationOptions credential_creation_options = 3;
+    webauthn.PublicKeyCredentialCreationOptions credential_creation_options = 2;
 }
 
 message FinishEnrollmentRequest {

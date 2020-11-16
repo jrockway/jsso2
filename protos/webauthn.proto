@@ -27,6 +27,13 @@ message PublicKeyCredentialCreationOptions {
     PublicKeyCredentialUserEntity user = 9;
 }
 
+message PublicKeyCredentialRequestOptions {
+    bytes challenge = 1;
+    repeated PublicKeyCredentialDescriptor allowed_credentials = 2;
+    google.protobuf.Duration timeout = 3;
+    // ...
+}
+
 message AuthenticatorSelectionCriteria {
     enum AuthenticatorAttachment {
         MISSING_AUTHENTICATOR_ATTACHMENT = 0;

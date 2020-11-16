@@ -105,6 +105,11 @@ export namespace StartLoginRequest {
 }
 
 export class StartLoginReply extends jspb.Message {
+  getCredentialRequestOptions(): webauthn_pb.PublicKeyCredentialRequestOptions | undefined;
+  setCredentialRequestOptions(value?: webauthn_pb.PublicKeyCredentialRequestOptions): StartLoginReply;
+  hasCredentialRequestOptions(): boolean;
+  clearCredentialRequestOptions(): StartLoginReply;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): StartLoginReply.AsObject;
   static toObject(includeInstance: boolean, msg: StartLoginReply): StartLoginReply.AsObject;
@@ -115,6 +120,7 @@ export class StartLoginReply extends jspb.Message {
 
 export namespace StartLoginReply {
   export type AsObject = {
+    credentialRequestOptions?: webauthn_pb.PublicKeyCredentialRequestOptions.AsObject,
   }
 }
 

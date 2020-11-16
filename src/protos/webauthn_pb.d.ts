@@ -69,6 +69,38 @@ export namespace PublicKeyCredentialCreationOptions {
   }
 }
 
+export class PublicKeyCredentialRequestOptions extends jspb.Message {
+  getChallenge(): Uint8Array | string;
+  getChallenge_asU8(): Uint8Array;
+  getChallenge_asB64(): string;
+  setChallenge(value: Uint8Array | string): PublicKeyCredentialRequestOptions;
+
+  getAllowedCredentialsList(): Array<PublicKeyCredentialDescriptor>;
+  setAllowedCredentialsList(value: Array<PublicKeyCredentialDescriptor>): PublicKeyCredentialRequestOptions;
+  clearAllowedCredentialsList(): PublicKeyCredentialRequestOptions;
+  addAllowedCredentials(value?: PublicKeyCredentialDescriptor, index?: number): PublicKeyCredentialDescriptor;
+
+  getTimeout(): google_protobuf_duration_pb.Duration | undefined;
+  setTimeout(value?: google_protobuf_duration_pb.Duration): PublicKeyCredentialRequestOptions;
+  hasTimeout(): boolean;
+  clearTimeout(): PublicKeyCredentialRequestOptions;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PublicKeyCredentialRequestOptions.AsObject;
+  static toObject(includeInstance: boolean, msg: PublicKeyCredentialRequestOptions): PublicKeyCredentialRequestOptions.AsObject;
+  static serializeBinaryToWriter(message: PublicKeyCredentialRequestOptions, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PublicKeyCredentialRequestOptions;
+  static deserializeBinaryFromReader(message: PublicKeyCredentialRequestOptions, reader: jspb.BinaryReader): PublicKeyCredentialRequestOptions;
+}
+
+export namespace PublicKeyCredentialRequestOptions {
+  export type AsObject = {
+    challenge: Uint8Array | string,
+    allowedCredentialsList: Array<PublicKeyCredentialDescriptor.AsObject>,
+    timeout?: google_protobuf_duration_pb.Duration.AsObject,
+  }
+}
+
 export class AuthenticatorSelectionCriteria extends jspb.Message {
   getAuthenticatorAttachment(): AuthenticatorSelectionCriteria.AuthenticatorAttachment;
   setAuthenticatorAttachment(value: AuthenticatorSelectionCriteria.AuthenticatorAttachment): AuthenticatorSelectionCriteria;

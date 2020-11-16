@@ -1,5 +1,6 @@
 import {
     PublicKeyCredentialCreationOptions as CCO,
+    PublicKeyCredentialRequestOptions as CRO,
     PublicKeyCredentialParameters,
     PublicKeyCredentialUserEntity,
     PublicKeyCredentialRpEntity,
@@ -8,7 +9,7 @@ import {
     PublicKeyCredentialDescriptor,
 } from "../../protos/webauthn_pb";
 
-import { creationOptionsFromProto, credentialFromJS } from "../webauthn";
+import { creationOptionsFromProto, credentialFromJS, requestOptionsFromProto } from "../webauthn";
 
 import * as google_protobuf_duration_pb from "google-protobuf/google/protobuf/duration_pb";
 
@@ -109,4 +110,34 @@ test("can convert a public key to a proto", () => {
     want.setAttestationObject(Uint8Array.from("foo", (c) => c.charCodeAt(0)));
     const got = credentialFromJS(input);
     expect(got.toObject()).toStrictEqual(want.toObject());
+});
+
+test("can convert a credential request proto to an object", () => {
+    const input = new CRO();
+    input.setChallenge(btoa("foo"));
+
+    const timeout = new google_protobuf_duration_pb.Duration();
+    timeout.setSeconds(60);
+    input.setTimeout(timeout);
+
+    const credential = new PublicKeyCredentialDescriptor();
+    credential.setId(Uint8Array.of(1, 2, 3, 4));
+    credential.setType("public-key");
+    credential.addTransports(PublicKeyCredentialDescriptor.AuthenticatorTransport.BLE);
+    credential.addTransports(PublicKeyCredentialDescriptor.AuthenticatorTransport.INTERNAL);
+    input.addAllowedCredentials(credential);
+
+    const want: PublicKeyCredentialRequestOptions = {
+        challenge: Uint8Array.from("foo", (c) => c.charCodeAt(0)),
+        timeout: 60000,
+        allowCredentials: [
+            {
+                id: Uint8Array.of(1, 2, 3, 4),
+                type: "public-key",
+                transports: ["ble", "internal"],
+            },
+        ],
+    };
+    const got = requestOptionsFromProto(input);
+    expect(got).toStrictEqual(want);
 });

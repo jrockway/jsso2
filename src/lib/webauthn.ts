@@ -1,9 +1,40 @@
 import {
     PublicKeyCredentialCreationOptions as CCO,
+    PublicKeyCredentialRequestOptions as CRO,
     PublicKeyCredentialDescriptor as CD,
     AuthenticatorSelectionCriteria as ASC,
     PublicKeyCredential as C,
 } from "../protos/webauthn_pb";
+
+function credentialsFromProto(input: CD[]): PublicKeyCredentialDescriptor[] {
+    const result = [];
+    for (const cred of input) {
+        const out = new Object() as PublicKeyCredentialDescriptor;
+        out.id = cred.getId_asU8();
+        if (cred.getType() == "public-key") {
+            out.type = "public-key";
+        }
+        out.transports = [];
+        for (const transport of cred.getTransportsList()) {
+            switch (transport) {
+                case CD.AuthenticatorTransport.BLE:
+                    out.transports.push("ble");
+                    break;
+                case CD.AuthenticatorTransport.INTERNAL:
+                    out.transports.push("internal");
+                    break;
+                case CD.AuthenticatorTransport.NFC:
+                    out.transports.push("nfc");
+                    break;
+                case CD.AuthenticatorTransport.USB:
+                    out.transports.push("usb");
+                    break;
+            }
+        }
+        result.push(out);
+    }
+    return result;
+}
 
 export function creationOptionsFromProto(rawOpts: CCO): PublicKeyCredentialCreationOptions {
     const opts = new Object() as PublicKeyCredentialCreationOptions;
@@ -43,32 +74,7 @@ export function creationOptionsFromProto(rawOpts: CCO): PublicKeyCredentialCreat
 
     opts.challenge = rawOpts.getChallenge_asU8();
 
-    opts.excludeCredentials = [];
-    for (const cred of rawOpts.getExcludeCredentialsList()) {
-        const out = new Object() as PublicKeyCredentialDescriptor;
-        out.id = cred.getId_asU8();
-        if (cred.getType() == "public-key") {
-            out.type = "public-key";
-        }
-        out.transports = [];
-        for (const transport of cred.getTransportsList()) {
-            switch (transport) {
-                case CD.AuthenticatorTransport.BLE:
-                    out.transports.push("ble");
-                    break;
-                case CD.AuthenticatorTransport.INTERNAL:
-                    out.transports.push("internal");
-                    break;
-                case CD.AuthenticatorTransport.NFC:
-                    out.transports.push("nfc");
-                    break;
-                case CD.AuthenticatorTransport.USB:
-                    out.transports.push("usb");
-                    break;
-            }
-        }
-        opts.excludeCredentials.push(out);
-    }
+    opts.excludeCredentials = credentialsFromProto(rawOpts.getExcludeCredentialsList());
 
     opts.pubKeyCredParams = [];
     for (const param of rawOpts.getPubKeyCredParamsList()) {
@@ -119,4 +125,12 @@ export function credentialFromJS(input: PublicKeyCredential): C {
     fillClientDataJSON(result, input.response);
     fillAttestationObject(result, input.response);
     return result;
+}
+
+export function requestOptionsFromProto(input: CRO): PublicKeyCredentialRequestOptions {
+    return {
+        challenge: input.getChallenge_asU8(),
+        timeout: 1000 * input.getTimeout().getSeconds() + input.getTimeout().getNanos() / 1e6,
+        allowCredentials: credentialsFromProto(input.getAllowedCredentialsList()),
+    };
 }

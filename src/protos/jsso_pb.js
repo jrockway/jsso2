@@ -1011,7 +1011,7 @@ proto.jsso.StartLoginReply.prototype.toObject = function(opt_includeInstance) {
  */
 proto.jsso.StartLoginReply.toObject = function(includeInstance, msg) {
   var f, obj = {
-
+    credentialRequestOptions: (f = msg.getCredentialRequestOptions()) && webauthn_pb.PublicKeyCredentialRequestOptions.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -1048,6 +1048,11 @@ proto.jsso.StartLoginReply.deserializeBinaryFromReader = function(msg, reader) {
     }
     var field = reader.getFieldNumber();
     switch (field) {
+    case 1:
+      var value = new webauthn_pb.PublicKeyCredentialRequestOptions;
+      reader.readMessage(value,webauthn_pb.PublicKeyCredentialRequestOptions.deserializeBinaryFromReader);
+      msg.setCredentialRequestOptions(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1077,6 +1082,51 @@ proto.jsso.StartLoginReply.prototype.serializeBinary = function() {
  */
 proto.jsso.StartLoginReply.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getCredentialRequestOptions();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      webauthn_pb.PublicKeyCredentialRequestOptions.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional webauthn.PublicKeyCredentialRequestOptions credential_request_options = 1;
+ * @return {?proto.webauthn.PublicKeyCredentialRequestOptions}
+ */
+proto.jsso.StartLoginReply.prototype.getCredentialRequestOptions = function() {
+  return /** @type{?proto.webauthn.PublicKeyCredentialRequestOptions} */ (
+    jspb.Message.getWrapperField(this, webauthn_pb.PublicKeyCredentialRequestOptions, 1));
+};
+
+
+/**
+ * @param {?proto.webauthn.PublicKeyCredentialRequestOptions|undefined} value
+ * @return {!proto.jsso.StartLoginReply} returns this
+*/
+proto.jsso.StartLoginReply.prototype.setCredentialRequestOptions = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.jsso.StartLoginReply} returns this
+ */
+proto.jsso.StartLoginReply.prototype.clearCredentialRequestOptions = function() {
+  return this.setCredentialRequestOptions(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.jsso.StartLoginReply.prototype.hasCredentialRequestOptions = function() {
+  return jspb.Message.getField(this, 1) != null;
 };
 
 
@@ -1256,7 +1306,7 @@ proto.jsso.StartEnrollmentReply.deserializeBinaryFromReader = function(msg, read
       reader.readMessage(value,types_pb.User.deserializeBinaryFromReader);
       msg.setUser(value);
       break;
-    case 3:
+    case 2:
       var value = new webauthn_pb.PublicKeyCredentialCreationOptions;
       reader.readMessage(value,webauthn_pb.PublicKeyCredentialCreationOptions.deserializeBinaryFromReader);
       msg.setCredentialCreationOptions(value);
@@ -1301,7 +1351,7 @@ proto.jsso.StartEnrollmentReply.serializeBinaryToWriter = function(message, writ
   f = message.getCredentialCreationOptions();
   if (f != null) {
     writer.writeMessage(
-      3,
+      2,
       f,
       webauthn_pb.PublicKeyCredentialCreationOptions.serializeBinaryToWriter
     );
@@ -1347,12 +1397,12 @@ proto.jsso.StartEnrollmentReply.prototype.hasUser = function() {
 
 
 /**
- * optional webauthn.PublicKeyCredentialCreationOptions credential_creation_options = 3;
+ * optional webauthn.PublicKeyCredentialCreationOptions credential_creation_options = 2;
  * @return {?proto.webauthn.PublicKeyCredentialCreationOptions}
  */
 proto.jsso.StartEnrollmentReply.prototype.getCredentialCreationOptions = function() {
   return /** @type{?proto.webauthn.PublicKeyCredentialCreationOptions} */ (
-    jspb.Message.getWrapperField(this, webauthn_pb.PublicKeyCredentialCreationOptions, 3));
+    jspb.Message.getWrapperField(this, webauthn_pb.PublicKeyCredentialCreationOptions, 2));
 };
 
 
@@ -1361,7 +1411,7 @@ proto.jsso.StartEnrollmentReply.prototype.getCredentialCreationOptions = functio
  * @return {!proto.jsso.StartEnrollmentReply} returns this
 */
 proto.jsso.StartEnrollmentReply.prototype.setCredentialCreationOptions = function(value) {
-  return jspb.Message.setWrapperField(this, 3, value);
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
@@ -1379,7 +1429,7 @@ proto.jsso.StartEnrollmentReply.prototype.clearCredentialCreationOptions = funct
  * @return {boolean}
  */
 proto.jsso.StartEnrollmentReply.prototype.hasCredentialCreationOptions = function() {
-  return jspb.Message.getField(this, 3) != null;
+  return jspb.Message.getField(this, 2) != null;
 };
 
 
