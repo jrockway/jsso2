@@ -18,7 +18,7 @@ require (
 	github.com/jackc/tern v1.12.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/joho/godotenv v1.3.0
-	github.com/jrockway/opinionated-server v0.0.14
+	github.com/jrockway/opinionated-server v0.0.15
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.3
