@@ -1,8 +1,11 @@
 package store
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -19,6 +22,7 @@ type rawSession struct {
 	Metadata  []byte    `db:"metadata"`
 	CreatedAt time.Time `db:"created_at"`
 	ExpiresAt time.Time `db:"expires_at"`
+	Taints    []byte    `db:"taints"`
 }
 
 // UpdateSession writes a session to the database.
@@ -40,10 +44,10 @@ func UpdateSession(ctx context.Context, db sqlx.ExtContext, s *types.Session) er
 		return fmt.Errorf("marshal session: %w", err)
 	}
 	if _, err := sqlx.NamedExecContext(ctx, db, `insert into session
-                  ( id,  user_id,  metadata,  created_at,  expires_at)
-            values(:id, :user_id, :metadata, :created_at, :expires_at)
+                  ( id,  user_id,  metadata,  taints,  created_at,  expires_at)
+            values(:id, :user_id, :metadata, :taints, :created_at, :expires_at)
             on conflict on constraint session_pkey
-               do update set metadata=:metadata, expires_at=:expires_at
+            do update set metadata=:metadata, taints=:taints, expires_at=:expires_at
 `, obj); err != nil {
 		return fmt.Errorf("insert: %w", err)
 	}
@@ -58,12 +62,22 @@ func fromSession(s *types.Session) (*rawSession, error) {
 		return nil, fmt.Errorf("marshal metadata: %w", err)
 	}
 
+	sort.Strings(s.Taints)
+	taintsJSON, err := json.Marshal(s.Taints)
+	if err != nil {
+		return nil, fmt.Errorf("marshal taints: %w", err)
+	}
+	if bytes.Equal(taintsJSON, []byte("null")) {
+		taintsJSON = []byte("[]")
+	}
+
 	result.ID = s.GetId()
 	result.UserID = s.GetUser().GetId()
 	result.Username = s.GetUser().GetUsername()
 	result.CreatedAt = s.GetCreatedAt().AsTime()
 	result.ExpiresAt = s.GetExpiresAt().AsTime()
 	result.Metadata = metadataJSON
+	result.Taints = taintsJSON
 
 	return result, nil
 }
@@ -76,8 +90,15 @@ func (raw *rawSession) toSession() (*types.Session, error) {
 	if err := protojson.Unmarshal(raw.Metadata, result.Metadata); err != nil {
 		return nil, fmt.Errorf("unmarshal metadata: %w", err)
 	}
+	var taints []string
+	if len(raw.Taints) > 0 {
+		if err := json.Unmarshal(raw.Taints, &taints); err != nil {
+			return nil, fmt.Errorf("unmarshal taints: %w", err)
+		}
+	}
 	result.CreatedAt = timestamppb.New(raw.CreatedAt)
 	result.ExpiresAt = timestamppb.New(raw.ExpiresAt)
+	result.Taints = taints
 	return result, nil
 }
 
@@ -88,7 +109,7 @@ func LookupSession(ctx context.Context, db sqlx.ExtContext, id []byte) (*types.S
 	}
 	raw := &rawSession{}
 	row := db.QueryRowxContext(ctx, `select
-            s.id AS id, s.metadata AS metadata, s.created_at AS created_at, s.expires_at AS expires_at,
+            s.id AS id, s.metadata AS metadata, s.taints AS taints, s.created_at AS created_at, s.expires_at AS expires_at,
             u.id AS user_id, u.username as username
             from session s left join "user" u on u.id=s.user_id where s.id=$1`, id)
 	if err := row.StructScan(raw); err != nil {

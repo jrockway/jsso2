@@ -155,6 +155,7 @@ func (p *Permissions) EnrollmentSessionPrototype(ctx context.Context, target *ty
 		User:      target,
 		CreatedAt: timestamppb.New(now),
 		ExpiresAt: timestamppb.New(now.Add(3 * 24 * time.Hour)),
+		Taints:    []string{"enrollment"},
 	}, nil
 }
 
@@ -169,6 +170,7 @@ func (p *Permissions) LoginSessionPrototype(ctx context.Context, target *types.U
 		User:      target,
 		CreatedAt: timestamppb.New(now),
 		ExpiresAt: timestamppb.New(now.Add(18 * time.Hour)),
+		Taints:    []string{"finish_login"},
 	}, nil
 }
 

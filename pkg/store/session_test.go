@@ -106,6 +106,31 @@ func TestSessions(t *testing.T) {
 		if _, err := LookupSession(e.Context, c.db, make([]byte, 64)); !errors.Is(err, sql.ErrNoRows) {
 			t.Errorf("expected no session rows; got %v", err)
 		}
+
+		session.Taints = append(session.Taints, "foo")
+		if err := UpdateSession(e.Context, c.db, session); err != nil {
+			t.Fatal(err)
+		}
+		got, err = LookupSession(e.Context, c.db, session.Id)
+		if err != nil {
+			t.Error(err)
+		}
+		if diff := cmp.Diff(got.Taints, []string{"foo"}); diff != "" {
+			t.Errorf("taints:\n%s", diff)
+		}
+
+		session.Taints = append(session.Taints, "bar")
+		if err := UpdateSession(e.Context, c.db, session); err != nil {
+			t.Fatal(err)
+		}
+		got, err = LookupSession(e.Context, c.db, session.Id)
+		if err != nil {
+			t.Error(err)
+		}
+		if diff := cmp.Diff(got.Taints, []string{"bar", "foo"}); diff != "" {
+			t.Errorf("taints:\n%s", diff)
+		}
+
 		expired := &types.Session{
 			Id: id,
 			User: &types.User{
