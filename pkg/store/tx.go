@@ -38,6 +38,9 @@ func isRetryable(err error) bool {
 	if errors.Is(err, sql.ErrTxDone) {
 		return true
 	}
+	if strings.Contains(err.Error(), "SQLSTATE 57") { // "terminating connection due to administrator command", etc.
+		return true
+	}
 	return false
 }
 
