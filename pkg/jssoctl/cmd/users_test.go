@@ -19,6 +19,7 @@ import (
 )
 
 func TestUsers(t *testing.T) {
+	jsonOutput = true
 	s := testserver.New()
 	s.WantRootClient = true
 	r := &jtesting.R{Logger: true, Database: true}

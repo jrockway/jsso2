@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	address string
-	token   string
-	timeout time.Duration
+	address    string
+	token      string
+	timeout    time.Duration
+	jsonOutput bool
 
 	rootCmd = &cobra.Command{
 		Use:   "jssoctl",
@@ -54,6 +55,7 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.PersistentFlags().BoolVar(&jsonOutput, "json-output", false, "set to output json instead of friendly text")
 	rootCmd.PersistentFlags().StringVar(&address, "address", "localhost:4000", "address of the jsso grpc address")
 	rootCmd.PersistentFlags().StringVar(&token, "token", "", "authentication material to use to authorize requests")
 	rootCmd.PersistentFlags().DurationVar(&timeout, "timeout", 5*time.Second, "time allowed for the command to run, including all network requests")

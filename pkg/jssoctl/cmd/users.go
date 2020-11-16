@@ -63,8 +63,12 @@ var (
 			if err != nil {
 				return fmt.Errorf("generate enrollment link: %w", err)
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), protojson.Format(reply))
-			fmt.Fprintln(cmd.ErrOrStderr(), "OK")
+			if jsonOutput {
+				fmt.Fprintln(cmd.OutOrStdout(), protojson.Format(reply))
+				fmt.Fprintln(cmd.ErrOrStderr(), "OK")
+			} else {
+				fmt.Fprintf(cmd.OutOrStdout(), "Click this link to enroll an authenticator: %s\n", reply.GetUrl())
+			}
 			return nil
 		},
 	}
