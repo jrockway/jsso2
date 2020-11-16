@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
@@ -13,13 +12,14 @@ import (
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/types"
+	"github.com/jrockway/jsso2/pkg/web"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Service struct {
 	DB          *store.Connection
 	Permissions *internalauth.Permissions
-	BaseURL     *url.URL
+	Linker      *web.Linker
 }
 
 // Edit implements jssopb.UserService.
@@ -70,6 +70,6 @@ func (s *Service) GenerateEnrollmentLink(ctx context.Context, req *jssopb.Genera
 		return reply, store.AsGRPCError(fmt.Errorf("store session: %w", err))
 	}
 	reply.Token = sessions.ToBase64(session)
-	reply.Url = s.BaseURL.String() + "#/enroll/" + reply.Token
+	reply.Url = s.Linker.EnrollmentPage(reply.Token)
 	return reply, nil
 }

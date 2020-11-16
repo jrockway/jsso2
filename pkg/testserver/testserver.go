@@ -13,6 +13,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/jtesting"
 	"github.com/jrockway/jsso2/pkg/store"
+	"github.com/jrockway/jsso2/pkg/web"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -53,8 +54,11 @@ func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 		}
 	}
 	s.Permissions.Store = db
-	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{DB: db, Permissions: s.Permissions}))
-	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"}}))
+	linker := &web.Linker{
+		BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"},
+	}
+	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{DB: db, Permissions: s.Permissions, Linker: linker}))
+	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, Linker: linker}))
 	jssopb.RegisterLoginService(server, jssopb.NewLoginService(&login.Service{}))
 }
 

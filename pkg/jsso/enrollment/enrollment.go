@@ -11,15 +11,16 @@ import (
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/types"
+	"github.com/jrockway/jsso2/pkg/web"
 	"github.com/jrockway/jsso2/pkg/webauthn"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Service struct {
-	DB             *store.Connection
-	Domain, Origin string
-	Permissions    *internalauth.Permissions
+	DB          *store.Connection
+	Permissions *internalauth.Permissions
+	Linker      *web.Linker
 }
 
 func (s *Service) Start(ctx context.Context, req *jssopb.StartEnrollmentRequest) (*jssopb.StartEnrollmentReply, error) {
@@ -44,7 +45,7 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartEnrollmentRequest)
 		return reply, store.AsGRPCError(err)
 	}
 
-	opts, err := webauthn.BeginEnrollment(s.Domain, session, creds)
+	opts, err := webauthn.BeginEnrollment(s.Linker.RPID(), session, creds)
 	if err != nil {
 		return reply, fmt.Errorf("create challenge: %w", err)
 	}
@@ -55,7 +56,7 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartEnrollmentRequest)
 func (s *Service) Finish(ctx context.Context, req *jssopb.FinishEnrollmentRequest) (*jssopb.FinishEnrollmentReply, error) {
 	reply := &jssopb.FinishEnrollmentReply{}
 	session := sessions.MustFromContext(ctx)
-	credential, err := webauthn.FinishEnrollment(s.Domain, s.Origin, session, req)
+	credential, err := webauthn.FinishEnrollment(s.Linker.RPID(), s.Linker.Origin(), session, req)
 	if err != nil {
 		return reply, fmt.Errorf("validate credential: %w", err)
 	}
@@ -74,5 +75,6 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishEnrollmentReques
 		return reply, store.AsGRPCError(err)
 	}
 	l.Debug("enrolled new credential", zap.Binary("credential_id", credential.GetCredentialId()))
+	reply.LoginUrl = s.Linker.LoginPage()
 	return reply, nil
 }

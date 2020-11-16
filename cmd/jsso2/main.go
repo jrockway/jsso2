@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/fullstorydev/grpcui/standalone"
@@ -13,6 +12,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/jsso/user"
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/store"
+	"github.com/jrockway/jsso2/pkg/web"
 	"github.com/jrockway/opinionated-server/server"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -51,22 +51,21 @@ func main() {
 	server.AddUnaryInterceptor(auth.UnaryServerInterceptor())
 	server.AddStreamInterceptor(auth.StreamServerInterceptor())
 
-	baseURL, err := url.Parse(appConfig.BaseURL)
+	linker, err := web.NewLinker(appConfig.BaseURL)
 	if err != nil {
-		zap.L().Fatal("failed to parse base URL", zap.String("base_url", appConfig.BaseURL), zap.Error(err))
+		zap.L().Fatal("failed to create linker", zap.String("base_url", appConfig.BaseURL), zap.Error(err))
 	}
 
 	userService := &user.Service{
 		DB:          db,
 		Permissions: auth,
-		BaseURL:     baseURL,
+		Linker:      linker,
 	}
 
 	enrollmentService := &enrollment.Service{
 		DB:          db,
 		Permissions: auth,
-		Domain:      baseURL.Hostname(),
-		Origin:      baseURL.Scheme + "://" + baseURL.Host,
+		Linker:      linker,
 	}
 
 	server.AddService(func(s *grpc.Server) {
