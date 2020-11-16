@@ -26,7 +26,7 @@ type Service struct {
 func (s *Service) Start(ctx context.Context, req *jssopb.StartEnrollmentRequest) (*jssopb.StartEnrollmentReply, error) {
 	reply := &jssopb.StartEnrollmentReply{}
 	session := sessions.MustFromContext(ctx)
-	if err := s.Permissions.AllowEnrollment(ctx, session); err != nil {
+	if err := s.Permissions.AllowStartEnrollment(ctx, session); err != nil {
 		return reply, fmt.Errorf("check permissions: %w", err)
 	}
 	user := session.GetUser()
@@ -56,6 +56,9 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartEnrollmentRequest)
 func (s *Service) Finish(ctx context.Context, req *jssopb.FinishEnrollmentRequest) (*jssopb.FinishEnrollmentReply, error) {
 	reply := &jssopb.FinishEnrollmentReply{}
 	session := sessions.MustFromContext(ctx)
+	if err := s.Permissions.AllowFinishEnrollment(ctx, session); err != nil {
+		return reply, fmt.Errorf("check permissions: %w", err)
+	}
 	credential, err := webauthn.FinishEnrollment(s.Linker.RPID(), s.Linker.Origin(), session, req)
 	if err != nil {
 		return reply, fmt.Errorf("validate credential: %w", err)

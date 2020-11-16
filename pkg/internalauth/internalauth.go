@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jmoiron/sqlx"
@@ -16,6 +17,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Config struct {
@@ -141,6 +143,35 @@ func (p *Permissions) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	}
 }
 
+// General policy decisions start here.
+func (p *Permissions) EnrollmentSessionPrototype(ctx context.Context, target *types.User) (*types.Session, error) {
+	id, err := sessions.GenerateID()
+	if err != nil {
+		return nil, fmt.Errorf("generate session id: %w", err)
+	}
+	now := time.Now()
+	return &types.Session{
+		Id:        id,
+		User:      target,
+		CreatedAt: timestamppb.New(now),
+		ExpiresAt: timestamppb.New(now.Add(3 * 24 * time.Hour)),
+	}, nil
+}
+
+func (p *Permissions) LoginSessionPrototype(ctx context.Context, target *types.User) (*types.Session, error) {
+	id, err := sessions.GenerateID()
+	if err != nil {
+		return nil, fmt.Errorf("generate session id: %w", err)
+	}
+	now := time.Now()
+	return &types.Session{
+		Id:        id,
+		User:      target,
+		CreatedAt: timestamppb.New(now),
+		ExpiresAt: timestamppb.New(now.Add(18 * time.Hour)),
+	}, nil
+}
+
 // The per-operation permissions start here.
 
 func (p *Permissions) AllowUserEdit(ctx context.Context, target *types.User, actor *types.Session) error {
@@ -151,6 +182,14 @@ func (p *Permissions) AllowGenerateEnrollmentLink(ctx context.Context, target *t
 	return nil
 }
 
-func (p *Permissions) AllowEnrollment(ctx context.Context, target *types.Session) error {
+func (p *Permissions) AllowStartEnrollment(ctx context.Context, target *types.Session) error {
+	return nil
+}
+
+func (p *Permissions) AllowFinishEnrollment(ctx context.Context, target *types.Session) error {
+	return nil
+}
+
+func (p *Permissions) AllowStartLogin(ctx context.Context, target *types.User) error {
 	return nil
 }

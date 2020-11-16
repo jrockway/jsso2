@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jmoiron/sqlx"
@@ -11,9 +10,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
-	"github.com/jrockway/jsso2/pkg/types"
 	"github.com/jrockway/jsso2/pkg/web"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Service struct {
@@ -45,31 +42,25 @@ func (s *Service) Edit(ctx context.Context, req *jssopb.EditUserRequest) (*jssop
 
 func (s *Service) GenerateEnrollmentLink(ctx context.Context, req *jssopb.GenerateEnrollmentLinkRequest) (*jssopb.GenerateEnrollmentLinkReply, error) {
 	reply := new(jssopb.GenerateEnrollmentLinkReply)
-	if err := s.DB.DoTx(ctx, ctxzap.Extract(ctx), true, func(tx *sqlx.Tx) error {
-		return store.LookupUser(ctx, tx, req.GetTarget())
-	}); err != nil {
-		return reply, store.AsGRPCError(fmt.Errorf("lookup target user: %w", err))
-	}
-	if err := s.Permissions.AllowGenerateEnrollmentLink(ctx, req.GetTarget(), sessions.MustFromContext(ctx)); err != nil {
-		return reply, fmt.Errorf("check permissions: %w", err)
-	}
-	sessionID, err := sessions.GenerateID()
-	if err != nil {
-		return reply, fmt.Errorf("generate session id: %w", err)
-	}
-	now := time.Now()
-	session := &types.Session{
-		Id:        sessionID,
-		User:      req.GetTarget(),
-		CreatedAt: timestamppb.New(now),
-		ExpiresAt: timestamppb.New(now.Add(3 * 24 * time.Hour)),
-	}
 	if err := s.DB.DoTx(ctx, ctxzap.Extract(ctx), false, func(tx *sqlx.Tx) error {
-		return store.AddSession(ctx, tx, session)
+		if err := store.LookupUser(ctx, tx, req.GetTarget()); err != nil {
+			return fmt.Errorf("lookup target user: %w", err)
+		}
+		if err := s.Permissions.AllowGenerateEnrollmentLink(ctx, req.GetTarget(), sessions.MustFromContext(ctx)); err != nil {
+			return fmt.Errorf("check permissions: %w", err)
+		}
+		session, err := s.Permissions.EnrollmentSessionPrototype(ctx, req.GetTarget())
+		if err != nil {
+			return fmt.Errorf("generate session prototype: %w", err)
+		}
+		if err := store.AddSession(ctx, tx, session); err != nil {
+			return fmt.Errorf("store session: %w", err)
+		}
+		reply.Token = sessions.ToBase64(session)
+		reply.Url = s.Linker.EnrollmentPage(reply.Token)
+		return nil
 	}); err != nil {
-		return reply, store.AsGRPCError(fmt.Errorf("store session: %w", err))
+		return reply, store.AsGRPCError(fmt.Errorf("generate enrollment link: %w", err))
 	}
-	reply.Token = sessions.ToBase64(session)
-	reply.Url = s.Linker.EnrollmentPage(reply.Token)
 	return reply, nil
 }
