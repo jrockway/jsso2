@@ -17,37 +17,43 @@ func TestAuthorizeRPC(t *testing.T) {
 	jtesting.Run(t, "authorizerpc", jtesting.R{Logger: true, Database: true}, func(t *testing.T, e *jtesting.E) {
 		c := store.MustGetTestDB(t, e)
 		p := NewFromConfig(&Config{RootPassword: "foo"}, c)
-		p.AllowedWithoutAuth = map[string]struct{}{
-			"ok": {},
+		p.RPCConfig = map[string]*RPCConfig{
+			"ok": {
+				Tolerations: []string{sessions.TaintAnonymous},
+			},
 		}
 
 		// Unauthenticated.
-		if err := p.AuthorizeRPC(e.Context, "bad"); err == nil {
+		if err := p.AuthorizeRPC(e.Context, sessions.Anonymous(), "bad"); err == nil {
 			t.Errorf("rpc 'bad': expected error")
 		}
-		if err := p.AuthorizeRPC(e.Context, "ok"); err != nil {
+		if err := p.AuthorizeRPC(e.Context, sessions.Anonymous(), "ok"); err != nil {
 			t.Errorf("rpc 'ok': unexpected error: %v", err)
 		}
 
 		// With valid session.
 		s := store.ValidSession(t, e, c)
 		ctx := metadata.NewIncomingContext(e.Context, metadata.Pairs("authorization", sessions.ToHeaderString(s)))
-		var err error
-		ctx, err = p.sessionToContext(ctx)
+		session, err := p.getSession(ctx)
 		if err != nil {
 			t.Fatalf("load session into context: %v", err)
 		}
-		if err := p.AuthorizeRPC(ctx, "bad"); err != nil {
+		ctx = sessions.NewContext(ctx, session)
+		if err := p.AuthorizeRPC(ctx, session, "bad"); err != nil {
 			t.Errorf("rpc 'bad' with auth: unexpected error: %v", err)
 		}
 
 		// With root password.
 		ctx = metadata.NewIncomingContext(e.Context, metadata.Pairs("authorization", "root foo"))
-		ctx, err = p.sessionToContext(ctx)
+		session, err = p.getSession(ctx)
+		if err != nil {
+			t.Fatalf("load session into context: %v", err)
+		}
+		ctx = sessions.NewContext(ctx, session)
 		if err != nil {
 			t.Fatalf("load root into context: %v", err)
 		}
-		if err := p.AuthorizeRPC(ctx, "bad"); err != nil {
+		if err := p.AuthorizeRPC(ctx, session, "bad"); err != nil {
 			t.Errorf("rpc 'bad' with root password: unexpected error: %v", err)
 		}
 	})
@@ -55,7 +61,7 @@ func TestAuthorizeRPC(t *testing.T) {
 
 func TestInterceptor(t *testing.T) {
 	p := NewFromConfig(&Config{RootPassword: "foo"}, nil)
-	p.AllowedWithoutAuth = map[string]struct{}{}
+	p.RPCConfig = map[string]*RPCConfig{}
 
 	h := health.NewServer()
 	setupGRPC := func(t *testing.T, e *jtesting.E, s *grpc.Server) {

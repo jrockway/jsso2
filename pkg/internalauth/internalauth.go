@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
@@ -24,13 +25,18 @@ type Config struct {
 	RootPassword string `long:"root_password" env:"ROOT_PASSWORD" description:"If set, allow a requestor full privileges if they include this password in their requests.  Should only be used to bootstrap a normal administrative user."`
 }
 
+// RPCConfig configures permissions for an RPC.
+type RPCConfig struct {
+	// An RPC must tolerate all session taints in order to be executed.
+	Tolerations []string
+}
+
 // Permissions manages all authorization in JSSO.
 type Permissions struct {
 	// If set, a password that can be provided to bypass all access controls.
 	RootPassword string
 
-	// RPCs that can be called without any credentials.
-	AllowedWithoutAuth map[string]struct{}
+	RPCConfig map[string]*RPCConfig
 
 	Store *store.Connection
 }
@@ -40,26 +46,54 @@ func NewFromConfig(c *Config, s *store.Connection) *Permissions {
 	return &Permissions{
 		Store:        s,
 		RootPassword: c.RootPassword,
-		AllowedWithoutAuth: map[string]struct{}{
-			"/grpc.health.v1.Health/Check":                                   {},
-			"/grpc.health.v1.Health/Watch":                                   {},
-			"/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo": {},
-			"/jsso.Login/Start":                                              {},
+		RPCConfig: map[string]*RPCConfig{
+			"/grpc.health.v1.Health/Check": {
+				Tolerations: []string{sessions.TaintAnonymous},
+			},
+			"/grpc.health.v1.Health/Watch": {
+				Tolerations: []string{sessions.TaintAnonymous},
+			},
+			"/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo": {
+				Tolerations: []string{sessions.TaintAnonymous},
+			},
+			"/jsso.Enrollment/Start": {
+				Tolerations: []string{sessions.TaintEnrollment},
+			},
+			"/jsso.Enrollment/Finish": {
+				Tolerations: []string{sessions.TaintEnrollment},
+			},
+			"/jsso.Login/Start": {
+				Tolerations: []string{sessions.TaintAnonymous},
+			},
+			"/jsso.Login/Finish": {
+				Tolerations: []string{sessions.TaintStartLogin},
+			},
 		},
 	}
 }
 
 // AuthorizeRPC returns whether the credentials provided allow the RPC to be called.
-func (p *Permissions) AuthorizeRPC(ctx context.Context, fullMethod string) error {
-	if _, ok := p.AllowedWithoutAuth[fullMethod]; ok {
+func (p *Permissions) AuthorizeRPC(ctx context.Context, session *types.Session, fullMethod string) error {
+	haveTaints := make(map[string]struct{})
+	for _, t := range session.GetTaints() {
+		haveTaints[t] = struct{}{}
+	}
+	var tolerations []string
+	if cfg, ok := p.RPCConfig[fullMethod]; ok {
+		tolerations = cfg.Tolerations
+	}
+	for _, t := range tolerations {
+		delete(haveTaints, t)
+	}
+	var remainingTaints []string
+	for k := range haveTaints {
+		remainingTaints = append(remainingTaints, k)
+	}
+	if len(remainingTaints) == 0 {
 		return nil
 	}
-
-	if _, ok := sessions.FromContext(ctx); ok {
-		return nil
-	}
-
-	return status.Error(codes.Unauthenticated, "no authentication credentials supplied")
+	sort.Strings(remainingTaints)
+	return status.Error(codes.PermissionDenied, fmt.Sprintf("rpc does not tolerate session taints %v", remainingTaints))
 }
 
 func (p *Permissions) isRoot(md metadata.MD) bool {
@@ -75,24 +109,22 @@ func (p *Permissions) isRoot(md metadata.MD) bool {
 	return false
 }
 
-func (p *Permissions) sessionToContext(ctx context.Context) (context.Context, error) {
+func (p *Permissions) getSession(ctx context.Context) (*types.Session, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return ctx, errors.New("no metadata in incoming context")
+		return nil, errors.New("no metadata in incoming context")
 	}
 
 	if p.isRoot(md) {
-		root := sessions.Root()
-		return sessions.NewContext(ctx, root), nil
+		return sessions.Root(), nil
 	}
 
 	sid, err := sessions.FromMetadata(md)
 	if err != nil {
 		if errors.Is(err, sessions.ErrSessionMissing) {
-			// No session is not an error.
-			return ctx, nil
+			return sessions.Anonymous(), nil
 		}
-		return ctx, fmt.Errorf("load session from metadata: %w", err)
+		return nil, fmt.Errorf("load session from metadata: %w", err)
 	}
 	var session *types.Session
 	err = p.Store.DoTx(ctx, ctxzap.Extract(ctx), true, func(tx *sqlx.Tx) error {
@@ -104,22 +136,26 @@ func (p *Permissions) sessionToContext(ctx context.Context) (context.Context, er
 		return nil
 	})
 	if err != nil {
-		return ctx, fmt.Errorf("read session from database: %w", err)
+		return nil, fmt.Errorf("read session from database: %w", err)
 	}
 	l := ctxzap.Extract(ctx)
-	l = l.With(zap.String("user", session.GetUser().GetUsername()))
+	l = l.With(zap.String("session.user", session.GetUser().GetUsername()))
+	if len(session.GetTaints()) > 0 {
+		l.With(zap.Any("session.taints", session.GetTaints()))
+	}
 	ctx = ctxzap.ToContext(ctx, l)
-	return sessions.NewContext(ctx, session), nil
+	return session, nil
 }
 
 func (p *Permissions) StreamServerInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		rootCtx := ss.Context()
-		ctx, err := p.sessionToContext(rootCtx)
+		session, err := p.getSession(rootCtx)
 		if err != nil {
 			return status.Error(codes.Unauthenticated, fmt.Sprintf("get user from session: %v", err))
 		}
-		if err := p.AuthorizeRPC(ctx, info.FullMethod); err != nil {
+		ctx := sessions.NewContext(rootCtx, session)
+		if err := p.AuthorizeRPC(ctx, session, info.FullMethod); err != nil {
 			l := ctxzap.Extract(ctx)
 			l.Debug("user not authorized to perform RPC", zap.Error(err))
 			return err
@@ -130,11 +166,12 @@ func (p *Permissions) StreamServerInterceptor() grpc.StreamServerInterceptor {
 
 func (p *Permissions) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(rootCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-		ctx, err := p.sessionToContext(rootCtx)
+		session, err := p.getSession(rootCtx)
 		if err != nil {
 			return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("get user from session: %v", err))
 		}
-		if err := p.AuthorizeRPC(ctx, info.FullMethod); err != nil {
+		ctx := sessions.NewContext(rootCtx, session)
+		if err := p.AuthorizeRPC(ctx, session, info.FullMethod); err != nil {
 			l := ctxzap.Extract(ctx)
 			l.Debug("user not authorized to perform RPC", zap.Error(err))
 			return nil, err
@@ -155,7 +192,7 @@ func (p *Permissions) EnrollmentSessionPrototype(ctx context.Context, target *ty
 		User:      target,
 		CreatedAt: timestamppb.New(now),
 		ExpiresAt: timestamppb.New(now.Add(3 * 24 * time.Hour)),
-		Taints:    []string{"enrollment"},
+		Taints:    []string{sessions.TaintEnrollment},
 	}, nil
 }
 
@@ -170,7 +207,7 @@ func (p *Permissions) LoginSessionPrototype(ctx context.Context, target *types.U
 		User:      target,
 		CreatedAt: timestamppb.New(now),
 		ExpiresAt: timestamppb.New(now.Add(18 * time.Hour)),
-		Taints:    []string{"finish_login"},
+		Taints:    []string{sessions.TaintStartLogin},
 	}, nil
 }
 

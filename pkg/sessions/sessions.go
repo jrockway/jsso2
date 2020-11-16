@@ -16,6 +16,12 @@ import (
 
 const sessionSize = 64
 
+const (
+	TaintEnrollment = "enrollment"
+	TaintStartLogin = "start_login"
+	TaintAnonymous  = "anonymous"
+)
+
 var encoder = base64.URLEncoding.WithPadding(base64.NoPadding)
 
 var ErrSessionMissing = errors.New("no session id")
@@ -104,6 +110,9 @@ func ToMetadata(dst metadata.MD, s *types.Session) {
 	dst.Append("Authorization", ToHeaderString(s))
 }
 
+// TODO(jrockway): We can't allow users to register as "root" or "anonymous" if we're going to use
+// those usernames here.
+
 // Root returns a session for the root user.
 func Root() *types.Session {
 	return &types.Session{
@@ -114,6 +123,20 @@ func Root() *types.Session {
 			Id:       -1, // It pains me to make root not 0, but 0 means other things.
 			Username: "root",
 		},
+	}
+}
+
+// Anonymous returns a session for an anonymous user.
+func Anonymous() *types.Session {
+	return &types.Session{
+		Id:        make([]byte, sessionSize),
+		CreatedAt: timestamppb.Now(),
+		ExpiresAt: timestamppb.New(time.Unix(1<<63-1, 0)),
+		User: &types.User{
+			Id:       -2,
+			Username: "anonymous",
+		},
+		Taints: []string{TaintAnonymous},
 	}
 }
 
