@@ -1,7 +1,7 @@
 <script lang="ts">
     import { LoginClient } from "../protos/JssoServiceClientPb";
-    import { StartLoginRequest } from "../protos/jsso_pb";
-    import { requestOptionsFromProto } from "../lib/webauthn";
+    import { StartLoginRequest, FinishLoginRequest } from "../protos/jsso_pb";
+    import { credentialFromJS, requestOptionsFromProto } from "../lib/webauthn";
     import GrpcError from "../components/GrpcError.svelte";
 
     let username = "";
@@ -17,17 +17,26 @@
 
     async function login(u: string) {
         showLogin = false;
-        const req = new StartLoginRequest();
-        req.setUsername(u);
-        const reply = await loginClient.start(req, null);
-        console.log(reply.toObject);
-        const publicKey = requestOptionsFromProto(reply.getCredentialRequestOptions());
+        const startReq = new StartLoginRequest();
+        startReq.setUsername(u);
+        const startReply = await loginClient.start(startReq, null);
+        console.log(startReply.toObject);
+        const publicKey = requestOptionsFromProto(startReply.getCredentialRequestOptions());
         publicKey.userVerification = "discouraged";
         const assertion = await navigator.credentials.get({
             publicKey: publicKey,
         });
         console.log(assertion);
-        return assertion;
+        if (!(assertion instanceof PublicKeyCredential)) {
+            throw "not a public key credential";
+        }
+        const finishReq = new FinishLoginRequest();
+        finishReq.setCredential(credentialFromJS(assertion));
+        const finishReply = await loginClient.finish(finishReq, {
+            Authorization: "SessionID " + startReply.getToken(),
+        });
+        console.log(finishReply);
+        return finishReply.getRedirectUrl();
     }
 </script>
 
@@ -48,9 +57,12 @@
         </p>
     {:else}
         {#await login(username)}
-            Hello, <b>{username}</b>.
-        {:then assertion}
-            Here's the reply: {assertion}.
+            <p>Hello, <b>{username}</b>.</p>
+        {:then redirect}
+            <p>You have logged in.</p>
+            {#if redirect != ''}
+                <p>You should be redirected to <a href={redirect}>{redirect}</a> shortly.</p>
+            {/if}
         {:catch error}
             <p>There was a problem logging in.</p>
             <GrpcError {error} />

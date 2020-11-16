@@ -110,6 +110,9 @@ export class StartLoginReply extends jspb.Message {
   hasCredentialRequestOptions(): boolean;
   clearCredentialRequestOptions(): StartLoginReply;
 
+  getToken(): string;
+  setToken(value: string): StartLoginReply;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): StartLoginReply.AsObject;
   static toObject(includeInstance: boolean, msg: StartLoginReply): StartLoginReply.AsObject;
@@ -121,6 +124,45 @@ export class StartLoginReply extends jspb.Message {
 export namespace StartLoginReply {
   export type AsObject = {
     credentialRequestOptions?: webauthn_pb.PublicKeyCredentialRequestOptions.AsObject,
+    token: string,
+  }
+}
+
+export class FinishLoginRequest extends jspb.Message {
+  getCredential(): webauthn_pb.PublicKeyCredential | undefined;
+  setCredential(value?: webauthn_pb.PublicKeyCredential): FinishLoginRequest;
+  hasCredential(): boolean;
+  clearCredential(): FinishLoginRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): FinishLoginRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: FinishLoginRequest): FinishLoginRequest.AsObject;
+  static serializeBinaryToWriter(message: FinishLoginRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): FinishLoginRequest;
+  static deserializeBinaryFromReader(message: FinishLoginRequest, reader: jspb.BinaryReader): FinishLoginRequest;
+}
+
+export namespace FinishLoginRequest {
+  export type AsObject = {
+    credential?: webauthn_pb.PublicKeyCredential.AsObject,
+  }
+}
+
+export class FinishLoginReply extends jspb.Message {
+  getRedirectUrl(): string;
+  setRedirectUrl(value: string): FinishLoginReply;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): FinishLoginReply.AsObject;
+  static toObject(includeInstance: boolean, msg: FinishLoginReply): FinishLoginReply.AsObject;
+  static serializeBinaryToWriter(message: FinishLoginReply, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): FinishLoginReply;
+  static deserializeBinaryFromReader(message: FinishLoginReply, reader: jspb.BinaryReader): FinishLoginReply;
+}
+
+export namespace FinishLoginReply {
+  export type AsObject = {
+    redirectUrl: string,
   }
 }
 

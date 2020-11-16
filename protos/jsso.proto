@@ -20,6 +20,8 @@ service User {
 service Login {
     rpc Start(StartLoginRequest) returns (StartLoginReply) {
     }
+    rpc Finish(FinishLoginRequest) returns (FinishLoginReply) {
+    }
 }
 
 // Service Enrollment manages the WebAuthn enrollment ceremony.
@@ -52,6 +54,14 @@ message StartLoginRequest {
 }
 message StartLoginReply {
     webauthn.PublicKeyCredentialRequestOptions credential_request_options = 1;
+    string token = 2;
+}
+
+message FinishLoginRequest {
+    webauthn.PublicKeyCredential credential = 1;
+}
+message FinishLoginReply {
+    string redirect_url = 1;
 }
 
 message StartEnrollmentRequest {

@@ -176,6 +176,46 @@ export class LoginClient {
     this.methodInfoStart);
   }
 
+  methodInfoFinish = new grpcWeb.AbstractClientBase.MethodInfo(
+    jsso_pb.FinishLoginReply,
+    (request: jsso_pb.FinishLoginRequest) => {
+      return request.serializeBinary();
+    },
+    jsso_pb.FinishLoginReply.deserializeBinary
+  );
+
+  finish(
+    request: jsso_pb.FinishLoginRequest,
+    metadata: grpcWeb.Metadata | null): Promise<jsso_pb.FinishLoginReply>;
+
+  finish(
+    request: jsso_pb.FinishLoginRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: jsso_pb.FinishLoginReply) => void): grpcWeb.ClientReadableStream<jsso_pb.FinishLoginReply>;
+
+  finish(
+    request: jsso_pb.FinishLoginRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: jsso_pb.FinishLoginReply) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/jsso.Login/Finish',
+        request,
+        metadata || {},
+        this.methodInfoFinish,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/jsso.Login/Finish',
+    request,
+    metadata || {},
+    this.methodInfoFinish);
+  }
+
 }
 
 export class EnrollmentClient {

@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jssopb"
+	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/types"
 	"github.com/jrockway/jsso2/pkg/webauthnpb"
@@ -42,6 +43,8 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartLoginRequest) (*js
 		if err != nil {
 			return fmt.Errorf("generate session prototype for user %q: %w", user.GetUsername(), err)
 		}
+		reply.Token = sessions.ToBase64(session)
+
 		// XXX: We need to taint this session to only allow it to be used to call Finish().
 		// The current state is completely insecure; no authentication is required to act as
 		// any user.  Obviously, this can't remain :)
@@ -70,5 +73,10 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartLoginRequest) (*js
 	}); err != nil {
 		return reply, store.AsGRPCError(fmt.Errorf("generate credential request: %w", err))
 	}
+	return reply, nil
+}
+
+func (s *Service) Finish(ctx context.Context, req *jssopb.FinishLoginRequest) (*jssopb.FinishLoginReply, error) {
+	reply := &jssopb.FinishLoginReply{}
 	return reply, nil
 }

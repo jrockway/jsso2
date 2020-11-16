@@ -172,6 +172,7 @@ type UnstableUserService interface {
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LoginClient interface {
 	Start(ctx context.Context, in *StartLoginRequest, opts ...grpc.CallOption) (*StartLoginReply, error)
+	Finish(ctx context.Context, in *FinishLoginRequest, opts ...grpc.CallOption) (*FinishLoginReply, error)
 }
 
 type loginClient struct {
@@ -195,12 +196,26 @@ func (c *loginClient) Start(ctx context.Context, in *StartLoginRequest, opts ...
 	return out, nil
 }
 
+var loginFinishStreamDesc = &grpc.StreamDesc{
+	StreamName: "Finish",
+}
+
+func (c *loginClient) Finish(ctx context.Context, in *FinishLoginRequest, opts ...grpc.CallOption) (*FinishLoginReply, error) {
+	out := new(FinishLoginReply)
+	err := c.cc.Invoke(ctx, "/jsso.Login/Finish", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LoginService is the service API for Login service.
 // Fields should be assigned to their respective handler implementations only before
 // RegisterLoginService is called.  Any unassigned fields will result in the
 // handler for that method returning an Unimplemented error.
 type LoginService struct {
-	Start func(context.Context, *StartLoginRequest) (*StartLoginReply, error)
+	Start  func(context.Context, *StartLoginRequest) (*StartLoginReply, error)
+	Finish func(context.Context, *FinishLoginRequest) (*FinishLoginReply, error)
 }
 
 func (s *LoginService) start(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -220,6 +235,23 @@ func (s *LoginService) start(_ interface{}, ctx context.Context, dec func(interf
 	}
 	return interceptor(ctx, in, info, handler)
 }
+func (s *LoginService) finish(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FinishLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.Finish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/jsso.Login/Finish",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.Finish(ctx, req.(*FinishLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 // RegisterLoginService registers a service implementation with a gRPC server.
 func RegisterLoginService(s grpc.ServiceRegistrar, srv *LoginService) {
@@ -229,12 +261,21 @@ func RegisterLoginService(s grpc.ServiceRegistrar, srv *LoginService) {
 			return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
 		}
 	}
+	if srvCopy.Finish == nil {
+		srvCopy.Finish = func(context.Context, *FinishLoginRequest) (*FinishLoginReply, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method Finish not implemented")
+		}
+	}
 	sd := grpc.ServiceDesc{
 		ServiceName: "jsso.Login",
 		Methods: []grpc.MethodDesc{
 			{
 				MethodName: "Start",
 				Handler:    srvCopy.start,
+			},
+			{
+				MethodName: "Finish",
+				Handler:    srvCopy.finish,
 			},
 		},
 		Streams:  []grpc.StreamDesc{},
@@ -257,6 +298,11 @@ func NewLoginService(s interface{}) *LoginService {
 	}); ok {
 		ns.Start = h.Start
 	}
+	if h, ok := s.(interface {
+		Finish(context.Context, *FinishLoginRequest) (*FinishLoginReply, error)
+	}); ok {
+		ns.Finish = h.Finish
+	}
 	return ns
 }
 
@@ -266,6 +312,7 @@ func NewLoginService(s interface{}) *LoginService {
 // use of this type is not recommended.
 type UnstableLoginService interface {
 	Start(context.Context, *StartLoginRequest) (*StartLoginReply, error)
+	Finish(context.Context, *FinishLoginRequest) (*FinishLoginReply, error)
 }
 
 // EnrollmentClient is the client API for Enrollment service.
