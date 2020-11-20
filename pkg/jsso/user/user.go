@@ -64,3 +64,12 @@ func (s *Service) GenerateEnrollmentLink(ctx context.Context, req *jssopb.Genera
 	}
 	return reply, nil
 }
+
+func (s *Service) WhoAmI(ctx context.Context, req *jssopb.WhoAmIRequest) (*jssopb.WhoAmIReply, error) {
+	reply := new(jssopb.WhoAmIReply)
+	session, ok := sessions.FromContext(ctx)
+	if ok && len(session.GetTaints()) == 0 {
+		reply.User = session.GetUser()
+	}
+	return reply, nil
+}

@@ -14,6 +14,11 @@ service User {
     rpc GenerateEnrollmentLink(GenerateEnrollmentLinkRequest)
         returns (GenerateEnrollmentLinkReply) {
     }
+    // WhoAmI returns the user object associated with the current session.  When
+    // called without a session, a null current user is returned rather than an
+    // error.
+    rpc WhoAmI(WhoAmIRequest) returns (WhoAmIReply) {
+    }
 }
 
 // Service Login manages the WebAuthn login ceremony.
@@ -75,6 +80,13 @@ message StartEnrollmentReply {
 message FinishEnrollmentRequest {
     webauthn.PublicKeyCredential credential = 1;
 }
+
 message FinishEnrollmentReply {
     string login_url = 1;
+}
+
+message WhoAmIRequest {
+}
+message WhoAmIReply {
+    types.User user = 1;
 }

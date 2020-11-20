@@ -56,6 +56,9 @@ func NewFromConfig(c *Config, s *store.Connection) *Permissions {
 			"/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo": {
 				Tolerations: []string{sessions.TaintAnonymous},
 			},
+			"/jsso.User/WhoAmI": {
+				Tolerations: []string{sessions.TaintAnonymous},
+			},
 			"/jsso.Enrollment/Start": {
 				Tolerations: []string{sessions.TaintEnrollment},
 			},

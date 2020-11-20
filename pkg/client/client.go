@@ -16,14 +16,22 @@ type Set struct {
 
 // Credentials authenticates requests to the JSSO server.
 type Credentials struct {
-	Token string
+	Root   string // Set to authenticate with a root password.
+	Token  string // Set to authenticate with a session ID.
+	Bearer string // Set to authenticate with a bearer token.
 }
 
 // GetRequestMetadata implements grpc.PerRPCCredentials.
 func (c *Credentials) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{
-		"Authorization": c.Token,
-	}, nil
+	result := map[string]string{}
+	if c.Token != "" {
+		result["Authorization"] = "SessionID " + c.Token
+	} else if c.Bearer != "" {
+		result["Authorization"] = "Bearer " + c.Bearer
+	} else if c.Root != "" {
+		result["Authorization"] = "root " + c.Root
+	}
+	return result, nil
 }
 
 // RequireTransportSecurity implements grpc.PerRPCCredentials.
@@ -41,8 +49,8 @@ func FromCC(cc *grpc.ClientConn) *Set {
 }
 
 // Dial dials a JSSO server and returns a clientset.
-func Dial(ctx context.Context, address, token string, dialopts ...grpc.DialOption) (*Set, error) {
-	dialopts = append(dialopts, grpc.WithInsecure(), grpc.WithPerRPCCredentials(&Credentials{Token: token}))
+func Dial(ctx context.Context, address string, creds *Credentials, dialopts ...grpc.DialOption) (*Set, error) {
+	dialopts = append(dialopts, grpc.WithInsecure(), grpc.WithPerRPCCredentials(creds))
 
 	cc, err := grpc.DialContext(ctx, address, dialopts...)
 	if err != nil {

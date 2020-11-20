@@ -21,6 +21,10 @@ type UserClient interface {
 	Edit(ctx context.Context, in *EditUserRequest, opts ...grpc.CallOption) (*EditUserReply, error)
 	// GenerateEnrollmentLink generates an enrollment token for the user.
 	GenerateEnrollmentLink(ctx context.Context, in *GenerateEnrollmentLinkRequest, opts ...grpc.CallOption) (*GenerateEnrollmentLinkReply, error)
+	// WhoAmI returns the user object associated with the current session.  When
+	// called without a session, a null current user is returned rather than an
+	// error.
+	WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...grpc.CallOption) (*WhoAmIReply, error)
 }
 
 type userClient struct {
@@ -57,6 +61,19 @@ func (c *userClient) GenerateEnrollmentLink(ctx context.Context, in *GenerateEnr
 	return out, nil
 }
 
+var userWhoAmIStreamDesc = &grpc.StreamDesc{
+	StreamName: "WhoAmI",
+}
+
+func (c *userClient) WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...grpc.CallOption) (*WhoAmIReply, error) {
+	out := new(WhoAmIReply)
+	err := c.cc.Invoke(ctx, "/jsso.User/WhoAmI", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserService is the service API for User service.
 // Fields should be assigned to their respective handler implementations only before
 // RegisterUserService is called.  Any unassigned fields will result in the
@@ -66,6 +83,10 @@ type UserService struct {
 	Edit func(context.Context, *EditUserRequest) (*EditUserReply, error)
 	// GenerateEnrollmentLink generates an enrollment token for the user.
 	GenerateEnrollmentLink func(context.Context, *GenerateEnrollmentLinkRequest) (*GenerateEnrollmentLinkReply, error)
+	// WhoAmI returns the user object associated with the current session.  When
+	// called without a session, a null current user is returned rather than an
+	// error.
+	WhoAmI func(context.Context, *WhoAmIRequest) (*WhoAmIReply, error)
 }
 
 func (s *UserService) edit(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -102,6 +123,23 @@ func (s *UserService) generateEnrollmentLink(_ interface{}, ctx context.Context,
 	}
 	return interceptor(ctx, in, info, handler)
 }
+func (s *UserService) whoAmI(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WhoAmIRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.WhoAmI(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/jsso.User/WhoAmI",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.WhoAmI(ctx, req.(*WhoAmIRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 // RegisterUserService registers a service implementation with a gRPC server.
 func RegisterUserService(s grpc.ServiceRegistrar, srv *UserService) {
@@ -116,6 +154,11 @@ func RegisterUserService(s grpc.ServiceRegistrar, srv *UserService) {
 			return nil, status.Errorf(codes.Unimplemented, "method GenerateEnrollmentLink not implemented")
 		}
 	}
+	if srvCopy.WhoAmI == nil {
+		srvCopy.WhoAmI = func(context.Context, *WhoAmIRequest) (*WhoAmIReply, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method WhoAmI not implemented")
+		}
+	}
 	sd := grpc.ServiceDesc{
 		ServiceName: "jsso.User",
 		Methods: []grpc.MethodDesc{
@@ -126,6 +169,10 @@ func RegisterUserService(s grpc.ServiceRegistrar, srv *UserService) {
 			{
 				MethodName: "GenerateEnrollmentLink",
 				Handler:    srvCopy.generateEnrollmentLink,
+			},
+			{
+				MethodName: "WhoAmI",
+				Handler:    srvCopy.whoAmI,
 			},
 		},
 		Streams:  []grpc.StreamDesc{},
@@ -153,6 +200,11 @@ func NewUserService(s interface{}) *UserService {
 	}); ok {
 		ns.GenerateEnrollmentLink = h.GenerateEnrollmentLink
 	}
+	if h, ok := s.(interface {
+		WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIReply, error)
+	}); ok {
+		ns.WhoAmI = h.WhoAmI
+	}
 	return ns
 }
 
@@ -165,6 +217,10 @@ type UnstableUserService interface {
 	Edit(context.Context, *EditUserRequest) (*EditUserReply, error)
 	// GenerateEnrollmentLink generates an enrollment token for the user.
 	GenerateEnrollmentLink(context.Context, *GenerateEnrollmentLinkRequest) (*GenerateEnrollmentLinkReply, error)
+	// WhoAmI returns the user object associated with the current session.  When
+	// called without a session, a null current user is returned rather than an
+	// error.
+	WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIReply, error)
 }
 
 // LoginClient is the client API for Login service.

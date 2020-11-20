@@ -37,12 +37,12 @@ func New() *S {
 func (s *S) Options(e *jtesting.E) []grpc.ServerOption {
 	return []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
-			s.Permissions.UnaryServerInterceptor(),
 			gzap.UnaryServerInterceptor(e.Logger.Named("server")),
+			s.Permissions.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
-			s.Permissions.StreamServerInterceptor(),
 			gzap.StreamServerInterceptor(e.Logger.Named("server")),
+			s.Permissions.StreamServerInterceptor(),
 		),
 	}
 }
@@ -51,7 +51,7 @@ func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 	db := store.MustGetTestDB(t, e)
 	if s.WantRootClient {
 		s.Credentials = &client.Credentials{
-			Token: "root root",
+			Root: "root",
 		}
 	}
 	s.Permissions.Store = db

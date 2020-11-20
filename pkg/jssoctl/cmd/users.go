@@ -72,12 +72,28 @@ var (
 			return nil
 		},
 	}
+
+	whoAmICmd = &cobra.Command{
+		Use:   "whoami",
+		Short: "Print some information about your current session.",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			reply, err := clientset.UserClient.WhoAmI(cmd.Context(), &jssopb.WhoAmIRequest{})
+			if err != nil {
+				return fmt.Errorf("whoami: %w", err)
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), protojson.Format(reply))
+			fmt.Fprintln(cmd.ErrOrStderr(), "OK")
+			return nil
+		},
+	}
 )
 
 func init() {
 	generateEnrollmentLinkCmd.Flags().String("username", "", "the name of the user to enroll")
 	generateEnrollmentLinkCmd.Flags().Int64("id", 0, "the id of the user to enroll")
-	usersCmd.AddCommand(addUserCmd, generateEnrollmentLinkCmd)
+	usersCmd.AddCommand(addUserCmd, generateEnrollmentLinkCmd, whoAmICmd)
 	AddClientset(addUserCmd)
 	AddClientset(generateEnrollmentLinkCmd)
+	AddClientset(whoAmICmd)
 }

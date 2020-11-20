@@ -244,3 +244,37 @@ export namespace FinishEnrollmentReply {
   }
 }
 
+export class WhoAmIRequest extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): WhoAmIRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: WhoAmIRequest): WhoAmIRequest.AsObject;
+  static serializeBinaryToWriter(message: WhoAmIRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): WhoAmIRequest;
+  static deserializeBinaryFromReader(message: WhoAmIRequest, reader: jspb.BinaryReader): WhoAmIRequest;
+}
+
+export namespace WhoAmIRequest {
+  export type AsObject = {
+  }
+}
+
+export class WhoAmIReply extends jspb.Message {
+  getUser(): types_pb.User | undefined;
+  setUser(value?: types_pb.User): WhoAmIReply;
+  hasUser(): boolean;
+  clearUser(): WhoAmIReply;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): WhoAmIReply.AsObject;
+  static toObject(includeInstance: boolean, msg: WhoAmIReply): WhoAmIReply.AsObject;
+  static serializeBinaryToWriter(message: WhoAmIReply, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): WhoAmIReply;
+  static deserializeBinaryFromReader(message: WhoAmIReply, reader: jspb.BinaryReader): WhoAmIReply;
+}
+
+export namespace WhoAmIReply {
+  export type AsObject = {
+    user?: types_pb.User.AsObject,
+  }
+}
+

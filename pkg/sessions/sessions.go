@@ -20,6 +20,11 @@ const (
 	TaintEnrollment = "enrollment"
 	TaintStartLogin = "start_login"
 	TaintAnonymous  = "anonymous"
+
+	AnonymousUsername = "anonymous"
+	AnonymousUser     = -2
+	RootUsername      = "root"
+	RootUser          = -1 // It pains me to make root not 0, but 0 means other things.
 )
 
 var encoder = base64.URLEncoding.WithPadding(base64.NoPadding)
@@ -82,7 +87,11 @@ func FromHeaderString(header string) (*types.Session, error) {
 	typ, tok := parts[0], parts[1]
 	switch typ {
 	case "SessionID":
-		return FromBase64(tok)
+		session, err := FromBase64(tok)
+		if err != nil {
+			return nil, fmt.Errorf("parse SessionID token: %w", err)
+		}
+		return session, nil
 	default:
 		return nil, fmt.Errorf("unknown token type %q", typ)
 	}
@@ -120,8 +129,8 @@ func Root() *types.Session {
 		CreatedAt: timestamppb.Now(),
 		ExpiresAt: timestamppb.New(time.Unix(1<<63-1, 0)),
 		User: &types.User{
-			Id:       -1, // It pains me to make root not 0, but 0 means other things.
-			Username: "root",
+			Id:       RootUser,
+			Username: RootUsername,
 		},
 	}
 }
@@ -133,8 +142,8 @@ func Anonymous() *types.Session {
 		CreatedAt: timestamppb.Now(),
 		ExpiresAt: timestamppb.New(time.Unix(1<<63-1, 0)),
 		User: &types.User{
-			Id:       -2,
-			Username: "anonymous",
+			Id:       AnonymousUser,
+			Username: AnonymousUsername,
 		},
 		Taints: []string{TaintAnonymous},
 	}

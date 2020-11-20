@@ -21,9 +21,10 @@ import (
 func TestUsers(t *testing.T) {
 	jsonOutput = true
 	s := testserver.New()
-	s.WantRootClient = true
 	r := &jtesting.R{Logger: true, Database: true}
+	defaultCreds := &client.Credentials{Root: "root"}
 	s.ToR(r)
+	s.Credentials = &client.Credentials{}
 	jtesting.Run(t, "users", *r, func(t *testing.T, e *jtesting.E) {
 		testData := []struct {
 			name         string
@@ -32,6 +33,7 @@ func TestUsers(t *testing.T) {
 			wantOutProto proto.Message
 			cmpopts      []cmp.Option
 			wantErr      string
+			creds        *client.Credentials
 		}{
 			{
 				name: "add",
@@ -82,6 +84,29 @@ func TestUsers(t *testing.T) {
 				args:     []string{"users", "enroll", "--username=invalid"},
 				wantFail: true,
 			},
+			{
+				name: "whoami",
+				args: []string{"users", "whoami"},
+				wantOutProto: &jssopb.WhoAmIReply{
+					User: sessions.Root().GetUser(),
+				},
+				wantErr: "OK\n",
+			},
+			{
+				name:         "whoami as anonymous user",
+				creds:        &client.Credentials{},
+				args:         []string{"users", "whoami"},
+				wantOutProto: &jssopb.WhoAmIReply{},
+				wantErr:      "OK\n",
+			},
+			{
+				name: "whoami with invalid session",
+				creds: &client.Credentials{
+					Token: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa",
+				},
+				args:     []string{"users", "whoami"},
+				wantFail: true,
+			},
 		}
 
 		clientset = client.FromCC(e.ClientConn)
@@ -96,6 +121,14 @@ func TestUsers(t *testing.T) {
 				rootCmd.SetErr(err)
 				defer rootCmd.SetOut(os.Stderr)
 				defer rootCmd.SetErr(os.Stderr)
+
+				creds := test.creds
+				if creds == nil {
+					creds = defaultCreds
+				}
+				s.Credentials.(*client.Credentials).Root = creds.Root
+				s.Credentials.(*client.Credentials).Token = creds.Token
+				s.Credentials.(*client.Credentials).Bearer = creds.Bearer
 
 				if err := rootCmd.ExecuteContext(e.Context); !test.wantFail && err != nil {
 					t.Fatalf("execute: %v", err)

@@ -21,7 +21,12 @@ func AddClientset(c *cobra.Command) {
 			// Skip dialing for the tests.
 			return nil
 		}
-		set, err := client.Dial(cmd.Context(), address, token)
+		credentials := &client.Credentials{
+			Bearer: bearer,
+			Root:   root,
+			Token:  session,
+		}
+		set, err := client.Dial(cmd.Context(), address, credentials)
 		if err != nil {
 			return fmt.Errorf("connect: %v", err)
 		}

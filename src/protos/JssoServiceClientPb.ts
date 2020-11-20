@@ -115,6 +115,46 @@ export class UserClient {
     this.methodInfoGenerateEnrollmentLink);
   }
 
+  methodInfoWhoAmI = new grpcWeb.AbstractClientBase.MethodInfo(
+    jsso_pb.WhoAmIReply,
+    (request: jsso_pb.WhoAmIRequest) => {
+      return request.serializeBinary();
+    },
+    jsso_pb.WhoAmIReply.deserializeBinary
+  );
+
+  whoAmI(
+    request: jsso_pb.WhoAmIRequest,
+    metadata: grpcWeb.Metadata | null): Promise<jsso_pb.WhoAmIReply>;
+
+  whoAmI(
+    request: jsso_pb.WhoAmIRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: jsso_pb.WhoAmIReply) => void): grpcWeb.ClientReadableStream<jsso_pb.WhoAmIReply>;
+
+  whoAmI(
+    request: jsso_pb.WhoAmIRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: jsso_pb.WhoAmIReply) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/jsso.User/WhoAmI',
+        request,
+        metadata || {},
+        this.methodInfoWhoAmI,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/jsso.User/WhoAmI',
+    request,
+    metadata || {},
+    this.methodInfoWhoAmI);
+  }
+
 }
 
 export class LoginClient {
