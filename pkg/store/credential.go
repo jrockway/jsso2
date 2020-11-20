@@ -23,6 +23,8 @@ type rawCredential struct {
 	CreatedAt          time.Time    `db:"created_at"`
 	DeletedAt          sql.NullTime `db:"deleted_at"`
 	CreatedBySessionID []byte       `db:"created_by_session_id"`
+	AAGUID             []byte       `db:"aaguid"`
+	SignCount          int64        `db:"sign_count"`
 }
 
 func (raw *rawCredential) toCredential() *types.Credential {
@@ -40,6 +42,8 @@ func (raw *rawCredential) toCredential() *types.Credential {
 		c.DeletedAt = timestamppb.New(raw.DeletedAt.Time)
 	}
 	c.CreatedBySessionId = raw.CreatedBySessionID
+	c.Aaguid = raw.AAGUID
+	c.SignCount = raw.SignCount
 	return c
 }
 
@@ -74,8 +78,10 @@ func AddCredential(ctx context.Context, db sqlx.ExtContext, c *types.Credential)
 		Name:               c.GetName(),
 		CreatedAt:          c.GetCreatedAt().AsTime(),
 		CreatedBySessionID: c.GetCreatedBySessionId(),
+		AAGUID:             c.GetAaguid(),
+		SignCount:          c.GetSignCount(),
 	}
-	rows, err := sqlx.NamedQueryContext(ctx, db, `insert into credential (user_id, credential_id, public_key, name, created_at, created_by_session_id) values(:user_id, :credential_id, :public_key, :name, :created_at, :created_by_session_id) returning (id)`, obj)
+	rows, err := sqlx.NamedQueryContext(ctx, db, `insert into credential (user_id, credential_id, public_key, name, created_at, created_by_session_id, aaguid, sign_count) values(:user_id, :credential_id, :public_key, :name, :created_at, :created_by_session_id, :aaguid, :sign_count) returning (id)`, obj)
 	if err != nil {
 		return fmt.Errorf("insert: %w", err)
 	}
@@ -100,7 +106,7 @@ func GetUserCredentials(ctx context.Context, db sqlx.ExtContext, u *types.User) 
 	}
 	var raw []*rawCredential
 	if err := sqlx.SelectContext(ctx, db, &raw, `select
-            c.id AS id, c.credential_id AS credential_id, c.public_key AS public_key, c.name AS name, c.created_at as created_at, u.id as user_id, u.username as username
+            c.id AS id, c.credential_id AS credential_id, c.public_key AS public_key, c.name AS name, c.created_at as created_at, c.aaguid as aaguid, c.sign_count as sign_count, u.id as user_id, u.username as username
             from credential c left join "user" u on u.id=c.user_id
             where deleted_at is null and c.user_id=$1`, u.GetId()); err != nil {
 		return nil, fmt.Errorf("select: %w", err)
@@ -110,4 +116,29 @@ func GetUserCredentials(ctx context.Context, db sqlx.ExtContext, u *types.User) 
 		result[i] = r.toCredential()
 	}
 	return result, nil
+}
+
+// CheckAndUpdateSignCount updates the sign count associated with the credential, and returns an
+// error if it would have decreased.
+func CheckAndUpdateSignCount(ctx context.Context, tx *sqlx.Tx, c *types.Credential) error {
+	var signCount int64
+	row := tx.QueryRowxContext(ctx, `select sign_count from credential where id=$1`, c.GetId())
+	if err := row.Scan(&signCount); err != nil {
+		return fmt.Errorf("retrieve sign count: %w", err)
+	}
+	if signCount != 0 && c.GetSignCount() != 0 && signCount >= c.GetSignCount() {
+		return fmt.Errorf("%w: authenticator's count: %d, stored count: %d", ErrSignCountDecreased, c.GetSignCount(), signCount)
+	}
+	info, err := tx.ExecContext(ctx, `update credential set sign_count=$1 where id=$2`, c.GetSignCount(), c.GetId())
+	if err != nil {
+		return fmt.Errorf("store new sign count: %w", err)
+	}
+	affected, err := info.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("retrieve affected row count: %w", err)
+	}
+	if got, want := affected, int64(1); got != want {
+		return fmt.Errorf("store sign count: affected row count: got %d, want %d", got, want)
+	}
+	return nil
 }

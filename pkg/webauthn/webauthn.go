@@ -220,6 +220,8 @@ func (c *Config) FinishEnrollment(session *types.Session, req *jssopb.FinishEnro
 	return &types.Credential{
 		CredentialId: attData.CredentialID,
 		PublicKey:    attData.CredentialPublicKey,
+		Aaguid:       attData.AAGUID,
+		SignCount:    int64(attestation.AttestationObject.AuthData.Counter),
 	}, nil
 }
 
@@ -274,9 +276,12 @@ func (u *webauthnUser) WebAuthnCredentials() []webauthn.Credential {
 	var result []webauthn.Credential
 	for _, c := range u.creds {
 		result = append(result, webauthn.Credential{
-			ID:            c.GetCredentialId(),
-			PublicKey:     c.GetPublicKey(),
-			Authenticator: webauthn.Authenticator{},
+			ID:        c.GetCredentialId(),
+			PublicKey: c.GetPublicKey(),
+			Authenticator: webauthn.Authenticator{
+				AAGUID:    c.GetAaguid(),
+				SignCount: uint32(c.GetSignCount()),
+			},
 		})
 	}
 	return result

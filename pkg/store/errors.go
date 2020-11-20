@@ -15,6 +15,7 @@ var (
 	ErrSessionExpired       = errors.New("session expired")
 	ErrSessionNotYetCreated = errors.New("session not yet created?")
 	ErrSessionIDInvalid     = errors.New("session id is not valid")
+	ErrSignCountDecreased   = errors.New("authenticator's signature counter is not higher than the stored signature counter; possible cloned authenticator")
 )
 
 type ErrEmpty struct {

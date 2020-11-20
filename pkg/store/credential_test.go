@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/jmoiron/sqlx"
 	"github.com/jrockway/jsso2/pkg/jtesting"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/types"
@@ -43,6 +44,8 @@ func TestCredentials(t *testing.T) {
 			CreatedAt:          now,
 			CredentialId:       []byte("AAAAAAAAAAAAAAAA"),
 			PublicKey:          []byte("public key of some sort"),
+			Aaguid:             []byte("aaguid"),
+			SignCount:          42,
 		}
 		for i := byte(0); i < 2; i++ {
 			credential := proto.Clone(baseCredential).(*types.Credential)
@@ -82,6 +85,8 @@ func TestCredentials(t *testing.T) {
 						CreatedAt:    now,
 						User:         user,
 						PublicKey:    baseCredential.PublicKey,
+						Aaguid:       []byte("aaguid"),
+						SignCount:    42,
 					},
 					{
 						Id:           2,
@@ -90,6 +95,8 @@ func TestCredentials(t *testing.T) {
 						CreatedAt:    now,
 						User:         user,
 						PublicKey:    baseCredential.PublicKey,
+						Aaguid:       []byte("aaguid"),
+						SignCount:    42,
 					},
 				},
 			},
@@ -111,6 +118,74 @@ func TestCredentials(t *testing.T) {
 			if diff := cmp.Diff(got, test.want, protocmp.Transform(), cmpopts.EquateEmpty()); diff != "" {
 				t.Errorf("test %d: returned credentials:\n%s", i, diff)
 			}
+		}
+	})
+}
+
+func TestSignCount(t *testing.T) {
+	jtesting.Run(t, "credentials", jtesting.R{Logger: true, Database: true}, func(t *testing.T, e *jtesting.E) {
+		c := MustGetTestDB(t, e)
+		user := &types.User{Username: "foo"}
+		if err := UpdateUser(e.Context, c.db, user); err != nil {
+			t.Fatal(err)
+		}
+		id, err := sessions.GenerateID()
+		if err != nil {
+			t.Fatal(err)
+		}
+		now := timestamppb.New(time.Now().Round(time.Millisecond))
+		session := &types.Session{
+			Id:        id,
+			User:      user,
+			CreatedAt: now,
+		}
+		if err := UpdateSession(e.Context, c.db, session); err != nil {
+			t.Fatal(err)
+		}
+
+		cred := &types.Credential{
+			Id:                 0,
+			User:               session.GetUser(),
+			CreatedBySessionId: session.GetId(),
+			CreatedAt:          now,
+			CredentialId:       []byte("AAAAAAAAAAAAAAAA"),
+			PublicKey:          []byte("public key of some sort"),
+			Aaguid:             []byte("aaguid"),
+			SignCount:          0,
+		}
+		if err := AddCredential(e.Context, c.db, cred); err != nil {
+			t.Fatal(err)
+		}
+
+		copy := proto.Clone(cred).(*types.Credential)
+		copy.SignCount = 1
+		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
+			return CheckAndUpdateSignCount(e.Context, tx, copy)
+		}); err != nil {
+			t.Error(err)
+		}
+		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
+			return CheckAndUpdateSignCount(e.Context, tx, copy)
+		}); err == nil {
+			t.Error("expected sign count validation error")
+		}
+		copy.SignCount = 99
+		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
+			return CheckAndUpdateSignCount(e.Context, tx, copy)
+		}); err != nil {
+			t.Error(err)
+		}
+		copy.SignCount = 2
+		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
+			return CheckAndUpdateSignCount(e.Context, tx, copy)
+		}); err == nil {
+			t.Error("expected sign count validation error")
+		}
+		copy.SignCount = 100
+		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
+			return CheckAndUpdateSignCount(e.Context, tx, copy)
+		}); err != nil {
+			t.Error(err)
 		}
 	})
 }

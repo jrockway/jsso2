@@ -20,6 +20,7 @@ create index idx_session_user on session (user_id);
 
 create table credential (
     id bigserial primary key not null,
+    aaguid bytea null,
     credential_id bytea not null check (octet_length(credential_id) >= 16),
     public_key bytea not null,
     user_id bigint not null,
@@ -27,6 +28,7 @@ create table credential (
     created_at timestamp (3) with time zone not null,
     deleted_at timestamp (3) with time zone null,
     created_by_session_id bytea not null,
+    sign_count bigint not null,
     constraint fk_user foreign key (user_id) references "user" (id),
     constraint fk_session foreign key (created_by_session_id) references session (id)
 );

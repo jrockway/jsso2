@@ -977,7 +977,9 @@ proto.types.Credential.toObject = function(includeInstance, msg) {
     name: jspb.Message.getFieldWithDefault(msg, 5, ""),
     createdAt: (f = msg.getCreatedAt()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     deletedAt: (f = msg.getDeletedAt()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
-    createdBySessionId: msg.getCreatedBySessionId_asB64()
+    createdBySessionId: msg.getCreatedBySessionId_asB64(),
+    aaguid: msg.getAaguid_asB64(),
+    signCount: jspb.Message.getFieldWithDefault(msg, 10, 0)
   };
 
   if (includeInstance) {
@@ -1048,6 +1050,14 @@ proto.types.Credential.deserializeBinaryFromReader = function(msg, reader) {
     case 8:
       var value = /** @type {!Uint8Array} */ (reader.readBytes());
       msg.setCreatedBySessionId(value);
+      break;
+    case 9:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setAaguid(value);
+      break;
+    case 10:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setSignCount(value);
       break;
     default:
       reader.skipField();
@@ -1134,6 +1144,20 @@ proto.types.Credential.serializeBinaryToWriter = function(message, writer) {
   if (f.length > 0) {
     writer.writeBytes(
       8,
+      f
+    );
+  }
+  f = message.getAaguid_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      9,
+      f
+    );
+  }
+  f = message.getSignCount();
+  if (f !== 0) {
+    writer.writeInt64(
+      10,
       f
     );
   }
@@ -1410,6 +1434,66 @@ proto.types.Credential.prototype.getCreatedBySessionId_asU8 = function() {
  */
 proto.types.Credential.prototype.setCreatedBySessionId = function(value) {
   return jspb.Message.setProto3BytesField(this, 8, value);
+};
+
+
+/**
+ * optional bytes aaguid = 9;
+ * @return {string}
+ */
+proto.types.Credential.prototype.getAaguid = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
+};
+
+
+/**
+ * optional bytes aaguid = 9;
+ * This is a type-conversion wrapper around `getAaguid()`
+ * @return {string}
+ */
+proto.types.Credential.prototype.getAaguid_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getAaguid()));
+};
+
+
+/**
+ * optional bytes aaguid = 9;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getAaguid()`
+ * @return {!Uint8Array}
+ */
+proto.types.Credential.prototype.getAaguid_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getAaguid()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.types.Credential} returns this
+ */
+proto.types.Credential.prototype.setAaguid = function(value) {
+  return jspb.Message.setProto3BytesField(this, 9, value);
+};
+
+
+/**
+ * optional int64 sign_count = 10;
+ * @return {number}
+ */
+proto.types.Credential.prototype.getSignCount = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.types.Credential} returns this
+ */
+proto.types.Credential.prototype.setSignCount = function(value) {
+  return jspb.Message.setProto3IntField(this, 10, value);
 };
 
 

@@ -146,6 +146,14 @@ export class Credential extends jspb.Message {
   getCreatedBySessionId_asB64(): string;
   setCreatedBySessionId(value: Uint8Array | string): Credential;
 
+  getAaguid(): Uint8Array | string;
+  getAaguid_asU8(): Uint8Array;
+  getAaguid_asB64(): string;
+  setAaguid(value: Uint8Array | string): Credential;
+
+  getSignCount(): number;
+  setSignCount(value: number): Credential;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Credential.AsObject;
   static toObject(includeInstance: boolean, msg: Credential): Credential.AsObject;
@@ -164,6 +172,8 @@ export namespace Credential {
     createdAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     deletedAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     createdBySessionId: Uint8Array | string,
+    aaguid: Uint8Array | string,
+    signCount: number,
   }
 }
 

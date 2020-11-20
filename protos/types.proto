@@ -61,4 +61,12 @@ message Credential {
     // use this anywhere, it's just for audit purposes.  (That's why it's just
     // the ID and not the full Session object.)
     bytes created_by_session_id = 8;
+
+    // The AAGUID of the authenticator.  (Supposedly this identifies the
+    // manufacturer of the authenticator.)
+    bytes aaguid = 9;
+
+    // The last-seen sign count of the authenticator.  If the sign count is less
+    // than this when logging in, we know the credential has been cloned.
+    int64 sign_count = 10;
 }
