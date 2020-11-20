@@ -6,7 +6,6 @@
     import GrpcError from "../components/GrpcError.svelte";
 
     export let opts: PublicKeyCredentialCreationOptions;
-    console.log(opts);
     export let token: string;
 
     const enrollmentClient = new EnrollmentClient("", null, null);

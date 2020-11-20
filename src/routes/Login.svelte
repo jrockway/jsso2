@@ -20,13 +20,11 @@
         const startReq = new StartLoginRequest();
         startReq.setUsername(u);
         const startReply = await loginClient.start(startReq, null);
-        console.log(startReply.toObject);
         const publicKey = requestOptionsFromProto(startReply.getCredentialRequestOptions());
         publicKey.userVerification = "discouraged";
         const assertion = await navigator.credentials.get({
             publicKey: publicKey,
         });
-        console.log(assertion);
         if (!(assertion instanceof PublicKeyCredential)) {
             throw "not a public key credential";
         }
@@ -35,7 +33,6 @@
         const finishReply = await loginClient.finish(finishReq, {
             Authorization: "SessionID " + startReply.getToken(),
         });
-        console.log(finishReply);
         return finishReply.getRedirectUrl();
     }
 </script>
