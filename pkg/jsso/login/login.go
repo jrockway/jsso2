@@ -115,17 +115,31 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishLoginRequest) (*
 	}); err != nil {
 		return reply, store.AsGRPCError(fmt.Errorf("lookup existing credentials: %w", err))
 	}
-	if err := s.Webauthn.FinishLogin(session, creds, req); err != nil {
+
+	if err := s.finishLoginAndCheckCounter(ctx, l, session, creds, req); err != nil {
 		if revokeErr := revokeSession(ctx, l, s.DB, id); revokeErr != nil {
 			l.Warn("failed to revoke session after failed login", zap.Error(err))
 			err = fmt.Errorf("%w (additionally: %v)", err, revokeErr)
 		}
-		return reply, fmt.Errorf("finish login: %w", err)
+		return reply, fmt.Errorf("finish login and update counters: %w", err)
 	}
 	if err := untaintSession(ctx, l, s.DB, id); err != nil {
 		return reply, err
 	}
 	return reply, nil
+}
+
+func (s *Service) finishLoginAndCheckCounter(ctx context.Context, l *zap.Logger, session *types.Session, creds []*types.Credential, req *jssopb.FinishLoginRequest) error {
+	usedCred, err := s.Webauthn.FinishLogin(session, creds, req)
+	if err != nil {
+		return fmt.Errorf("finish login: %w", err)
+	}
+	if err := s.DB.DoTx(ctx, l, false, func(tx *sqlx.Tx) error {
+		return store.CheckAndUpdateSignCount(ctx, tx, usedCred)
+	}); err != nil {
+		return fmt.Errorf("check and update counter: %w", err)
+	}
+	return nil
 }
 
 func untaintSession(ctx context.Context, l *zap.Logger, db *store.Connection, id []byte) error {

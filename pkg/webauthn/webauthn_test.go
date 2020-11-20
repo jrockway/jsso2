@@ -395,7 +395,7 @@ func TestFinishLogin(t *testing.T) {
 
 	for _, test := range testData {
 		t.Run(test.name, func(t *testing.T) {
-			if err := cfg.FinishLogin(session, creds, test.req); (err != nil) == test.ok {
+			if _, err := cfg.FinishLogin(session, creds, test.req); (err != nil) == test.ok {
 				want := "<error>"
 				if test.ok {
 					want = "<no error>"

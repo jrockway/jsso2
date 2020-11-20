@@ -288,14 +288,14 @@ func (u *webauthnUser) WebAuthnCredentials() []webauthn.Credential {
 }
 
 // FinishLogin validates a signature against of allowed credentials.
-func (c *Config) FinishLogin(s *types.Session, creds []*types.Credential, req *jssopb.FinishLoginRequest) error {
+func (c *Config) FinishLogin(s *types.Session, creds []*types.Credential, req *jssopb.FinishLoginRequest) (*types.Credential, error) {
 	if req.GetCredential().GetType() != "public-key" {
-		return ErrNotPublicKey
+		return nil, ErrNotPublicKey
 	}
 	switch req.GetCredential().GetResponse().GetResponse().(type) {
 	case *webauthnpb.AuthenticatorResponse_AssertionResponse:
 	default:
-		return ErrNotAssertionResponse
+		return nil, ErrNotAssertionResponse
 	}
 
 	res := req.GetCredential().GetResponse()
@@ -303,15 +303,15 @@ func (c *Config) FinishLogin(s *types.Session, creds []*types.Credential, req *j
 
 	var clientData protocol.CollectedClientData
 	if err := json.Unmarshal(res.GetClientDataJson(), &clientData); err != nil {
-		return fmt.Errorf("unmarshal client data json: %w", err)
+		return nil, fmt.Errorf("unmarshal client data json: %w", err)
 	}
 	ad := protocol.AuthenticatorData{}
 	if err := ad.Unmarshal(ares.GetAuthenticatorData()); err != nil {
-		return fmt.Errorf("unmarshal attestation object: %w", err)
+		return nil, fmt.Errorf("unmarshal attestation object: %w", err)
 	}
 	rawID, err := encoder.DecodeString(req.GetCredential().GetId())
 	if err != nil {
-		return fmt.Errorf("decode credential id: %w", err)
+		return nil, fmt.Errorf("decode credential id: %w", err)
 	}
 	cad := &protocol.ParsedCredentialAssertionData{
 		ParsedPublicKeyCredential: protocol.ParsedPublicKeyCredential{
@@ -344,7 +344,7 @@ func (c *Config) FinishLogin(s *types.Session, creds []*types.Credential, req *j
 	}
 	idBytes, err := userAsBinary(s.GetUser().GetId())
 	if err != nil {
-		return fmt.Errorf("format user id as binary: %w", err)
+		return nil, fmt.Errorf("format user id as binary: %w", err)
 	}
 	u := &webauthnUser{
 		id:    idBytes,
@@ -364,8 +364,20 @@ func (c *Config) FinishLogin(s *types.Session, creds []*types.Credential, req *j
 			RPOrigin:      c.Origin,
 		},
 	}
-	if _, err := cfg.ValidateLogin(u, session, cad); err != nil {
-		return fmt.Errorf("validate login: %w", unpackProtocolError(err))
+	rawCred, err := cfg.ValidateLogin(u, session, cad)
+	if err != nil {
+		return nil, fmt.Errorf("validate login: %w", unpackProtocolError(err))
 	}
-	return nil
+	var foundCredential *types.Credential
+	for _, c := range creds {
+		if bytes.Equal(c.GetCredentialId(), rawCred.ID) {
+			foundCredential = c
+			break
+		}
+	}
+	if foundCredential == nil {
+		return nil, errors.New("search for used authenticator object: no match found")
+	}
+	foundCredential.SignCount = int64(rawCred.Authenticator.SignCount)
+	return foundCredential, nil
 }
