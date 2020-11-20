@@ -90,6 +90,23 @@ message PublicKeyCredential {
     string id = 1;
     // Type is always "public-key".
     string type = 2;
-    bytes client_data_json = 3;
-    bytes attestation_object = 4;
+    AuthenticatorResponse response = 3;
+}
+
+message AuthenticatorResponse {
+    bytes client_data_json = 1;
+    oneof response {
+        AuthenticatorAttestationResponse attestation_response = 2;
+        AuthenticatorAssertionResponse assertion_response = 3;
+    }
+}
+
+message AuthenticatorAttestationResponse {
+    bytes attestation_object = 1;
+}
+
+message AuthenticatorAssertionResponse {
+    bytes authenticator_data = 1;
+    bytes signature = 2;
+    bytes user_handle = 3;
 }

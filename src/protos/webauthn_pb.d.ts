@@ -265,15 +265,10 @@ export class PublicKeyCredential extends jspb.Message {
   getType(): string;
   setType(value: string): PublicKeyCredential;
 
-  getClientDataJson(): Uint8Array | string;
-  getClientDataJson_asU8(): Uint8Array;
-  getClientDataJson_asB64(): string;
-  setClientDataJson(value: Uint8Array | string): PublicKeyCredential;
-
-  getAttestationObject(): Uint8Array | string;
-  getAttestationObject_asU8(): Uint8Array;
-  getAttestationObject_asB64(): string;
-  setAttestationObject(value: Uint8Array | string): PublicKeyCredential;
+  getResponse(): AuthenticatorResponse | undefined;
+  setResponse(value?: AuthenticatorResponse): PublicKeyCredential;
+  hasResponse(): boolean;
+  clearResponse(): PublicKeyCredential;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): PublicKeyCredential.AsObject;
@@ -287,8 +282,99 @@ export namespace PublicKeyCredential {
   export type AsObject = {
     id: string,
     type: string,
+    response?: AuthenticatorResponse.AsObject,
+  }
+}
+
+export class AuthenticatorResponse extends jspb.Message {
+  getClientDataJson(): Uint8Array | string;
+  getClientDataJson_asU8(): Uint8Array;
+  getClientDataJson_asB64(): string;
+  setClientDataJson(value: Uint8Array | string): AuthenticatorResponse;
+
+  getAttestationResponse(): AuthenticatorAttestationResponse | undefined;
+  setAttestationResponse(value?: AuthenticatorAttestationResponse): AuthenticatorResponse;
+  hasAttestationResponse(): boolean;
+  clearAttestationResponse(): AuthenticatorResponse;
+
+  getAssertionResponse(): AuthenticatorAssertionResponse | undefined;
+  setAssertionResponse(value?: AuthenticatorAssertionResponse): AuthenticatorResponse;
+  hasAssertionResponse(): boolean;
+  clearAssertionResponse(): AuthenticatorResponse;
+
+  getResponseCase(): AuthenticatorResponse.ResponseCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): AuthenticatorResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: AuthenticatorResponse): AuthenticatorResponse.AsObject;
+  static serializeBinaryToWriter(message: AuthenticatorResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AuthenticatorResponse;
+  static deserializeBinaryFromReader(message: AuthenticatorResponse, reader: jspb.BinaryReader): AuthenticatorResponse;
+}
+
+export namespace AuthenticatorResponse {
+  export type AsObject = {
     clientDataJson: Uint8Array | string,
+    attestationResponse?: AuthenticatorAttestationResponse.AsObject,
+    assertionResponse?: AuthenticatorAssertionResponse.AsObject,
+  }
+
+  export enum ResponseCase { 
+    RESPONSE_NOT_SET = 0,
+    ATTESTATION_RESPONSE = 2,
+    ASSERTION_RESPONSE = 3,
+  }
+}
+
+export class AuthenticatorAttestationResponse extends jspb.Message {
+  getAttestationObject(): Uint8Array | string;
+  getAttestationObject_asU8(): Uint8Array;
+  getAttestationObject_asB64(): string;
+  setAttestationObject(value: Uint8Array | string): AuthenticatorAttestationResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): AuthenticatorAttestationResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: AuthenticatorAttestationResponse): AuthenticatorAttestationResponse.AsObject;
+  static serializeBinaryToWriter(message: AuthenticatorAttestationResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AuthenticatorAttestationResponse;
+  static deserializeBinaryFromReader(message: AuthenticatorAttestationResponse, reader: jspb.BinaryReader): AuthenticatorAttestationResponse;
+}
+
+export namespace AuthenticatorAttestationResponse {
+  export type AsObject = {
     attestationObject: Uint8Array | string,
+  }
+}
+
+export class AuthenticatorAssertionResponse extends jspb.Message {
+  getAuthenticatorData(): Uint8Array | string;
+  getAuthenticatorData_asU8(): Uint8Array;
+  getAuthenticatorData_asB64(): string;
+  setAuthenticatorData(value: Uint8Array | string): AuthenticatorAssertionResponse;
+
+  getSignature(): Uint8Array | string;
+  getSignature_asU8(): Uint8Array;
+  getSignature_asB64(): string;
+  setSignature(value: Uint8Array | string): AuthenticatorAssertionResponse;
+
+  getUserHandle(): Uint8Array | string;
+  getUserHandle_asU8(): Uint8Array;
+  getUserHandle_asB64(): string;
+  setUserHandle(value: Uint8Array | string): AuthenticatorAssertionResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): AuthenticatorAssertionResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: AuthenticatorAssertionResponse): AuthenticatorAssertionResponse.AsObject;
+  static serializeBinaryToWriter(message: AuthenticatorAssertionResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AuthenticatorAssertionResponse;
+  static deserializeBinaryFromReader(message: AuthenticatorAssertionResponse, reader: jspb.BinaryReader): AuthenticatorAssertionResponse;
+}
+
+export namespace AuthenticatorAssertionResponse {
+  export type AsObject = {
+    authenticatorData: Uint8Array | string,
+    signature: Uint8Array | string,
+    userHandle: Uint8Array | string,
   }
 }
 

@@ -83,7 +83,9 @@ func TestFinishEnrollment(t *testing.T) {
 			name: "empty client data",
 			input: &jssopb.FinishEnrollmentRequest{
 				Credential: &webauthnpb.PublicKeyCredential{
-					ClientDataJson: mustMarshalJSON(map[string]interface{}{}),
+					Response: &webauthnpb.AuthenticatorResponse{
+						ClientDataJson: mustMarshalJSON(map[string]interface{}{}),
+					},
 				},
 			},
 			wantErr: true,
@@ -92,9 +94,11 @@ func TestFinishEnrollment(t *testing.T) {
 			name: "almost empty client data",
 			input: &jssopb.FinishEnrollmentRequest{
 				Credential: &webauthnpb.PublicKeyCredential{
-					ClientDataJson: mustMarshalJSON(map[string]interface{}{
-						"type": "webauthn.create",
-					}),
+					Response: &webauthnpb.AuthenticatorResponse{
+						ClientDataJson: mustMarshalJSON(map[string]interface{}{
+							"type": "webauthn.create",
+						}),
+					},
 				},
 			},
 			wantErr: true,
@@ -103,12 +107,14 @@ func TestFinishEnrollment(t *testing.T) {
 			name: "correct client data, no attestation object",
 			input: &jssopb.FinishEnrollmentRequest{
 				Credential: &webauthnpb.PublicKeyCredential{
-					ClientDataJson: mustMarshalJSON(map[string]interface{}{
-						"type":        "webauthn.create",
-						"challenge":   sessions.ToBase64(session),
-						"crossOrigin": false,
-						"origin":      "http://localhost:4000",
-					}),
+					Response: &webauthnpb.AuthenticatorResponse{
+						ClientDataJson: mustMarshalJSON(map[string]interface{}{
+							"type":        "webauthn.create",
+							"challenge":   sessions.ToBase64(session),
+							"crossOrigin": false,
+							"origin":      "http://localhost:4000",
+						}),
+					},
 				},
 			},
 			wantErr: true,
@@ -117,13 +123,19 @@ func TestFinishEnrollment(t *testing.T) {
 			name: "correct client data, correct attestation object",
 			input: &jssopb.FinishEnrollmentRequest{
 				Credential: &webauthnpb.PublicKeyCredential{
-					ClientDataJson: mustMarshalJSON(map[string]interface{}{
-						"type":        "webauthn.create",
-						"challenge":   sessions.ToBase64(session),
-						"crossOrigin": false,
-						"origin":      "http://localhost:4000",
-					}),
-					AttestationObject: attObj,
+					Response: &webauthnpb.AuthenticatorResponse{
+						ClientDataJson: mustMarshalJSON(map[string]interface{}{
+							"type":        "webauthn.create",
+							"challenge":   sessions.ToBase64(session),
+							"crossOrigin": false,
+							"origin":      "http://localhost:4000",
+						}),
+						Response: &webauthnpb.AuthenticatorResponse_AttestationResponse{
+							AttestationResponse: &webauthnpb.AuthenticatorAttestationResponse{
+								AttestationObject: attObj,
+							},
+						},
+					},
 				},
 			},
 			wantErr: false,
@@ -132,13 +144,19 @@ func TestFinishEnrollment(t *testing.T) {
 			name: "incorrect origin, correct attestation object",
 			input: &jssopb.FinishEnrollmentRequest{
 				Credential: &webauthnpb.PublicKeyCredential{
-					ClientDataJson: mustMarshalJSON(map[string]interface{}{
-						"type":        "webauthn.create",
-						"challenge":   sessions.ToBase64(session),
-						"crossOrigin": false,
-						"origin":      "https://example.com",
-					}),
-					AttestationObject: attObj,
+					Response: &webauthnpb.AuthenticatorResponse{
+						ClientDataJson: mustMarshalJSON(map[string]interface{}{
+							"type":        "webauthn.create",
+							"challenge":   sessions.ToBase64(session),
+							"crossOrigin": false,
+							"origin":      "https://example.com",
+						}),
+						Response: &webauthnpb.AuthenticatorResponse_AttestationResponse{
+							AttestationResponse: &webauthnpb.AuthenticatorAttestationResponse{
+								AttestationObject: attObj,
+							},
+						},
+					},
 				},
 			},
 			wantErr: true,
@@ -147,13 +165,19 @@ func TestFinishEnrollment(t *testing.T) {
 			name: "incorrect cross-origin, correct attestation object",
 			input: &jssopb.FinishEnrollmentRequest{
 				Credential: &webauthnpb.PublicKeyCredential{
-					ClientDataJson: mustMarshalJSON(map[string]interface{}{
-						"type":        "webauthn.create",
-						"challenge":   sessions.ToBase64(session),
-						"crossOrigin": true,
-						"origin":      "http://localhost:4000",
-					}),
-					AttestationObject: attObj,
+					Response: &webauthnpb.AuthenticatorResponse{
+						ClientDataJson: mustMarshalJSON(map[string]interface{}{
+							"type":        "webauthn.create",
+							"challenge":   sessions.ToBase64(session),
+							"crossOrigin": true,
+							"origin":      "http://localhost:4000",
+						}),
+						Response: &webauthnpb.AuthenticatorResponse_AttestationResponse{
+							AttestationResponse: &webauthnpb.AuthenticatorAttestationResponse{
+								AttestationObject: attObj,
+							},
+						},
+					},
 				},
 			},
 			wantErr: true,
@@ -162,13 +186,19 @@ func TestFinishEnrollment(t *testing.T) {
 			name: "correct client data, incorrect attestation object",
 			input: &jssopb.FinishEnrollmentRequest{
 				Credential: &webauthnpb.PublicKeyCredential{
-					ClientDataJson: mustMarshalJSON(map[string]interface{}{
-						"type":        "webauthn.create",
-						"challenge":   sessions.ToBase64(session),
-						"crossOrigin": false,
-						"origin":      "http://localhost:4000",
-					}),
-					AttestationObject: badAttObj,
+					Response: &webauthnpb.AuthenticatorResponse{
+						ClientDataJson: mustMarshalJSON(map[string]interface{}{
+							"type":        "webauthn.create",
+							"challenge":   sessions.ToBase64(session),
+							"crossOrigin": false,
+							"origin":      "http://localhost:4000",
+						}),
+						Response: &webauthnpb.AuthenticatorResponse_AttestationResponse{
+							AttestationResponse: &webauthnpb.AuthenticatorAttestationResponse{
+								AttestationObject: badAttObj,
+							},
+						},
+					},
 				},
 			},
 			wantErr: true,

@@ -7,6 +7,9 @@ import {
     AuthenticatorSelectionCriteria,
     PublicKeyCredential as C,
     PublicKeyCredentialDescriptor,
+    AuthenticatorResponse as AR,
+    AuthenticatorAssertionResponse as AAsR,
+    AuthenticatorAttestationResponse as AAtR,
 } from "../../protos/webauthn_pb";
 
 import { creationOptionsFromProto, credentialFromJS, requestOptionsFromProto } from "../webauthn";
@@ -91,7 +94,7 @@ test("can convert a creation request in proto form to javascript form", () => {
     expect(got).toStrictEqual(want);
 });
 
-test("can convert a public key to a proto", () => {
+test("can convert an attestation response to a proto", () => {
     const input: PublicKeyCredential = {
         id: "abc",
         type: "public-key",
@@ -106,8 +109,45 @@ test("can convert a public key to a proto", () => {
     };
     const want = new C();
     want.setId("abc");
-    want.setClientDataJson(Uint8Array.from("{}", (c) => c.charCodeAt(0)));
-    want.setAttestationObject(Uint8Array.from("foo", (c) => c.charCodeAt(0)));
+    want.setType("public-key");
+    const r = new AR();
+    r.setClientDataJson(Uint8Array.from("{}", (c) => c.charCodeAt(0)));
+    const atr = new AAtR();
+    atr.setAttestationObject(Uint8Array.from("foo", (c) => c.charCodeAt(0)));
+    r.setAttestationResponse(atr);
+    want.setResponse(r);
+
+    const got = credentialFromJS(input);
+    expect(got.toObject()).toStrictEqual(want.toObject());
+});
+
+test("can convert an assertion response to a proto", () => {
+    const input: PublicKeyCredential = {
+        id: "abc",
+        type: "public-key",
+        rawId: Uint8Array.from("abc", (c) => c.charCodeAt(0)),
+        response: {
+            clientDataJSON: Uint8Array.from("{}", (c) => c.charCodeAt(0)),
+            authenticatorData: Uint8Array.from("auth", (c) => c.charCodeAt(0)),
+            signature: Uint8Array.from("sig", (c) => c.charCodeAt(0)),
+            userHandle: Uint8Array.from("uh", (c) => c.charCodeAt(0)),
+        } as AuthenticatorAssertionResponse,
+        getClientExtensionResults: () => {
+            return {};
+        },
+    };
+    const want = new C();
+    want.setId("abc");
+    want.setType("public-key");
+    const r = new AR();
+    r.setClientDataJson(Uint8Array.from("{}", (c) => c.charCodeAt(0)));
+    const asr = new AAsR();
+    asr.setAuthenticatorData(btoa("auth"));
+    asr.setSignature(btoa("sig"));
+    asr.setUserHandle(btoa("uh"));
+    r.setAssertionResponse(asr);
+    want.setResponse(r);
+
     const got = credentialFromJS(input);
     expect(got.toObject()).toStrictEqual(want.toObject());
 });

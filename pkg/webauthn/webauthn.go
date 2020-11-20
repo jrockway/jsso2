@@ -47,6 +47,14 @@ var optsPrototype = &webauthnpb.PublicKeyCredentialCreationOptions{
 	}(),
 }
 
+func userAsBinary(id int64) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, id); err != nil {
+		return nil, fmt.Errorf("write user id to byte buffer: %w", err)
+	}
+	return buf.Bytes(), nil
+}
+
 // BeginEnrollment starts the enrollment process, returning a PublicKeyCredentialCreationOptions
 // for the browser.
 func BeginEnrollment(domain string, session *types.Session, existingCreds []*types.Credential) (*webauthnpb.PublicKeyCredentialCreationOptions, error) {
@@ -60,12 +68,12 @@ func BeginEnrollment(domain string, session *types.Session, existingCreds []*typ
 	if user.GetId() < 1 {
 		return nil, errors.New("invalid user attempting enrollment")
 	}
-	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.BigEndian, user.GetId()); err != nil {
-		return nil, fmt.Errorf("write user id to byte buffer: %w", err)
+	idBytes, err := userAsBinary(user.GetId())
+	if err != nil {
+		return nil, fmt.Errorf("format user id as binary: %w", err)
 	}
 	opts.User = &webauthnpb.PublicKeyCredentialUserEntity{
-		Id:          buf.Bytes(),
+		Id:          idBytes,
 		DisplayName: user.GetUsername(),
 		Name:        user.GetUsername(),
 	}
@@ -102,7 +110,7 @@ func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb
 	//
 	// Step 2: Let C be the result of running a JSON parser on the clientDataJSON.  (We call it
 	// clientData.)
-	clientDataJSON := req.GetCredential().GetClientDataJson()
+	clientDataJSON := req.GetCredential().GetResponse().GetClientDataJson()
 	var clientData ClientData
 	if err := json.Unmarshal(clientDataJSON, &clientData); err != nil {
 		return nil, fmt.Errorf("unmarshal client data json: %w", err)
@@ -144,9 +152,9 @@ func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb
 	// Step 8: Perform CBOR decoding on attestationObject.
 	attestationResponse := protocol.AuthenticatorAttestationResponse{
 		AuthenticatorResponse: protocol.AuthenticatorResponse{
-			ClientDataJSON: req.Credential.GetClientDataJson(),
+			ClientDataJSON: req.Credential.GetResponse().GetClientDataJson(),
 		},
-		AttestationObject: req.Credential.GetAttestationObject(),
+		AttestationObject: req.Credential.GetResponse().GetAttestationResponse().GetAttestationObject(),
 	}
 	attestation, err := attestationResponse.Parse()
 	if err != nil {

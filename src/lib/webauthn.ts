@@ -4,6 +4,9 @@ import {
     PublicKeyCredentialDescriptor as CD,
     AuthenticatorSelectionCriteria as ASC,
     PublicKeyCredential as C,
+    AuthenticatorResponse as AR,
+    AuthenticatorAssertionResponse as AAsR,
+    AuthenticatorAttestationResponse as AAtR,
 } from "../protos/webauthn_pb";
 
 function credentialsFromProto(input: CD[]): PublicKeyCredentialDescriptor[] {
@@ -106,24 +109,40 @@ export function creationOptionsFromProto(rawOpts: CCO): PublicKeyCredentialCreat
     return opts;
 }
 
-function fillClientDataJSON(credential: C, response: AuthenticatorResponse): void {
-    credential.setClientDataJson(new Uint8Array(response.clientDataJSON));
+function isAttestationResponse(r: AuthenticatorResponse): r is AuthenticatorAttestationResponse {
+    return "attestationObject" in r;
 }
 
-function fillAttestationObject(
-    credential: C,
-    response: AuthenticatorAttestationResponse | AuthenticatorResponse
-): void {
-    if ("attestationObject" in response) {
-        credential.setAttestationObject(new Uint8Array(response.attestationObject));
+function isAssertionResponse(r: AuthenticatorResponse): r is AuthenticatorAssertionResponse {
+    return "authenticatorData" in r && "signature" in r && "userHandle" in r;
+}
+
+function fillDetails(r: AR, response: AuthenticatorResponse): void {
+    if (isAttestationResponse(response)) {
+        const atr = new AAtR();
+        atr.setAttestationObject(new Uint8Array(response.attestationObject));
+        r.setAttestationResponse(atr);
+    } else if (isAssertionResponse(response)) {
+        const asr = new AAsR();
+        asr.setAuthenticatorData(new Uint8Array(response.authenticatorData));
+        asr.setSignature(new Uint8Array(response.signature));
+        asr.setUserHandle(new Uint8Array(response.userHandle));
+        r.setAssertionResponse(asr);
     }
+}
+
+function fillResponse(credential: C, response: AuthenticatorResponse): void {
+    const r = new AR();
+    r.setClientDataJson(new Uint8Array(response.clientDataJSON));
+    fillDetails(r, response);
+    credential.setResponse(r);
 }
 
 export function credentialFromJS(input: PublicKeyCredential): C {
     const result = new C();
     result.setId(input.id);
-    fillClientDataJSON(result, input.response);
-    fillAttestationObject(result, input.response);
+    result.setType(input.type);
+    fillResponse(result, input.response);
     return result;
 }
 
