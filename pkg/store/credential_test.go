@@ -157,33 +157,32 @@ func TestSignCount(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		copy := proto.Clone(cred).(*types.Credential)
-		copy.SignCount = 1
+		cred.SignCount = 1
 		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
-			return CheckAndUpdateSignCount(e.Context, tx, copy)
+			return CheckAndUpdateSignCount(e.Context, tx, cred)
 		}); err != nil {
 			t.Error(err)
 		}
 		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
-			return CheckAndUpdateSignCount(e.Context, tx, copy)
+			return CheckAndUpdateSignCount(e.Context, tx, cred)
 		}); err == nil {
 			t.Error("expected sign count validation error")
 		}
-		copy.SignCount = 99
+		cred.SignCount = 99
 		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
-			return CheckAndUpdateSignCount(e.Context, tx, copy)
+			return CheckAndUpdateSignCount(e.Context, tx, cred)
 		}); err != nil {
 			t.Error(err)
 		}
-		copy.SignCount = 2
+		cred.SignCount = 2
 		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
-			return CheckAndUpdateSignCount(e.Context, tx, copy)
+			return CheckAndUpdateSignCount(e.Context, tx, cred)
 		}); err == nil {
 			t.Error("expected sign count validation error")
 		}
-		copy.SignCount = 100
+		cred.SignCount = 100
 		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
-			return CheckAndUpdateSignCount(e.Context, tx, copy)
+			return CheckAndUpdateSignCount(e.Context, tx, cred)
 		}); err != nil {
 			t.Error(err)
 		}
