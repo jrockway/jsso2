@@ -114,10 +114,16 @@ function isAttestationResponse(r: AuthenticatorResponse): r is AuthenticatorAtte
 }
 
 function isAssertionResponse(r: AuthenticatorResponse): r is AuthenticatorAssertionResponse {
-    return "authenticatorData" in r && "signature" in r && "userHandle" in r;
+    return "authenticatorData" in r;
 }
 
-function fillDetails(r: AR, response: AuthenticatorResponse): void {
+export function credentialFromJS(input: PublicKeyCredential): C {
+    const result = new C();
+    result.setId(input.id);
+    result.setType(input.type);
+    const response = input.response;
+    const r = new AR();
+    r.setClientDataJson(new Uint8Array(response.clientDataJSON));
     if (isAttestationResponse(response)) {
         const atr = new AAtR();
         atr.setAttestationObject(new Uint8Array(response.attestationObject));
@@ -129,20 +135,7 @@ function fillDetails(r: AR, response: AuthenticatorResponse): void {
         asr.setUserHandle(new Uint8Array(response.userHandle));
         r.setAssertionResponse(asr);
     }
-}
-
-function fillResponse(credential: C, response: AuthenticatorResponse): void {
-    const r = new AR();
-    r.setClientDataJson(new Uint8Array(response.clientDataJSON));
-    fillDetails(r, response);
-    credential.setResponse(r);
-}
-
-export function credentialFromJS(input: PublicKeyCredential): C {
-    const result = new C();
-    result.setId(input.id);
-    result.setType(input.type);
-    fillResponse(result, input.response);
+    result.setResponse(r);
     return result;
 }
 
