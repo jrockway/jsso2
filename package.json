@@ -39,6 +39,8 @@
         "concurrently": "^5.3.0",
         "env-path": "^1.0.7",
         "jest": "^26.6.3",
+        "prettier": "^2.2.0",
+        "prettier-plugin-svelte": "^1.4.1",
         "rollup": "^2.33.3",
         "rollup-plugin-livereload": "^2.0.0",
         "rollup-plugin-svelte": "^6.1.1",
