@@ -92,7 +92,7 @@ export function creationOptionsFromProto(rawOpts: CCO): PublicKeyCredentialCreat
         id: rawOpts.getUser().getId_asU8(),
     };
     if (rawOpts.getUser().getIcon() != "") {
-        opts.user.icon = rawOpts.getUser().getIcon();
+        (opts.user as any).icon = rawOpts.getUser().getIcon();
     }
 
     opts.rp = {
@@ -100,7 +100,7 @@ export function creationOptionsFromProto(rawOpts: CCO): PublicKeyCredentialCreat
         id: rawOpts.getRp().getId(),
     };
     if (rawOpts.getRp().getIcon() != "") {
-        opts.rp.icon = rawOpts.getRp().getIcon();
+        (opts.rp as any).icon = rawOpts.getRp().getIcon();
     }
 
     return opts;
