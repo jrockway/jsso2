@@ -14,6 +14,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/jtesting"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/web"
+	"github.com/jrockway/jsso2/pkg/webauthn"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -57,9 +58,15 @@ func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 	linker := &web.Linker{
 		BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"},
 	}
-	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{DB: db, Permissions: s.Permissions, Linker: linker}))
+	webauthnConfig := &webauthn.Config{
+		RelyingPartyID:   linker.Domain(),
+		RelyingPartyName: linker.Domain(),
+		Origin:           linker.Origin(),
+	}
+
+	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{DB: db, Permissions: s.Permissions, Linker: linker, Webauthn: webauthnConfig}))
 	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, Linker: linker}))
-	jssopb.RegisterLoginService(server, jssopb.NewLoginService(&login.Service{}))
+	jssopb.RegisterLoginService(server, jssopb.NewLoginService(&login.Service{DB: db, Permissions: s.Permissions, Webauthn: webauthnConfig}))
 }
 
 // OK, maybe I went overboard with single-letter type names.

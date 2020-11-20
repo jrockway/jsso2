@@ -3,6 +3,7 @@ package webauthn
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/duo-labs/webauthn/protocol"
 	"github.com/duo-labs/webauthn/protocol/webauthncose"
+	"github.com/duo-labs/webauthn/webauthn"
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/types"
@@ -19,6 +21,35 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
+
+type Config struct {
+	RelyingPartyID   string
+	RelyingPartyName string
+	Origin           string
+}
+
+var (
+	ErrNoCredentials          = errors.New("no credentials; try enrolling an authenticator")
+	ErrNotPublicKey           = errors.New("the authentication material is not of type 'public-key'")
+	ErrNotAttestationResponse = errors.New("AuthenticatorResponse is not an AuthenticatorAttestationResponse")
+	ErrNotAssertionResponse   = errors.New("AuthenticatorResponse is not an AuthenticatorAssertionResponse")
+
+	encoder = base64.URLEncoding.WithPadding(base64.NoPadding)
+)
+
+func unpackProtocolError(err error) error {
+	protocolErr := new(protocol.Error)
+	if errors.As(err, &protocolErr) {
+		info := protocolErr.DevInfo
+		// These contain garbage that messes up your terminal.
+		if strings.HasPrefix(info, "RP Hash mismatch") {
+			info = "RP Hash mismatch"
+		}
+		info = strings.ReplaceAll(info, "\n", " ")
+		return fmt.Errorf("validate attestation object: %w (type: %s, dev info: %s)", err, protocolErr.Type, info)
+	}
+	return err
+}
 
 var optsPrototype = &webauthnpb.PublicKeyCredentialCreationOptions{
 	Attestation: webauthnpb.PublicKeyCredentialCreationOptions_NONE,
@@ -57,12 +88,12 @@ func userAsBinary(id int64) ([]byte, error) {
 
 // BeginEnrollment starts the enrollment process, returning a PublicKeyCredentialCreationOptions
 // for the browser.
-func BeginEnrollment(domain string, session *types.Session, existingCreds []*types.Credential) (*webauthnpb.PublicKeyCredentialCreationOptions, error) {
+func (c *Config) BeginEnrollment(session *types.Session, existingCreds []*types.Credential) (*webauthnpb.PublicKeyCredentialCreationOptions, error) {
 	opts := proto.Clone(optsPrototype).(*webauthnpb.PublicKeyCredentialCreationOptions)
 	opts.Challenge = session.GetId()
 	opts.Rp = &webauthnpb.PublicKeyCredentialRpEntity{
-		Id:   domain,
-		Name: domain,
+		Id:   c.RelyingPartyID,
+		Name: c.RelyingPartyName,
 	}
 	user := session.GetUser()
 	if user.GetId() < 1 {
@@ -103,7 +134,12 @@ type ClientData struct {
 // RPC format than Duo's webauthn library, we do the non-crypto things here, and delegate to that
 // library to verify signations.  The steps below are from:
 // https://www.w3.org/TR/webauthn/#registering-a-new-credential
-func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb.FinishEnrollmentRequest) (*types.Credential, error) {
+func (c *Config) FinishEnrollment(session *types.Session, req *jssopb.FinishEnrollmentRequest) (*types.Credential, error) {
+	switch req.GetCredential().GetResponse().GetResponse().(type) {
+	case *webauthnpb.AuthenticatorResponse_AttestationResponse:
+	default:
+		return nil, ErrNotAttestationResponse
+	}
 	// Step 1: Let JSONtext be the result of running UTF-8 decode on clientDataJSON.  (We
 	// actually do this on the client side since gRPC lets use send raw bytes on the wire unlike
 	// the JSON that the spec assumes you're going to use; see src/lib/webauthn.ts.)
@@ -135,7 +171,7 @@ func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb
 	}
 
 	// Step 5: Verify that the value of C.origin matches the Relying Party's origin.
-	if got, want := clientData.Origin, origin; got != want {
+	if got, want := clientData.Origin, c.Origin; got != want {
 		return nil, fmt.Errorf("credential from invalid origin: got %q, want %q", got, want)
 	}
 	if clientData.CrossOrigin {
@@ -166,17 +202,8 @@ func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb
 	// Step 12: Verify the client extensions.  Skipped.
 	// Step 13: Verify the attestation format.  (Handled by Verify.)
 	// Step 14: Verify that the attestation statement is correct.
-	if err := attestation.AttestationObject.Verify(domain, clientDataHash, false); err != nil {
-		protocolErr := new(protocol.Error)
-		if errors.As(err, &protocolErr) {
-			info := protocolErr.DevInfo
-			if strings.HasPrefix(info, "RP Hash mismatch") {
-				// This contains garbage that messes up your terminal.
-				info = "RP Hash mismatch"
-			}
-			return nil, fmt.Errorf("validate attestation object: %w (type: %s, dev info: %s)", err, protocolErr.Type, info)
-		}
-		return nil, fmt.Errorf("validate attestation object: %w", err)
+	if err := attestation.AttestationObject.Verify(c.RelyingPartyID, clientDataHash, false); err != nil {
+		return nil, fmt.Errorf("validate attestation object: %w", unpackProtocolError(err))
 	}
 
 	// Step 15: Obtain trust anchors.  The Duo library claims this is impossible to do, so we
@@ -194,4 +221,146 @@ func FinishEnrollment(domain, origin string, session *types.Session, req *jssopb
 		CredentialId: attData.CredentialID,
 		PublicKey:    attData.CredentialPublicKey,
 	}, nil
+}
+
+// BeginLogin fills out a StartLoginReply so that login can begin.
+func (c *Config) BeginLogin(s *types.Session, creds []*types.Credential) (*jssopb.StartLoginReply, error) {
+	reply := &jssopb.StartLoginReply{
+		CredentialRequestOptions: &webauthnpb.PublicKeyCredentialRequestOptions{
+			Timeout: durationpb.New(60 * time.Second),
+		},
+	}
+	reply.CredentialRequestOptions.Challenge = s.GetId()
+
+	if len(creds) == 0 {
+		return reply, ErrNoCredentials
+	}
+	for _, c := range creds {
+		reply.CredentialRequestOptions.AllowedCredentials = append(reply.CredentialRequestOptions.AllowedCredentials, &webauthnpb.PublicKeyCredentialDescriptor{
+			Id: c.CredentialId,
+			Transports: []webauthnpb.PublicKeyCredentialDescriptor_AuthenticatorTransport{
+				webauthnpb.PublicKeyCredentialDescriptor_BLE,
+				webauthnpb.PublicKeyCredentialDescriptor_INTERNAL,
+				webauthnpb.PublicKeyCredentialDescriptor_NFC,
+				webauthnpb.PublicKeyCredentialDescriptor_USB,
+			},
+			Type: "public-key",
+		})
+	}
+	return reply, nil
+}
+
+type webauthnUser struct {
+	id    []byte
+	user  *types.User
+	creds []*types.Credential
+}
+
+func (u *webauthnUser) WebAuthnID() []byte {
+	return u.id
+}
+
+func (u *webauthnUser) WebAuthnName() string {
+	return u.user.GetUsername()
+}
+
+func (u *webauthnUser) WebAuthnDisplayName() string {
+	return u.user.GetUsername()
+}
+
+func (*webauthnUser) WebAuthnIcon() string { return "" }
+
+func (u *webauthnUser) WebAuthnCredentials() []webauthn.Credential {
+	var result []webauthn.Credential
+	for _, c := range u.creds {
+		result = append(result, webauthn.Credential{
+			ID:            c.GetCredentialId(),
+			PublicKey:     c.GetPublicKey(),
+			Authenticator: webauthn.Authenticator{},
+		})
+	}
+	return result
+}
+
+// FinishLogin validates a signature against of allowed credentials.
+func (c *Config) FinishLogin(s *types.Session, creds []*types.Credential, req *jssopb.FinishLoginRequest) error {
+	if req.GetCredential().GetType() != "public-key" {
+		return ErrNotPublicKey
+	}
+	switch req.GetCredential().GetResponse().GetResponse().(type) {
+	case *webauthnpb.AuthenticatorResponse_AssertionResponse:
+	default:
+		return ErrNotAssertionResponse
+	}
+
+	res := req.GetCredential().GetResponse()
+	ares := res.GetAssertionResponse()
+
+	var clientData protocol.CollectedClientData
+	if err := json.Unmarshal(res.GetClientDataJson(), &clientData); err != nil {
+		return fmt.Errorf("unmarshal client data json: %w", err)
+	}
+	ad := protocol.AuthenticatorData{}
+	if err := ad.Unmarshal(ares.GetAuthenticatorData()); err != nil {
+		return fmt.Errorf("unmarshal attestation object: %w", err)
+	}
+	rawID, err := encoder.DecodeString(req.GetCredential().GetId())
+	if err != nil {
+		return fmt.Errorf("decode credential id: %w", err)
+	}
+	cad := &protocol.ParsedCredentialAssertionData{
+		ParsedPublicKeyCredential: protocol.ParsedPublicKeyCredential{
+			RawID: rawID,
+			ParsedCredential: protocol.ParsedCredential{
+				ID:   req.GetCredential().GetId(),
+				Type: req.GetCredential().GetType(),
+			},
+		},
+		Response: protocol.ParsedAssertionResponse{
+			CollectedClientData: clientData,
+			AuthenticatorData:   ad,
+			Signature:           ares.GetSignature(),
+			UserHandle:          ares.GetUserHandle(),
+		},
+		Raw: protocol.CredentialAssertionResponse{
+			AssertionResponse: protocol.AuthenticatorAssertionResponse{
+				AuthenticatorResponse: protocol.AuthenticatorResponse{
+					ClientDataJSON: res.GetClientDataJson(),
+				},
+				AuthenticatorData: ares.GetAuthenticatorData(),
+				Signature:         ares.GetSignature(),
+				UserHandle:        ares.GetUserHandle(),
+			},
+		},
+	}
+	var credIDs [][]byte
+	for _, c := range creds {
+		credIDs = append(credIDs, c.GetCredentialId())
+	}
+	idBytes, err := userAsBinary(s.GetUser().GetId())
+	if err != nil {
+		return fmt.Errorf("format user id as binary: %w", err)
+	}
+	u := &webauthnUser{
+		id:    idBytes,
+		user:  s.GetUser(),
+		creds: creds,
+	}
+	session := webauthn.SessionData{
+		Challenge:            sessions.ToBase64(s),
+		UserID:               idBytes,
+		AllowedCredentialIDs: credIDs,
+		UserVerification:     protocol.VerificationDiscouraged,
+	}
+	cfg := &webauthn.WebAuthn{
+		Config: &webauthn.Config{
+			RPDisplayName: c.RelyingPartyName,
+			RPID:          c.RelyingPartyID,
+			RPOrigin:      c.Origin,
+		},
+	}
+	if _, err := cfg.ValidateLogin(u, session, cad); err != nil {
+		return fmt.Errorf("validate login: %w", unpackProtocolError(err))
+	}
+	return nil
 }

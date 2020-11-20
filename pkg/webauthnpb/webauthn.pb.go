@@ -726,9 +726,8 @@ type PublicKeyCredential struct {
 
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Type is always "public-key".
-	Type              string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	ClientDataJson    []byte `protobuf:"bytes,3,opt,name=client_data_json,json=clientDataJson,proto3" json:"client_data_json,omitempty"`
-	AttestationObject []byte `protobuf:"bytes,4,opt,name=attestation_object,json=attestationObject,proto3" json:"attestation_object,omitempty"`
+	Type     string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Response *AuthenticatorResponse `protobuf:"bytes,3,opt,name=response,proto3" json:"response,omitempty"`
 }
 
 func (x *PublicKeyCredential) Reset() {
@@ -777,16 +776,207 @@ func (x *PublicKeyCredential) GetType() string {
 	return ""
 }
 
-func (x *PublicKeyCredential) GetClientDataJson() []byte {
+func (x *PublicKeyCredential) GetResponse() *AuthenticatorResponse {
+	if x != nil {
+		return x.Response
+	}
+	return nil
+}
+
+type AuthenticatorResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ClientDataJson []byte `protobuf:"bytes,1,opt,name=client_data_json,json=clientDataJson,proto3" json:"client_data_json,omitempty"`
+	// Types that are assignable to Response:
+	//	*AuthenticatorResponse_AttestationResponse
+	//	*AuthenticatorResponse_AssertionResponse
+	Response isAuthenticatorResponse_Response `protobuf_oneof:"response"`
+}
+
+func (x *AuthenticatorResponse) Reset() {
+	*x = AuthenticatorResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_webauthn_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthenticatorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthenticatorResponse) ProtoMessage() {}
+
+func (x *AuthenticatorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_webauthn_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthenticatorResponse.ProtoReflect.Descriptor instead.
+func (*AuthenticatorResponse) Descriptor() ([]byte, []int) {
+	return file_webauthn_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *AuthenticatorResponse) GetClientDataJson() []byte {
 	if x != nil {
 		return x.ClientDataJson
 	}
 	return nil
 }
 
-func (x *PublicKeyCredential) GetAttestationObject() []byte {
+func (m *AuthenticatorResponse) GetResponse() isAuthenticatorResponse_Response {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
+func (x *AuthenticatorResponse) GetAttestationResponse() *AuthenticatorAttestationResponse {
+	if x, ok := x.GetResponse().(*AuthenticatorResponse_AttestationResponse); ok {
+		return x.AttestationResponse
+	}
+	return nil
+}
+
+func (x *AuthenticatorResponse) GetAssertionResponse() *AuthenticatorAssertionResponse {
+	if x, ok := x.GetResponse().(*AuthenticatorResponse_AssertionResponse); ok {
+		return x.AssertionResponse
+	}
+	return nil
+}
+
+type isAuthenticatorResponse_Response interface {
+	isAuthenticatorResponse_Response()
+}
+
+type AuthenticatorResponse_AttestationResponse struct {
+	AttestationResponse *AuthenticatorAttestationResponse `protobuf:"bytes,2,opt,name=attestation_response,json=attestationResponse,proto3,oneof"`
+}
+
+type AuthenticatorResponse_AssertionResponse struct {
+	AssertionResponse *AuthenticatorAssertionResponse `protobuf:"bytes,3,opt,name=assertion_response,json=assertionResponse,proto3,oneof"`
+}
+
+func (*AuthenticatorResponse_AttestationResponse) isAuthenticatorResponse_Response() {}
+
+func (*AuthenticatorResponse_AssertionResponse) isAuthenticatorResponse_Response() {}
+
+type AuthenticatorAttestationResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	AttestationObject []byte `protobuf:"bytes,1,opt,name=attestation_object,json=attestationObject,proto3" json:"attestation_object,omitempty"`
+}
+
+func (x *AuthenticatorAttestationResponse) Reset() {
+	*x = AuthenticatorAttestationResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_webauthn_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthenticatorAttestationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthenticatorAttestationResponse) ProtoMessage() {}
+
+func (x *AuthenticatorAttestationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_webauthn_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthenticatorAttestationResponse.ProtoReflect.Descriptor instead.
+func (*AuthenticatorAttestationResponse) Descriptor() ([]byte, []int) {
+	return file_webauthn_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *AuthenticatorAttestationResponse) GetAttestationObject() []byte {
 	if x != nil {
 		return x.AttestationObject
+	}
+	return nil
+}
+
+type AuthenticatorAssertionResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	AuthenticatorData []byte `protobuf:"bytes,1,opt,name=authenticator_data,json=authenticatorData,proto3" json:"authenticator_data,omitempty"`
+	Signature         []byte `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+	UserHandle        []byte `protobuf:"bytes,3,opt,name=user_handle,json=userHandle,proto3" json:"user_handle,omitempty"`
+}
+
+func (x *AuthenticatorAssertionResponse) Reset() {
+	*x = AuthenticatorAssertionResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_webauthn_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthenticatorAssertionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthenticatorAssertionResponse) ProtoMessage() {}
+
+func (x *AuthenticatorAssertionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_webauthn_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthenticatorAssertionResponse.ProtoReflect.Descriptor instead.
+func (*AuthenticatorAssertionResponse) Descriptor() ([]byte, []int) {
+	return file_webauthn_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *AuthenticatorAssertionResponse) GetAuthenticatorData() []byte {
+	if x != nil {
+		return x.AuthenticatorData
+	}
+	return nil
+}
+
+func (x *AuthenticatorAssertionResponse) GetSignature() []byte {
+	if x != nil {
+		return x.Signature
+	}
+	return nil
+}
+
+func (x *AuthenticatorAssertionResponse) GetUserHandle() []byte {
+	if x != nil {
+		return x.UserHandle
 	}
 	return nil
 }
@@ -923,19 +1113,48 @@ var file_webauthn_proto_rawDesc = []byte{
 	0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x0b, 0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x12,
 	0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x69, 0x64, 0x22,
-	0x92, 0x01, 0x0a, 0x13, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x43, 0x72, 0x65,
-	0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x28, 0x0a, 0x10, 0x63,
-	0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x6a, 0x73, 0x6f, 0x6e, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0e, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x44, 0x61, 0x74,
-	0x61, 0x4a, 0x73, 0x6f, 0x6e, 0x12, 0x2d, 0x0a, 0x12, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x11, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4f, 0x62,
-	0x6a, 0x65, 0x63, 0x74, 0x42, 0x2a, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x6a, 0x72, 0x6f, 0x63, 0x6b, 0x77, 0x61, 0x79, 0x2f, 0x6a, 0x73, 0x73, 0x6f,
-	0x32, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x77, 0x65, 0x62, 0x61, 0x75, 0x74, 0x68, 0x6e, 0x70, 0x62,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x76, 0x0a, 0x13, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x43, 0x72, 0x65, 0x64,
+	0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x3b, 0x0a, 0x08, 0x72, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x77,
+	0x65, 0x62, 0x61, 0x75, 0x74, 0x68, 0x6e, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69,
+	0x63, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x08, 0x72,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x89, 0x02, 0x0a, 0x15, 0x41, 0x75, 0x74, 0x68,
+	0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x28, 0x0a, 0x10, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x64, 0x61, 0x74, 0x61,
+	0x5f, 0x6a, 0x73, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0e, 0x63, 0x6c, 0x69,
+	0x65, 0x6e, 0x74, 0x44, 0x61, 0x74, 0x61, 0x4a, 0x73, 0x6f, 0x6e, 0x12, 0x5f, 0x0a, 0x14, 0x61,
+	0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x72, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x77, 0x65, 0x62, 0x61,
+	0x75, 0x74, 0x68, 0x6e, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74,
+	0x6f, 0x72, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x00, 0x52, 0x13, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x59, 0x0a, 0x12,
+	0x61, 0x73, 0x73, 0x65, 0x72, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x77, 0x65, 0x62, 0x61, 0x75,
+	0x74, 0x68, 0x6e, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x6f,
+	0x72, 0x41, 0x73, 0x73, 0x65, 0x72, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x48, 0x00, 0x52, 0x11, 0x61, 0x73, 0x73, 0x65, 0x72, 0x74, 0x69, 0x6f, 0x6e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x0a, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x51, 0x0a, 0x20, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63,
+	0x61, 0x74, 0x6f, 0x72, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2d, 0x0a, 0x12, 0x61, 0x74, 0x74, 0x65, 0x73,
+	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x11, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x22, 0x8e, 0x01, 0x0a, 0x1e, 0x41, 0x75, 0x74, 0x68, 0x65,
+	0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x73, 0x73, 0x65, 0x72, 0x74, 0x69, 0x6f,
+	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2d, 0x0a, 0x12, 0x61, 0x75, 0x74,
+	0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x11, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63,
+	0x61, 0x74, 0x6f, 0x72, 0x44, 0x61, 0x74, 0x61, 0x12, 0x1c, 0x0a, 0x09, 0x73, 0x69, 0x67, 0x6e,
+	0x61, 0x74, 0x75, 0x72, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x73, 0x69, 0x67,
+	0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x68,
+	0x61, 0x6e, 0x64, 0x6c, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0a, 0x75, 0x73, 0x65,
+	0x72, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x42, 0x2a, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75,
+	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x72, 0x6f, 0x63, 0x6b, 0x77, 0x61, 0x79, 0x2f, 0x6a,
+	0x73, 0x73, 0x6f, 0x32, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x77, 0x65, 0x62, 0x61, 0x75, 0x74, 0x68,
+	0x6e, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -951,7 +1170,7 @@ func file_webauthn_proto_rawDescGZIP() []byte {
 }
 
 var file_webauthn_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_webauthn_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_webauthn_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_webauthn_proto_goTypes = []interface{}{
 	(PublicKeyCredentialCreationOptions_AttestationConveyancePreference)(0), // 0: webauthn.PublicKeyCredentialCreationOptions.AttestationConveyancePreference
 	(AuthenticatorSelectionCriteria_AuthenticatorAttachment)(0),             // 1: webauthn.AuthenticatorSelectionCriteria.AuthenticatorAttachment
@@ -965,7 +1184,10 @@ var file_webauthn_proto_goTypes = []interface{}{
 	(*PublicKeyCredentialRpEntity)(nil),                                     // 9: webauthn.PublicKeyCredentialRpEntity
 	(*PublicKeyCredentialUserEntity)(nil),                                   // 10: webauthn.PublicKeyCredentialUserEntity
 	(*PublicKeyCredential)(nil),                                             // 11: webauthn.PublicKeyCredential
-	(*duration.Duration)(nil),                                               // 12: google.protobuf.Duration
+	(*AuthenticatorResponse)(nil),                                           // 12: webauthn.AuthenticatorResponse
+	(*AuthenticatorAttestationResponse)(nil),                                // 13: webauthn.AuthenticatorAttestationResponse
+	(*AuthenticatorAssertionResponse)(nil),                                  // 14: webauthn.AuthenticatorAssertionResponse
+	(*duration.Duration)(nil),                                               // 15: google.protobuf.Duration
 }
 var file_webauthn_proto_depIdxs = []int32{
 	0,  // 0: webauthn.PublicKeyCredentialCreationOptions.attestation:type_name -> webauthn.PublicKeyCredentialCreationOptions.AttestationConveyancePreference
@@ -973,18 +1195,21 @@ var file_webauthn_proto_depIdxs = []int32{
 	7,  // 2: webauthn.PublicKeyCredentialCreationOptions.exclude_credentials:type_name -> webauthn.PublicKeyCredentialDescriptor
 	8,  // 3: webauthn.PublicKeyCredentialCreationOptions.pub_key_cred_params:type_name -> webauthn.PublicKeyCredentialParameters
 	9,  // 4: webauthn.PublicKeyCredentialCreationOptions.rp:type_name -> webauthn.PublicKeyCredentialRpEntity
-	12, // 5: webauthn.PublicKeyCredentialCreationOptions.timeout:type_name -> google.protobuf.Duration
+	15, // 5: webauthn.PublicKeyCredentialCreationOptions.timeout:type_name -> google.protobuf.Duration
 	10, // 6: webauthn.PublicKeyCredentialCreationOptions.user:type_name -> webauthn.PublicKeyCredentialUserEntity
 	7,  // 7: webauthn.PublicKeyCredentialRequestOptions.allowed_credentials:type_name -> webauthn.PublicKeyCredentialDescriptor
-	12, // 8: webauthn.PublicKeyCredentialRequestOptions.timeout:type_name -> google.protobuf.Duration
+	15, // 8: webauthn.PublicKeyCredentialRequestOptions.timeout:type_name -> google.protobuf.Duration
 	1,  // 9: webauthn.AuthenticatorSelectionCriteria.authenticator_attachment:type_name -> webauthn.AuthenticatorSelectionCriteria.AuthenticatorAttachment
 	2,  // 10: webauthn.AuthenticatorSelectionCriteria.user_verification:type_name -> webauthn.AuthenticatorSelectionCriteria.UserVerificationRequirement
 	3,  // 11: webauthn.PublicKeyCredentialDescriptor.transports:type_name -> webauthn.PublicKeyCredentialDescriptor.AuthenticatorTransport
-	12, // [12:12] is the sub-list for method output_type
-	12, // [12:12] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	12, // 12: webauthn.PublicKeyCredential.response:type_name -> webauthn.AuthenticatorResponse
+	13, // 13: webauthn.AuthenticatorResponse.attestation_response:type_name -> webauthn.AuthenticatorAttestationResponse
+	14, // 14: webauthn.AuthenticatorResponse.assertion_response:type_name -> webauthn.AuthenticatorAssertionResponse
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_webauthn_proto_init() }
@@ -1089,6 +1314,46 @@ func file_webauthn_proto_init() {
 				return nil
 			}
 		}
+		file_webauthn_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AuthenticatorResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_webauthn_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AuthenticatorAttestationResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_webauthn_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AuthenticatorAssertionResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+	}
+	file_webauthn_proto_msgTypes[8].OneofWrappers = []interface{}{
+		(*AuthenticatorResponse_AttestationResponse)(nil),
+		(*AuthenticatorResponse_AssertionResponse)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1096,7 +1361,7 @@ func file_webauthn_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_webauthn_proto_rawDesc,
 			NumEnums:      4,
-			NumMessages:   8,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

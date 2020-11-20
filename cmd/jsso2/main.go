@@ -13,6 +13,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/web"
+	"github.com/jrockway/jsso2/pkg/webauthn"
 	"github.com/jrockway/opinionated-server/server"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -56,6 +57,12 @@ func main() {
 		zap.L().Fatal("failed to create linker", zap.String("base_url", appConfig.BaseURL), zap.Error(err))
 	}
 
+	webauthnConfig := &webauthn.Config{
+		RelyingPartyID:   linker.Domain(),
+		RelyingPartyName: linker.Domain(),
+		Origin:           linker.Origin(),
+	}
+
 	userService := &user.Service{
 		DB:          db,
 		Permissions: auth,
@@ -66,11 +73,13 @@ func main() {
 		DB:          db,
 		Permissions: auth,
 		Linker:      linker,
+		Webauthn:    webauthnConfig,
 	}
 
 	loginService := &login.Service{
 		DB:          db,
 		Permissions: auth,
+		Webauthn:    webauthnConfig,
 	}
 
 	server.AddService(func(s *grpc.Server) {

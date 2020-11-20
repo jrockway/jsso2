@@ -21,6 +21,7 @@ type Service struct {
 	DB          *store.Connection
 	Permissions *internalauth.Permissions
 	Linker      *web.Linker
+	Webauthn    *webauthn.Config
 }
 
 func (s *Service) Start(ctx context.Context, req *jssopb.StartEnrollmentRequest) (*jssopb.StartEnrollmentReply, error) {
@@ -45,7 +46,7 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartEnrollmentRequest)
 		return reply, store.AsGRPCError(err)
 	}
 
-	opts, err := webauthn.BeginEnrollment(s.Linker.RPID(), session, creds)
+	opts, err := s.Webauthn.BeginEnrollment(session, creds)
 	if err != nil {
 		return reply, fmt.Errorf("create challenge: %w", err)
 	}
@@ -59,7 +60,7 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishEnrollmentReques
 	if err := s.Permissions.AllowFinishEnrollment(ctx, session); err != nil {
 		return reply, fmt.Errorf("check permissions: %w", err)
 	}
-	credential, err := webauthn.FinishEnrollment(s.Linker.RPID(), s.Linker.Origin(), session, req)
+	credential, err := s.Webauthn.FinishEnrollment(session, req)
 	if err != nil {
 		return reply, fmt.Errorf("validate credential: %w", err)
 	}
