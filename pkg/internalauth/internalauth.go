@@ -119,31 +119,27 @@ func (p *Permissions) getSession(ctx context.Context) (*types.Session, error) {
 		return sessions.Root(), nil
 	}
 
-	sid, err := sessions.FromMetadata(md)
+	session, err := sessions.FromMetadata(md)
 	if err != nil {
 		if errors.Is(err, sessions.ErrSessionMissing) {
 			return sessions.Anonymous(), nil
 		}
 		return nil, fmt.Errorf("load session from metadata: %w", err)
 	}
-	var session *types.Session
+	if sessions.IsZero(session.GetId()) {
+		return nil, errors.New("malformed session id")
+	}
 	err = p.Store.DoTx(ctx, ctxzap.Extract(ctx), true, func(tx *sqlx.Tx) error {
 		var err error
-		session, err = store.LookupSession(ctx, tx, sid.GetId())
+		session, err = store.LookupSession(ctx, tx, session.GetId())
 		if err != nil {
 			return fmt.Errorf("lookup session: %w", err)
 		}
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("read session from database: %w", err)
+		return nil, fmt.Errorf("restore session: %w", err)
 	}
-	l := ctxzap.Extract(ctx)
-	l = l.With(zap.String("session.user", session.GetUser().GetUsername()))
-	if len(session.GetTaints()) > 0 {
-		l.With(zap.Any("session.taints", session.GetTaints()))
-	}
-	ctx = ctxzap.ToContext(ctx, l)
 	return session, nil
 }
 
@@ -151,6 +147,12 @@ func (p *Permissions) StreamServerInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		rootCtx := ss.Context()
 		session, err := p.getSession(rootCtx)
+		if u := session.GetUser().GetUsername(); u != "" {
+			ctxzap.AddFields(rootCtx, zap.String("session.user", u))
+		}
+		if t := session.GetTaints(); len(t) > 0 {
+			ctxzap.AddFields(rootCtx, zap.Any("session.taints", t))
+		}
 		if err != nil {
 			return status.Error(codes.Unauthenticated, fmt.Sprintf("get user from session: %v", err))
 		}
@@ -167,6 +169,12 @@ func (p *Permissions) StreamServerInterceptor() grpc.StreamServerInterceptor {
 func (p *Permissions) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(rootCtx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		session, err := p.getSession(rootCtx)
+		if u := session.GetUser().GetUsername(); u != "" {
+			ctxzap.AddFields(rootCtx, zap.String("session.user", u))
+		}
+		if t := session.GetTaints(); len(t) > 0 {
+			ctxzap.AddFields(rootCtx, zap.Any("session.taints", t))
+		}
 		if err != nil {
 			return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("get user from session: %v", err))
 		}
