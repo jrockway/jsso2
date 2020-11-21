@@ -198,6 +198,28 @@ func (p *Permissions) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	}
 }
 
+func sessionMetadataFromContext(ctx context.Context) *types.SessionMetadata {
+	result := &types.SessionMetadata{}
+	if ctx == nil {
+		return result
+	}
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return result
+	}
+	userAgent := md.Get("user-agent")
+	if len(userAgent) == 1 {
+		result.UserAgent = userAgent[0]
+	}
+	// It's assumed that Envoy is always in front of requests and that it will always set this
+	// to a legitimate value that the client can't tamper with.
+	ip := md.Get("x-forwarded-for")
+	if len(ip) == 1 {
+		result.IpAddress = ip[0]
+	}
+	return result
+}
+
 // General policy decisions start here.
 func (p *Permissions) EnrollmentSessionPrototype(ctx context.Context, target *types.User) (*types.Session, error) {
 	id, err := sessions.GenerateID()
@@ -211,6 +233,7 @@ func (p *Permissions) EnrollmentSessionPrototype(ctx context.Context, target *ty
 		CreatedAt: timestamppb.New(now),
 		ExpiresAt: timestamppb.New(now.Add(3 * 24 * time.Hour)),
 		Taints:    []string{sessions.TaintEnrollment},
+		Metadata:  sessionMetadataFromContext(ctx),
 	}, nil
 }
 
@@ -226,6 +249,7 @@ func (p *Permissions) LoginSessionPrototype(ctx context.Context, target *types.U
 		CreatedAt: timestamppb.New(now),
 		ExpiresAt: timestamppb.New(now.Add(18 * time.Hour)),
 		Taints:    []string{sessions.TaintStartLogin},
+		Metadata:  sessionMetadataFromContext(ctx),
 	}, nil
 }
 
