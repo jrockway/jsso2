@@ -40,6 +40,7 @@ func TestRoundTrip(t *testing.T) {
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	res := rec.Result()
+	res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		t.Fatalf("non-200 response: %s", res.Status)
 	}
