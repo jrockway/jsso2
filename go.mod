@@ -20,6 +20,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/jrockway/opinionated-server v0.0.15
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
+	github.com/o1egl/paseto/v2 v2.1.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.4.0

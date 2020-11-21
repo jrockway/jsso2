@@ -1,5 +1,6 @@
 import * as jspb from 'google-protobuf'
 
+import * as google_protobuf_any_pb from 'google-protobuf/google/protobuf/any_pb';
 import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 
 
@@ -174,6 +175,62 @@ export namespace Credential {
     createdBySessionId: Uint8Array | string,
     aaguid: Uint8Array | string,
     signCount: number,
+  }
+}
+
+export class SecureToken extends jspb.Message {
+  getMessage(): google_protobuf_any_pb.Any | undefined;
+  setMessage(value?: google_protobuf_any_pb.Any): SecureToken;
+  hasMessage(): boolean;
+  clearMessage(): SecureToken;
+
+  getIssuedAt(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setIssuedAt(value?: google_protobuf_timestamp_pb.Timestamp): SecureToken;
+  hasIssuedAt(): boolean;
+  clearIssuedAt(): SecureToken;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SecureToken.AsObject;
+  static toObject(includeInstance: boolean, msg: SecureToken): SecureToken.AsObject;
+  static serializeBinaryToWriter(message: SecureToken, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SecureToken;
+  static deserializeBinaryFromReader(message: SecureToken, reader: jspb.BinaryReader): SecureToken;
+}
+
+export namespace SecureToken {
+  export type AsObject = {
+    message?: google_protobuf_any_pb.Any.AsObject,
+    issuedAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+  }
+}
+
+export class SetCookieRequest extends jspb.Message {
+  getSessionId(): Uint8Array | string;
+  getSessionId_asU8(): Uint8Array;
+  getSessionId_asB64(): string;
+  setSessionId(value: Uint8Array | string): SetCookieRequest;
+
+  getRedirectUrl(): string;
+  setRedirectUrl(value: string): SetCookieRequest;
+
+  getSessionExpiresAt(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setSessionExpiresAt(value?: google_protobuf_timestamp_pb.Timestamp): SetCookieRequest;
+  hasSessionExpiresAt(): boolean;
+  clearSessionExpiresAt(): SetCookieRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SetCookieRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: SetCookieRequest): SetCookieRequest.AsObject;
+  static serializeBinaryToWriter(message: SetCookieRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SetCookieRequest;
+  static deserializeBinaryFromReader(message: SetCookieRequest, reader: jspb.BinaryReader): SetCookieRequest;
+}
+
+export namespace SetCookieRequest {
+  export type AsObject = {
+    sessionId: Uint8Array | string,
+    redirectUrl: string,
+    sessionExpiresAt?: google_protobuf_timestamp_pb.Timestamp.AsObject,
   }
 }
 

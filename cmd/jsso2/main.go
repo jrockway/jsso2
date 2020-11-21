@@ -21,7 +21,8 @@ import (
 )
 
 type Config struct {
-	BaseURL string `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
+	BaseURL      string `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
+	SetCookieKey string `long:"set_cookie_key" description:"32 bytes that are used to encrypt and sign set-cookie tokens." env:"SET_COOKIE_KEY"`
 }
 
 func main() {
@@ -58,6 +59,9 @@ func main() {
 		Name:   "jsso-session-id",
 		Domain: linker.Domain(),
 		Linker: linker,
+	}
+	if err := cookieConfig.SetKey([]byte(appConfig.SetCookieKey)); err != nil {
+		zap.L().Fatal("failed to set set-cookie encryption key", zap.Error(err))
 	}
 
 	auth := internalauth.NewFromConfig(authConfig, db)

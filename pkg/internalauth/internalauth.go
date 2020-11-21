@@ -123,7 +123,7 @@ func (p *Permissions) getSession(ctx context.Context) (*types.Session, error) {
 	}
 
 	var session *types.Session
-	for _, f := range []func(metadata.MD) (*types.Session, error){sessions.FromMetadata, p.Cookies.SessionIDFromMetadata} {
+	for _, f := range []func(metadata.MD) (*types.Session, error){sessions.FromMetadata, p.Cookies.SessionFromMetadata} {
 		s, err := f(md)
 		if err != nil {
 			if errors.Is(err, sessions.ErrSessionMissing) {

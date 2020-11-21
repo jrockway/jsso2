@@ -62,5 +62,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&session, "session", "", "if set, authenticate with this base64-encoded session id")
 	rootCmd.PersistentFlags().StringVar(&bearer, "bearer", "", "if set, authenticate with this bearer token")
 	rootCmd.PersistentFlags().DurationVar(&timeout, "timeout", 5*time.Second, "time allowed for the command to run, including all network requests")
-	rootCmd.AddCommand(usersCmd)
+	rootCmd.AddCommand(usersCmd, devCmd)
 }

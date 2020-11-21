@@ -1,5 +1,6 @@
 syntax = "proto3";
 package types;
+import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/jrockway/jsso2/pkg/types";
@@ -69,4 +70,23 @@ message Credential {
     // The last-seen sign count of the authenticator.  If the sign count is less
     // than this when logging in, we know the credential has been cloned.
     int64 sign_count = 10;
+}
+
+message SecureToken {
+    // We use an "any" here because it includes the type of the message, which
+    // acts as a "subject" and ensures that a piece of code is actually looking
+    // at the right kind of token.
+    google.protobuf.Any message = 1;
+
+    // When this request was created.
+    google.protobuf.Timestamp issued_at = 2;
+}
+
+message SetCookieRequest {
+    // The session ID to set.
+    bytes session_id = 1;
+    // Where to redirect after setting the cookie.
+    string redirect_url = 2;
+    // When the session cookie should expire.
+    google.protobuf.Timestamp session_expires_at = 3;
 }

@@ -128,7 +128,11 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishLoginRequest) (*
 	if err := untaintSession(ctx, l, s.DB, id); err != nil {
 		return reply, err
 	}
-	reply.RedirectUrl = s.Cookies.LinkToSetCookie(s.Cookies.SessionToSetCookieToken(session))
+	token, err := s.Cookies.NewSetCookieRequest(session, "")
+	if err != nil {
+		return reply, fmt.Errorf("get set-cookie token: %w", err)
+	}
+	reply.RedirectUrl = s.Cookies.LinkToSetCookie(token)
 	return reply, nil
 }
 
