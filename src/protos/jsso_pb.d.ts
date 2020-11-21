@@ -134,6 +134,12 @@ export class FinishLoginRequest extends jspb.Message {
   hasCredential(): boolean;
   clearCredential(): FinishLoginRequest;
 
+  getError(): string;
+  setError(value: string): FinishLoginRequest;
+
+  getRedirectTo(): string;
+  setRedirectTo(value: string): FinishLoginRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): FinishLoginRequest.AsObject;
   static toObject(includeInstance: boolean, msg: FinishLoginRequest): FinishLoginRequest.AsObject;
@@ -145,6 +151,8 @@ export class FinishLoginRequest extends jspb.Message {
 export namespace FinishLoginRequest {
   export type AsObject = {
     credential?: webauthn_pb.PublicKeyCredential.AsObject,
+    error: string,
+    redirectTo: string,
   }
 }
 

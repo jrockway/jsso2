@@ -103,6 +103,13 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishLoginRequest) (*
 	l := ctxzap.Extract(ctx)
 
 	session := sessions.MustFromContext(ctx)
+	if clientError := req.GetError(); clientError != "" {
+		if err := revokeSession(ctx, l, s.DB, session.GetId()); err != nil {
+			return reply, store.AsGRPCError(fmt.Errorf("revoke session after client error %q: %w", clientError, err))
+		}
+		return reply, status.Error(codes.FailedPrecondition, fmt.Sprintf("login failed due to a client error: %q", clientError))
+	}
+
 	id := session.GetId()
 	user := session.GetUser()
 
@@ -128,7 +135,12 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishLoginRequest) (*
 	if err := untaintSession(ctx, l, s.DB, id); err != nil {
 		return reply, err
 	}
-	token, err := s.Cookies.NewSetCookieRequest(session, "")
+	redirectTo := req.GetRedirectTo()
+	if err := s.Permissions.AllowRedirect(redirectTo); err != nil {
+		l.Warn("not allowed to redirect user", zap.String("redirect_to", redirectTo))
+		redirectTo = ""
+	}
+	token, err := s.Cookies.NewSetCookieRequest(session, redirectTo)
 	if err != nil {
 		return reply, fmt.Errorf("get set-cookie token: %w", err)
 	}

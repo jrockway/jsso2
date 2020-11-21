@@ -4,6 +4,9 @@
     import { credentialFromJS, requestOptionsFromProto } from "../lib/webauthn";
     import GrpcError from "../components/GrpcError.svelte";
 
+    export let params = {
+        redirect: "",
+    };
     let username = "";
     let showLogin = true;
 
@@ -22,19 +25,36 @@
         const startReply = await loginClient.start(startReq, null);
         const publicKey = requestOptionsFromProto(startReply.getCredentialRequestOptions());
         publicKey.userVerification = "discouraged";
-        const assertion = await navigator.credentials.get({
-            publicKey: publicKey,
-        });
-        if (!(assertion instanceof PublicKeyCredential)) {
-            throw "not a public key credential";
-        }
         const finishReq = new FinishLoginRequest();
-        finishReq.setCredential(credentialFromJS(assertion));
+        try {
+            if (navigator.credentials === undefined) {
+                throw "Your browser does not support WebAuthn.";
+            }
+            const assertion = await navigator.credentials.get({
+                publicKey: publicKey,
+            });
+            if (!(assertion instanceof PublicKeyCredential)) {
+                throw "not a public key credential";
+            }
+            if (params.redirect == "") {
+                const loc = window.location;
+                params.redirect = loc.protocol + "//" + loc.host + "/";
+            }
+            finishReq.setRedirectTo(params.redirect);
+            finishReq.setCredential(credentialFromJS(assertion));
+        } catch (e) {
+            finishReq.setError(e.toString());
+        }
         const finishReply = await loginClient.finish(finishReq, {
             Authorization: "SessionID " + startReply.getToken(),
         });
-        console.log(finishReply.toObject());
-        return finishReply.getRedirectUrl();
+        const redirect = finishReply.getRedirectUrl();
+        if (redirect != "") {
+            window.setTimeout(() => {
+                window.location.href = redirect;
+            }, 1000);
+        }
+        return redirect;
     }
 </script>
 

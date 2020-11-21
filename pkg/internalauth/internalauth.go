@@ -229,6 +229,10 @@ func (p *Permissions) LoginSessionPrototype(ctx context.Context, target *types.U
 	}, nil
 }
 
+func (p *Permissions) AllowRedirect(destination string) error {
+	return nil
+}
+
 // The per-operation permissions start here.
 
 func (p *Permissions) AllowUserEdit(ctx context.Context, target *types.User, actor *types.Session) error {

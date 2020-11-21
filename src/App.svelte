@@ -8,8 +8,9 @@
     const routes = {
         "/": Index,
         "/enroll": Enrollment,
-        "/login": Login,
         "/enroll/:token": Enrollment,
+        "/login": Login,
+        "/login/:redirect": Login,
         "*": NotFound,
     };
 </script>

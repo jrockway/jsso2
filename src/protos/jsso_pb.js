@@ -1280,7 +1280,9 @@ proto.jsso.FinishLoginRequest.prototype.toObject = function(opt_includeInstance)
  */
 proto.jsso.FinishLoginRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    credential: (f = msg.getCredential()) && webauthn_pb.PublicKeyCredential.toObject(includeInstance, f)
+    credential: (f = msg.getCredential()) && webauthn_pb.PublicKeyCredential.toObject(includeInstance, f),
+    error: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    redirectTo: jspb.Message.getFieldWithDefault(msg, 3, "")
   };
 
   if (includeInstance) {
@@ -1322,6 +1324,14 @@ proto.jsso.FinishLoginRequest.deserializeBinaryFromReader = function(msg, reader
       reader.readMessage(value,webauthn_pb.PublicKeyCredential.deserializeBinaryFromReader);
       msg.setCredential(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setError(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRedirectTo(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1357,6 +1367,20 @@ proto.jsso.FinishLoginRequest.serializeBinaryToWriter = function(message, writer
       1,
       f,
       webauthn_pb.PublicKeyCredential.serializeBinaryToWriter
+    );
+  }
+  f = message.getError();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getRedirectTo();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
     );
   }
 };
@@ -1396,6 +1420,42 @@ proto.jsso.FinishLoginRequest.prototype.clearCredential = function() {
  */
 proto.jsso.FinishLoginRequest.prototype.hasCredential = function() {
   return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional string error = 2;
+ * @return {string}
+ */
+proto.jsso.FinishLoginRequest.prototype.getError = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.jsso.FinishLoginRequest} returns this
+ */
+proto.jsso.FinishLoginRequest.prototype.setError = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string redirect_to = 3;
+ * @return {string}
+ */
+proto.jsso.FinishLoginRequest.prototype.getRedirectTo = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.jsso.FinishLoginRequest} returns this
+ */
+proto.jsso.FinishLoginRequest.prototype.setRedirectTo = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
