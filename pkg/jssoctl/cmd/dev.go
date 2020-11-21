@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/jrockway/jsso2/pkg/tokens"
@@ -22,6 +23,12 @@ var (
 			var key []byte
 			if len(args[0]) == 32 {
 				key = []byte(args[0])
+			} else {
+				raw, err := base64.StdEncoding.DecodeString(args[0])
+				if err != nil {
+					return err
+				}
+				key = raw
 			}
 			msg, err := tokens.Decrypt(args[1], key)
 			if err != nil {
