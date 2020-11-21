@@ -146,7 +146,10 @@ func RevokeSession(ctx context.Context, tx *sqlx.Tx, id []byte, reason string) e
 		// Already expired.
 		return nil
 	}
-	// TODO(jrockway): Add a revocation reason into the metadata.
+
+	if session.GetMetadata().GetRevocationReason() == "" {
+		session.GetMetadata().RevocationReason = reason
+	}
 	session.ExpiresAt = timestamppb.Now()
 	if err := UpdateSession(ctx, tx, session); err != nil {
 		return fmt.Errorf("store expired session: %w", err)

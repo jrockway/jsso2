@@ -19,6 +19,7 @@ message User {
 message SessionMetadata {
     string ip_address = 1;
     string user_agent = 2;
+    string revocation_reason = 3;
 }
 
 // Session links a token (the id) and a user.  If expires_at is less than or
