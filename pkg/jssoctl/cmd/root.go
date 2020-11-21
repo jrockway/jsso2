@@ -42,12 +42,15 @@ It can be used to administer JSSO, or interact with it as a normal user.`,
 			})
 			return nil
 		},
+		SilenceErrors: true,
+		SilenceUsage:  true,
 	}
 )
 
 func Execute() {
 	ctx, c := context.WithTimeout(context.Background(), timeout)
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
+		fmt.Fprintln(rootCmd.ErrOrStderr(), err)
 		c()
 		os.Exit(1)
 	}
