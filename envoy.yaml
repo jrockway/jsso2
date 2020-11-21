@@ -24,9 +24,6 @@ static_resources:
                               virtual_hosts:
                                   - name: localhost
                                     domains: ["*"]
-                                    retry_policy:
-                                        num_retries: 50
-                                        retry_on: "5xx,reset"
                                     routes:
                                         - match:
                                               prefix: "/"
@@ -63,8 +60,8 @@ static_resources:
                                   - name: localhost
                                     domains: ["*"]
                                     retry_policy:
-                                        num_retries: 50
-                                        retry_on: "5xx,reset"
+                                        num_retries: 100
+                                        retry_on: "5xx,reset,connect-failure"
                                     routes:
                                         - match:
                                               prefix: "/"
@@ -306,14 +303,6 @@ static_resources:
           type: static
           lb_policy: random
           connect_timeout: 1s
-          health_checks:
-              - timeout: 1s
-                interval: 1s
-                healthy_threshold: 1
-                unhealthy_threshold: 1
-                http_health_check:
-                    host: "localhost"
-                    path: "/healthz"
           load_assignment:
               cluster_name: localhost:protected:http
               endpoints:
