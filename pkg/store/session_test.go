@@ -131,11 +131,11 @@ func TestSessions(t *testing.T) {
 		if diff := cmp.Diff(got.Taints, []string{"bar", "foo"}); diff != "" {
 			t.Errorf("taints:\n%s", diff)
 		}
-		newId := make([]byte, 0, len(session.Id))
-		newId = append(newId, session.Id...)
-		newId[0]++
+		newID := make([]byte, 0, len(session.Id))
+		newID = append(newID, session.Id...)
+		newID[0]++
 		expired := &types.Session{
-			Id: newId,
+			Id: newID,
 			User: &types.User{
 				Id: 1,
 			},
@@ -145,7 +145,7 @@ func TestSessions(t *testing.T) {
 		if err := UpdateSession(e.Context, c.db, expired); err != nil {
 			t.Fatal(err)
 		}
-		if got, err := LookupSession(e.Context, c.db, newId); !errors.Is(err, ErrSessionExpired) {
+		if got, err := LookupSession(e.Context, c.db, newID); !errors.Is(err, ErrSessionExpired) {
 			t.Errorf("expected expired session; got %v\n  session: %v", err, got)
 		}
 
