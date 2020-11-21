@@ -20,7 +20,7 @@
         <p>You can manage your account from this page.</p>
         <ul>
             <li><a href="/#/enroll">Enroll a security key</a>.</li>
-            <li><a href="/#/logout">Log out</a>.</li>
+            <li><a href="/logout">Log out</a>.</li>
         </ul>
     {/if}
 {:catch error}

@@ -12,6 +12,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/jsso/login"
 	"github.com/jrockway/jsso2/pkg/jsso/user"
 	"github.com/jrockway/jsso2/pkg/jssopb"
+	"github.com/jrockway/jsso2/pkg/logout"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/web"
 	"github.com/jrockway/jsso2/pkg/webauthn"
@@ -95,8 +96,15 @@ func main() {
 		Cookies:     cookieConfig,
 	}
 
+	logoutHandler := &logout.Handler{
+		Linker:  linker,
+		Cookies: cookieConfig,
+		DB:      db,
+	}
+
 	publicMux := new(http.ServeMux)
 	publicMux.HandleFunc("/set-cookie", cookieConfig.HandleSetCookie)
+	publicMux.Handle("/logout", logoutHandler)
 	server.SetHTTPHandler(publicMux)
 
 	server.AddService(func(s *grpc.Server) {

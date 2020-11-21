@@ -102,8 +102,7 @@ func (raw *rawSession) toSession() (*types.Session, error) {
 	return result, nil
 }
 
-// LookupSession will return the session object for a provided session ID, if the session is still valid.
-func LookupSession(ctx context.Context, db sqlx.ExtContext, id []byte) (*types.Session, error) {
+func getSession(ctx context.Context, db sqlx.ExtContext, id []byte) (*types.Session, error) {
 	if len(id) != 64 {
 		return nil, fmt.Errorf("session id %s: %w", id, ErrSessionIDInvalid)
 	}
@@ -119,6 +118,15 @@ func LookupSession(ctx context.Context, db sqlx.ExtContext, id []byte) (*types.S
 	if err != nil {
 		return nil, fmt.Errorf("convert to *types.Session: %w", err)
 	}
+	return session, nil
+}
+
+// LookupSession will return the session object for a provided session ID, if the session is still valid.
+func LookupSession(ctx context.Context, db sqlx.ExtContext, id []byte) (*types.Session, error) {
+	session, err := getSession(ctx, db, id)
+	if err != nil {
+		return nil, fmt.Errorf("read session: %w", err)
+	}
 	if session.GetExpiresAt().AsTime().Before(time.Now()) {
 		return nil, ErrSessionExpired
 	}
@@ -126,4 +134,22 @@ func LookupSession(ctx context.Context, db sqlx.ExtContext, id []byte) (*types.S
 		return nil, ErrSessionNotYetCreated
 	}
 	return session, nil
+}
+
+// RevokeSession will revoke the provided session.
+func RevokeSession(ctx context.Context, tx *sqlx.Tx, id []byte, reason string) error {
+	session, err := getSession(ctx, tx, id)
+	if err != nil {
+		return fmt.Errorf("refresh session: %w", err)
+	}
+	if time.Until(session.ExpiresAt.AsTime()) < 0 {
+		// Already expired.
+		return nil
+	}
+	// TODO(jrockway): Add a revocation reason into the metadata.
+	session.ExpiresAt = timestamppb.Now()
+	if err := UpdateSession(ctx, tx, session); err != nil {
+		return fmt.Errorf("store expired session: %w", err)
+	}
+	return nil
 }

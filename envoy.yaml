@@ -45,6 +45,10 @@ static_resources:
                                           route:
                                               cluster: localhost:backend:public
                                         - match:
+                                              prefix: "/logout"
+                                          route:
+                                              cluster: localhost:backend:public
+                                        - match:
                                               prefix: "/livereload.js"
                                           route:
                                               cluster: localhost:livereload:http

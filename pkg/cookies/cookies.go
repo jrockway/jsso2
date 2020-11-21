@@ -99,6 +99,10 @@ func (c *Config) cookieFromToken(token string) (*http.Cookie, string, error) {
 // cookies are found.  sessions.ErrSessionMissing is returned if no cookie is found.
 func (c *Config) SessionFromMetadata(md metadata.MD) (*types.Session, error) {
 	req := &http.Request{Header: http.Header{"Cookie": md.Get("cookie")}}
+	return c.SessionFromRequest(req)
+}
+
+func (c *Config) SessionFromRequest(req *http.Request) (*types.Session, error) {
 	for _, cookie := range req.Cookies() {
 		if cookie.Name == c.Name {
 			s, err := sessions.FromBase64(cookie.Value)

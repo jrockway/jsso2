@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jmoiron/sqlx"
 	"github.com/jrockway/jsso2/pkg/jtesting"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/types"
@@ -130,31 +131,41 @@ func TestSessions(t *testing.T) {
 		if diff := cmp.Diff(got.Taints, []string{"bar", "foo"}); diff != "" {
 			t.Errorf("taints:\n%s", diff)
 		}
-
+		newId := make([]byte, 0, len(session.Id))
+		newId = append(newId, session.Id...)
+		newId[0]++
 		expired := &types.Session{
-			Id: id,
+			Id: newId,
 			User: &types.User{
 				Id: 1,
 			},
 			CreatedAt: timestamppb.New(time.Now().Add(-2 * time.Minute).Round(time.Millisecond)),
 			ExpiresAt: timestamppb.New(time.Now().Add(-time.Minute).Round(time.Millisecond)),
 		}
-		expired.Id[0]++
 		if err := UpdateSession(e.Context, c.db, expired); err != nil {
 			t.Fatal(err)
 		}
-		if got, err := LookupSession(e.Context, c.db, id); !errors.Is(err, ErrSessionExpired) {
+		if got, err := LookupSession(e.Context, c.db, newId); !errors.Is(err, ErrSessionExpired) {
 			t.Errorf("expected expired session; got %v\n  session: %v", err, got)
 		}
+
 		// Try expiring the original session.
-		session.ExpiresAt = timestamppb.Now()
-		if err := UpdateSession(e.Context, c.db, session); err != nil {
+		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
+			return RevokeSession(e.Context, tx, session.GetId(), "revoked")
+		}); err != nil {
 			t.Fatal(err)
 		}
 		if _, err := LookupSession(e.Context, c.db, session.GetId()); err == nil {
 			t.Error("expected lookup of newly-expired session to fail")
 		} else if got, want := err, ErrSessionExpired; !errors.Is(got, want) {
 			t.Errorf("expired session: lookup error:\n got: %v\nwant: %v", got, want)
+		}
+
+		// Ensure it's possible to expire an expired session.
+		if err := c.DoTx(e.Context, e.Logger, false, func(tx *sqlx.Tx) error {
+			return RevokeSession(e.Context, tx, session.GetId(), "revoked")
+		}); err != nil {
+			t.Fatal(err)
 		}
 	})
 }

@@ -17,7 +17,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Service struct {
@@ -189,16 +188,7 @@ func untaintSession(ctx context.Context, l *zap.Logger, db *store.Connection, id
 func revokeSession(ctx context.Context, l *zap.Logger, db *store.Connection, id []byte) error {
 	// There is some question as to whether or not we want to revoke an untainted session here.
 	if err := db.DoTx(ctx, l, false, func(tx *sqlx.Tx) error {
-		session, err := store.LookupSession(ctx, tx, id)
-		if err != nil {
-			return fmt.Errorf("refresh session: %w", err)
-		}
-		// TODO(jrockway): Add a revocation reason into the metadata.
-		session.ExpiresAt = timestamppb.Now()
-		if err := store.UpdateSession(ctx, tx, session); err != nil {
-			return fmt.Errorf("store expired session: %w", err)
-		}
-		return nil
+		return store.RevokeSession(ctx, tx, id, "login aborted")
 	}); err != nil {
 		return store.AsGRPCError(fmt.Errorf("expire session: %w", err))
 	}
