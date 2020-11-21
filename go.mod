@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/duo-labs/webauthn v0.0.0-20200714211715-1daaee874e43
+	github.com/envoyproxy/go-control-plane v0.9.7
 	github.com/fullstorydev/grpcui v1.0.0
 	github.com/fullstorydev/grpcurl v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.2.0
@@ -21,6 +22,7 @@ require (
 	github.com/jrockway/opinionated-server v0.0.15
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
 	github.com/o1egl/paseto/v2 v2.1.1
+	github.com/olekukonko/tablewriter v0.0.4
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.4.0

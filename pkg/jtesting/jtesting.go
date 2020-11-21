@@ -55,7 +55,7 @@ func Run(t *testing.T, name string, r R, f func(t *testing.T, e *E)) {
 	pc, _, _, pcOk := runtime.Caller(1)
 	t.Run(name, func(t *testing.T) {
 		_, file, _, _ := runtime.Caller(0)
-		envFile := filepath.Clean(filepath.Join(file, "..", "..", "..", "env.test"))
+		envFile := filepath.Clean(filepath.Join(file, "..", "..", "..", "env.jsso2-backend.dev"))
 		if err := godotenv.Load(envFile); err != nil {
 			t.Fatalf("failed to load %s: %v", envFile, err)
 		}
