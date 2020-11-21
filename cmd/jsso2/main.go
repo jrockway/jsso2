@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/fullstorydev/grpcui/standalone"
+	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
 	"github.com/jrockway/jsso2/pkg/jsso/login"
@@ -48,14 +49,21 @@ func main() {
 	}
 	c()
 
-	auth := internalauth.NewFromConfig(authConfig, db)
-	server.AddUnaryInterceptor(auth.UnaryServerInterceptor())
-	server.AddStreamInterceptor(auth.StreamServerInterceptor())
-
 	linker, err := web.NewLinker(appConfig.BaseURL)
 	if err != nil {
 		zap.L().Fatal("failed to create linker", zap.String("base_url", appConfig.BaseURL), zap.Error(err))
 	}
+
+	cookieConfig := &cookies.Config{
+		Name:   "jsso-session-id",
+		Domain: linker.Domain(),
+		Linker: linker,
+	}
+
+	auth := internalauth.NewFromConfig(authConfig, db)
+	auth.Cookies = cookieConfig
+	server.AddUnaryInterceptor(auth.UnaryServerInterceptor())
+	server.AddStreamInterceptor(auth.StreamServerInterceptor())
 
 	webauthnConfig := &webauthn.Config{
 		RelyingPartyID:   linker.Domain(),
@@ -80,13 +88,19 @@ func main() {
 		DB:          db,
 		Permissions: auth,
 		Webauthn:    webauthnConfig,
+		Cookies:     cookieConfig,
 	}
+
+	publicMux := new(http.ServeMux)
+	publicMux.HandleFunc("/set-cookie", cookieConfig.HandleSetCookie)
+	server.SetHTTPHandler(publicMux)
 
 	server.AddService(func(s *grpc.Server) {
 		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(enrollmentService))
 		jssopb.RegisterUserService(s, jssopb.NewUserService(userService))
 		jssopb.RegisterLoginService(s, jssopb.NewLoginService(loginService))
 	})
+
 	server.SetStartupCallback(func(info server.Info) {
 		// This starts up grpcui on the debug port.
 		cc, err := grpc.Dial(info.GRPCAddress, grpc.WithInsecure())
@@ -99,5 +113,6 @@ func main() {
 		}
 		http.Handle("/grpcui/", http.StripPrefix("/grpcui", h))
 	})
+
 	server.ListenAndServe()
 }

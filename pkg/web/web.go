@@ -38,3 +38,7 @@ func (l *Linker) EnrollmentPage(token string) string {
 func (l *Linker) LoginPage() string {
 	return "#/login"
 }
+
+func (l *Linker) SetCookie(cookie string) string {
+	return l.BaseURL.String() + "/set-cookie?set=" + cookie
+}

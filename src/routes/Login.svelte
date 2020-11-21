@@ -33,6 +33,7 @@
         const finishReply = await loginClient.finish(finishReq, {
             Authorization: "SessionID " + startReply.getToken(),
         });
+        console.log(finishReply.toObject());
         return finishReply.getRedirectUrl();
     }
 </script>
@@ -44,10 +45,8 @@
     <h1>Login</h1>
     {#if showLogin}
         <p>
-            Enter your username: <input
-                type="text"
-                bind:value={username}
-                on:keydown={handleKeypress} /><button
+            Enter your username:
+            <input type="text" bind:value={username} on:keydown={handleKeypress} /><button
                 on:click={() => {
                     showLogin = false;
                 }}>Login</button>

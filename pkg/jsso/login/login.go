@@ -7,6 +7,7 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jmoiron/sqlx"
+	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/sessions"
@@ -23,6 +24,7 @@ type Service struct {
 	DB          *store.Connection
 	Permissions *internalauth.Permissions
 	Webauthn    *webauthn.Config
+	Cookies     *cookies.Config
 }
 
 func (s *Service) Start(ctx context.Context, req *jssopb.StartLoginRequest) (*jssopb.StartLoginReply, error) {
@@ -126,6 +128,7 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishLoginRequest) (*
 	if err := untaintSession(ctx, l, s.DB, id); err != nil {
 		return reply, err
 	}
+	reply.RedirectUrl = s.Cookies.LinkToSetCookie(s.Cookies.SessionToSetCookieToken(session))
 	return reply, nil
 }
 

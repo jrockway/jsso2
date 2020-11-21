@@ -10,6 +10,7 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jmoiron/sqlx"
+	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/types"
@@ -35,10 +36,9 @@ type RPCConfig struct {
 type Permissions struct {
 	// If set, a password that can be provided to bypass all access controls.
 	RootPassword string
-
-	RPCConfig map[string]*RPCConfig
-
-	Store *store.Connection
+	RPCConfig    map[string]*RPCConfig
+	Store        *store.Connection
+	Cookies      *cookies.Config
 }
 
 // NewFromConfig builds a Permissions object from configuration.
@@ -122,25 +122,32 @@ func (p *Permissions) getSession(ctx context.Context) (*types.Session, error) {
 		return sessions.Root(), nil
 	}
 
-	session, err := sessions.FromMetadata(md)
-	if err != nil {
-		if errors.Is(err, sessions.ErrSessionMissing) {
-			return sessions.Anonymous(), nil
+	var session *types.Session
+	for _, f := range []func(metadata.MD) (*types.Session, error){sessions.FromMetadata, p.Cookies.SessionIDFromMetadata} {
+		s, err := f(md)
+		if err != nil {
+			if errors.Is(err, sessions.ErrSessionMissing) {
+				continue
+			}
+			return nil, fmt.Errorf("load session from metadata: %w", err)
 		}
-		return nil, fmt.Errorf("load session from metadata: %w", err)
+		session = s
+		break
+	}
+	if session == nil {
+		return sessions.Anonymous(), nil
 	}
 	if sessions.IsZero(session.GetId()) {
 		return nil, errors.New("malformed session id")
 	}
-	err = p.Store.DoTx(ctx, ctxzap.Extract(ctx), true, func(tx *sqlx.Tx) error {
+	if err := p.Store.DoTx(ctx, ctxzap.Extract(ctx), true, func(tx *sqlx.Tx) error {
 		var err error
 		session, err = store.LookupSession(ctx, tx, session.GetId())
 		if err != nil {
 			return fmt.Errorf("lookup session: %w", err)
 		}
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, fmt.Errorf("restore session: %w", err)
 	}
 	return session, nil
