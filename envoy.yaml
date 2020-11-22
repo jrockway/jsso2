@@ -38,6 +38,7 @@ static_resources:
                                             cluster_name: localhost:authz:grpc
                                         timeout: 0.1s
                                     failure_mode_allow: false
+                                    transport_api_version: V3
                               - name: envoy.filters.http.router
         - name: http_listener
           address:
