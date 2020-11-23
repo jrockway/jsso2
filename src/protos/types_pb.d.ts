@@ -238,3 +238,47 @@ export namespace SetCookieRequest {
   }
 }
 
+export class Header extends jspb.Message {
+  getKey(): string;
+  setKey(value: string): Header;
+
+  getValue(): string;
+  setValue(value: string): Header;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Header.AsObject;
+  static toObject(includeInstance: boolean, msg: Header): Header.AsObject;
+  static serializeBinaryToWriter(message: Header, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Header;
+  static deserializeBinaryFromReader(message: Header, reader: jspb.BinaryReader): Header;
+}
+
+export namespace Header {
+  export type AsObject = {
+    key: string,
+    value: string,
+  }
+}
+
+export class BearerToken extends jspb.Message {
+  getUsername(): string;
+  setUsername(value: string): BearerToken;
+
+  getRequestId(): string;
+  setRequestId(value: string): BearerToken;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): BearerToken.AsObject;
+  static toObject(includeInstance: boolean, msg: BearerToken): BearerToken.AsObject;
+  static serializeBinaryToWriter(message: BearerToken, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): BearerToken;
+  static deserializeBinaryFromReader(message: BearerToken, reader: jspb.BinaryReader): BearerToken;
+}
+
+export namespace BearerToken {
+  export type AsObject = {
+    username: string,
+    requestId: string,
+  }
+}
+

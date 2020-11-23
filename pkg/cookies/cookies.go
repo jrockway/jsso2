@@ -94,25 +94,46 @@ func (c *Config) cookieFromToken(token string) (*http.Cookie, string, error) {
 	return cookie, req.GetRedirectUrl(), nil
 }
 
-// SessionFromMetadata looks for a Cookie header in the provided metadata, and then returns the
-// session ID in the first cookie that looks like a session.  An error is returned if any invalid
-// cookies are found.  sessions.ErrSessionMissing is returned if no cookie is found.
-func (c *Config) SessionFromMetadata(md metadata.MD) (*types.Session, error) {
-	req := &http.Request{Header: http.Header{"Cookie": md.Get("cookie")}}
-	return c.SessionFromRequest(req)
+// Cookies returns the cookie objects in the provided string.
+func Cookies(header ...string) []*http.Cookie {
+	req := &http.Request{Header: http.Header{"Cookie": header}}
+	return req.Cookies()
 }
 
+// SessionFromMetadata extracts cookies from the metadata, and calls SessionFromCookies.
+func (c *Config) SessionFromMetadata(md metadata.MD) (*types.Session, error) {
+	session, _, err := c.SessionFromCookies(Cookies(md.Get("cookie")...))
+	return session, err
+}
+
+// SessionFromRequest extracts cookies from the provided request, and calls SessionFromCookies.
 func (c *Config) SessionFromRequest(req *http.Request) (*types.Session, error) {
-	for _, cookie := range req.Cookies() {
+	session, _, err := c.SessionFromCookies(req.Cookies())
+	return session, err
+}
+
+// SessionFromCookies looks through the provided cookies and returns the sessionID from a cookie
+// that looks like a session, and the list of cookies with all matching cookies removed.  An error
+// is returned if any invalid cookies are found.  sessions.ErrSessionMissing is returned if no
+// cookie is found.
+func (c *Config) SessionFromCookies(cookies []*http.Cookie) (*types.Session, []*http.Cookie, error) {
+	var rest []*http.Cookie
+	var session *types.Session
+	for _, cookie := range cookies {
 		if cookie.Name == c.Name {
 			s, err := sessions.FromBase64(cookie.Value)
 			if err != nil {
-				return nil, fmt.Errorf("investigating cookie %q: %w", cookie.Name, err)
+				return nil, nil, fmt.Errorf("investigating cookie %q: %w", cookie.Name, err)
 			}
-			return s, nil
+			session = s
+		} else {
+			rest = append(rest, cookie)
 		}
 	}
-	return nil, fmt.Errorf("no matching cookies found: %w", sessions.ErrSessionMissing)
+	if sessions.IsZero(session.GetId()) {
+		return nil, rest, fmt.Errorf("no matching cookies found: %w", sessions.ErrSessionMissing)
+	}
+	return session, rest, nil
 }
 
 // LinkToSetCookie accepts a token from NewSetCookieRequest and returns the URL that will cause that

@@ -395,11 +395,12 @@ type SecureToken struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// We use an "any" here because it includes the type of the message, which
-	// acts as a "subject" and ensures that a piece of code is actually looking
-	// at the right kind of token.
+	// We use an Any here because it includes the type of the message.  This
+	// means that when we sign one of these tokens, we also sign the type of the
+	// token, ensuring that validation does not succeed on the wrong type of
+	// message.
 	Message *any.Any `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	// When this request was created.
+	// When this token was created.
 	IssuedAt *timestamp.Timestamp `protobuf:"bytes,2,opt,name=issued_at,json=issuedAt,proto3" json:"issued_at,omitempty"`
 }
 
@@ -449,6 +450,9 @@ func (x *SecureToken) GetIssuedAt() *timestamp.Timestamp {
 	return nil
 }
 
+// SetCookieRequest is a request to set a session cookie.  It's intended to be
+// wrapped in a SecureToken, so that a gRPC request can return a token and it
+// can be passed to a regular HTTP service that sets an HttpOnly cookie.
 type SetCookieRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -513,6 +517,119 @@ func (x *SetCookieRequest) GetSessionExpiresAt() *timestamp.Timestamp {
 		return x.SessionExpiresAt
 	}
 	return nil
+}
+
+// Header is an HTTP header.
+type Header struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Key   string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (x *Header) Reset() {
+	*x = Header{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_types_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Header) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Header) ProtoMessage() {}
+
+func (x *Header) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Header.ProtoReflect.Descriptor instead.
+func (*Header) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Header) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *Header) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+// BearerToken is information authenticating a single request.  It's intended to
+// be wrapped in a SecureToken.
+type BearerToken struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Username  string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	RequestId string `protobuf:"bytes,2,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+}
+
+func (x *BearerToken) Reset() {
+	*x = BearerToken{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_types_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *BearerToken) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BearerToken) ProtoMessage() {}
+
+func (x *BearerToken) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BearerToken.ProtoReflect.Descriptor instead.
+func (*BearerToken) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *BearerToken) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *BearerToken) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
 }
 
 var File_types_proto protoreflect.FileDescriptor
@@ -598,10 +715,18 @@ var file_types_proto_rawDesc = []byte{
 	0x69, 0x72, 0x65, 0x73, 0x5f, 0x61, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e,
 	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
 	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x10, 0x73, 0x65, 0x73, 0x73, 0x69,
-	0x6f, 0x6e, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x73, 0x41, 0x74, 0x42, 0x25, 0x5a, 0x23, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x72, 0x6f, 0x63, 0x6b, 0x77,
-	0x61, 0x79, 0x2f, 0x6a, 0x73, 0x73, 0x6f, 0x32, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x74, 0x79, 0x70,
-	0x65, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x6e, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x73, 0x41, 0x74, 0x22, 0x30, 0x0a, 0x06, 0x48,
+	0x65, 0x61, 0x64, 0x65, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x48, 0x0a,
+	0x0b, 0x42, 0x65, 0x61, 0x72, 0x65, 0x72, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x12, 0x1a, 0x0a, 0x08,
+	0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
+	0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x72, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x42, 0x25, 0x5a, 0x23, 0x67, 0x69, 0x74, 0x68, 0x75,
+	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x72, 0x6f, 0x63, 0x6b, 0x77, 0x61, 0x79, 0x2f, 0x6a,
+	0x73, 0x73, 0x6f, 0x32, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -616,7 +741,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_types_proto_goTypes = []interface{}{
 	(*User)(nil),                // 0: types.User
 	(*SessionMetadata)(nil),     // 1: types.SessionMetadata
@@ -624,22 +749,24 @@ var file_types_proto_goTypes = []interface{}{
 	(*Credential)(nil),          // 3: types.Credential
 	(*SecureToken)(nil),         // 4: types.SecureToken
 	(*SetCookieRequest)(nil),    // 5: types.SetCookieRequest
-	(*timestamp.Timestamp)(nil), // 6: google.protobuf.Timestamp
-	(*any.Any)(nil),             // 7: google.protobuf.Any
+	(*Header)(nil),              // 6: types.Header
+	(*BearerToken)(nil),         // 7: types.BearerToken
+	(*timestamp.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(*any.Any)(nil),             // 9: google.protobuf.Any
 }
 var file_types_proto_depIdxs = []int32{
-	6,  // 0: types.User.created_at:type_name -> google.protobuf.Timestamp
-	6,  // 1: types.User.disabled_at:type_name -> google.protobuf.Timestamp
+	8,  // 0: types.User.created_at:type_name -> google.protobuf.Timestamp
+	8,  // 1: types.User.disabled_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: types.Session.user:type_name -> types.User
 	1,  // 3: types.Session.metadata:type_name -> types.SessionMetadata
-	6,  // 4: types.Session.created_at:type_name -> google.protobuf.Timestamp
-	6,  // 5: types.Session.expires_at:type_name -> google.protobuf.Timestamp
+	8,  // 4: types.Session.created_at:type_name -> google.protobuf.Timestamp
+	8,  // 5: types.Session.expires_at:type_name -> google.protobuf.Timestamp
 	0,  // 6: types.Credential.user:type_name -> types.User
-	6,  // 7: types.Credential.created_at:type_name -> google.protobuf.Timestamp
-	6,  // 8: types.Credential.deleted_at:type_name -> google.protobuf.Timestamp
-	7,  // 9: types.SecureToken.message:type_name -> google.protobuf.Any
-	6,  // 10: types.SecureToken.issued_at:type_name -> google.protobuf.Timestamp
-	6,  // 11: types.SetCookieRequest.session_expires_at:type_name -> google.protobuf.Timestamp
+	8,  // 7: types.Credential.created_at:type_name -> google.protobuf.Timestamp
+	8,  // 8: types.Credential.deleted_at:type_name -> google.protobuf.Timestamp
+	9,  // 9: types.SecureToken.message:type_name -> google.protobuf.Any
+	8,  // 10: types.SecureToken.issued_at:type_name -> google.protobuf.Timestamp
+	8,  // 11: types.SetCookieRequest.session_expires_at:type_name -> google.protobuf.Timestamp
 	12, // [12:12] is the sub-list for method output_type
 	12, // [12:12] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
@@ -725,6 +852,30 @@ func file_types_proto_init() {
 				return nil
 			}
 		}
+		file_types_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Header); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_types_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BearerToken); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -732,7 +883,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_types_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

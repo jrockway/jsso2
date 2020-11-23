@@ -286,3 +286,185 @@ export namespace WhoAmIReply {
   }
 }
 
+export class AuthorizeHTTPRequest extends jspb.Message {
+  getRequestMethod(): string;
+  setRequestMethod(value: string): AuthorizeHTTPRequest;
+
+  getRequestUri(): string;
+  setRequestUri(value: string): AuthorizeHTTPRequest;
+
+  getRequestId(): string;
+  setRequestId(value: string): AuthorizeHTTPRequest;
+
+  getAuthorizationHeadersList(): Array<string>;
+  setAuthorizationHeadersList(value: Array<string>): AuthorizeHTTPRequest;
+  clearAuthorizationHeadersList(): AuthorizeHTTPRequest;
+  addAuthorizationHeaders(value: string, index?: number): AuthorizeHTTPRequest;
+
+  getCookiesList(): Array<string>;
+  setCookiesList(value: Array<string>): AuthorizeHTTPRequest;
+  clearCookiesList(): AuthorizeHTTPRequest;
+  addCookies(value: string, index?: number): AuthorizeHTTPRequest;
+
+  getIpAddress(): string;
+  setIpAddress(value: string): AuthorizeHTTPRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): AuthorizeHTTPRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: AuthorizeHTTPRequest): AuthorizeHTTPRequest.AsObject;
+  static serializeBinaryToWriter(message: AuthorizeHTTPRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AuthorizeHTTPRequest;
+  static deserializeBinaryFromReader(message: AuthorizeHTTPRequest, reader: jspb.BinaryReader): AuthorizeHTTPRequest;
+}
+
+export namespace AuthorizeHTTPRequest {
+  export type AsObject = {
+    requestMethod: string,
+    requestUri: string,
+    requestId: string,
+    authorizationHeadersList: Array<string>,
+    cookiesList: Array<string>,
+    ipAddress: string,
+  }
+}
+
+export class Allow extends jspb.Message {
+  getBearerToken(): string;
+  setBearerToken(value: string): Allow;
+
+  getAddHeadersList(): Array<types_pb.Header>;
+  setAddHeadersList(value: Array<types_pb.Header>): Allow;
+  clearAddHeadersList(): Allow;
+  addAddHeaders(value?: types_pb.Header, index?: number): types_pb.Header;
+
+  getAppendHeadersList(): Array<types_pb.Header>;
+  setAppendHeadersList(value: Array<types_pb.Header>): Allow;
+  clearAppendHeadersList(): Allow;
+  addAppendHeaders(value?: types_pb.Header, index?: number): types_pb.Header;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Allow.AsObject;
+  static toObject(includeInstance: boolean, msg: Allow): Allow.AsObject;
+  static serializeBinaryToWriter(message: Allow, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Allow;
+  static deserializeBinaryFromReader(message: Allow, reader: jspb.BinaryReader): Allow;
+}
+
+export namespace Allow {
+  export type AsObject = {
+    bearerToken: string,
+    addHeadersList: Array<types_pb.Header.AsObject>,
+    appendHeadersList: Array<types_pb.Header.AsObject>,
+  }
+}
+
+export class Deny extends jspb.Message {
+  getRedirect(): Deny.Redirect | undefined;
+  setRedirect(value?: Deny.Redirect): Deny;
+  hasRedirect(): boolean;
+  clearRedirect(): Deny;
+
+  getResponse(): Deny.Response | undefined;
+  setResponse(value?: Deny.Response): Deny;
+  hasResponse(): boolean;
+  clearResponse(): Deny;
+
+  getDestinationCase(): Deny.DestinationCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Deny.AsObject;
+  static toObject(includeInstance: boolean, msg: Deny): Deny.AsObject;
+  static serializeBinaryToWriter(message: Deny, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Deny;
+  static deserializeBinaryFromReader(message: Deny, reader: jspb.BinaryReader): Deny;
+}
+
+export namespace Deny {
+  export type AsObject = {
+    redirect?: Deny.Redirect.AsObject,
+    response?: Deny.Response.AsObject,
+  }
+
+  export class Redirect extends jspb.Message {
+    getRedirectUrl(): string;
+    setRedirectUrl(value: string): Redirect;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Redirect.AsObject;
+    static toObject(includeInstance: boolean, msg: Redirect): Redirect.AsObject;
+    static serializeBinaryToWriter(message: Redirect, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Redirect;
+    static deserializeBinaryFromReader(message: Redirect, reader: jspb.BinaryReader): Redirect;
+  }
+
+  export namespace Redirect {
+    export type AsObject = {
+      redirectUrl: string,
+    }
+  }
+
+
+  export class Response extends jspb.Message {
+    getContentType(): string;
+    setContentType(value: string): Response;
+
+    getBody(): string;
+    setBody(value: string): Response;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Response.AsObject;
+    static toObject(includeInstance: boolean, msg: Response): Response.AsObject;
+    static serializeBinaryToWriter(message: Response, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Response;
+    static deserializeBinaryFromReader(message: Response, reader: jspb.BinaryReader): Response;
+  }
+
+  export namespace Response {
+    export type AsObject = {
+      contentType: string,
+      body: string,
+    }
+  }
+
+
+  export enum DestinationCase { 
+    DESTINATION_NOT_SET = 0,
+    REDIRECT = 1,
+    RESPONSE = 2,
+  }
+}
+
+export class AuthorizeHTTPReply extends jspb.Message {
+  getAllow(): Allow | undefined;
+  setAllow(value?: Allow): AuthorizeHTTPReply;
+  hasAllow(): boolean;
+  clearAllow(): AuthorizeHTTPReply;
+
+  getDeny(): Deny | undefined;
+  setDeny(value?: Deny): AuthorizeHTTPReply;
+  hasDeny(): boolean;
+  clearDeny(): AuthorizeHTTPReply;
+
+  getDecisionCase(): AuthorizeHTTPReply.DecisionCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): AuthorizeHTTPReply.AsObject;
+  static toObject(includeInstance: boolean, msg: AuthorizeHTTPReply): AuthorizeHTTPReply.AsObject;
+  static serializeBinaryToWriter(message: AuthorizeHTTPReply, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AuthorizeHTTPReply;
+  static deserializeBinaryFromReader(message: AuthorizeHTTPReply, reader: jspb.BinaryReader): AuthorizeHTTPReply;
+}
+
+export namespace AuthorizeHTTPReply {
+  export type AsObject = {
+    allow?: Allow.AsObject,
+    deny?: Deny.AsObject,
+  }
+
+  export enum DecisionCase { 
+    DECISION_NOT_SET = 0,
+    ALLOW = 1,
+    DENY = 2,
+  }
+}
+

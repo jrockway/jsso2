@@ -21,6 +21,19 @@ service User {
     }
 }
 
+// Service session manages sessions.
+service Session {
+    // AuthorizeHTTP authorizes an incoming HTTP request, returning a
+    // request-scoped bearer token to authenticate the request to upstream
+    // systems.  A "deny" authorization decision will not be transmitted as a
+    // gRPC error; a gRPC error like PermissionDenied means that the caller is
+    // not authorized to call AuthorizeHTTP, not that the HTTP request is
+    // unauthorized.  (Corollary: an OK response code does not mean the request
+    // is authorized.)
+    rpc AuthorizeHTTP(AuthorizeHTTPRequest) returns (AuthorizeHTTPReply) {
+    }
+}
+
 // Service Login manages the WebAuthn login ceremony.
 service Login {
     rpc Start(StartLoginRequest) returns (StartLoginReply) {
@@ -91,4 +104,62 @@ message WhoAmIRequest {
 }
 message WhoAmIReply {
     types.User user = 1;
+}
+
+// AuthorizeHTTPRequest is a request from an authenticating proxy to authorize
+// one HTTP request.
+message AuthorizeHTTPRequest {
+    // The method of this request.
+    string request_method = 1;
+    // The URI that this request is attempting to access.
+    string request_uri = 2;
+    // The x-request-id header for this request.
+    string request_id = 3;
+    // The value of the "Authorization" HTTP header.
+    repeated string authorization_headers = 4;
+    // Any cookies included with this request.
+    repeated string cookies = 5;
+    // The IP address of the user making this request.
+    string ip_address = 6;
+}
+
+// Allow allows a request through the proxy.
+message Allow {
+    // A signed and encrypted token allowing the upstream application to
+    // authorize this request without contacting an external system.  It is
+    // scoped to this request and has a short duration, so capturing this token
+    // only provides limited authenticated access.  This token is included here
+    // for non-proxying API clients; the actual authorization header to pass
+    // upstream is included in add_headers or append_headers fields below.
+    string bearer_token = 1;
+    // Headers to add (or replace) when sending the request upstream.  We will
+    // always set Authorization and Cookie here.
+    repeated types.Header add_headers = 2;
+    // Headers to append to (or add) when sending the requests upstream.
+    repeated types.Header append_headers = 3;
+}
+
+// Deny denies a request through the proxy.  An HTTP response can be included to
+// inform the end-user as to what went wrong.  (More likely, it will be a
+// temporary redirect to a login page.)
+message Deny {
+    message Redirect {
+        string redirect_url = 1;
+    }
+    message Response {
+        string content_type = 1;
+        string body = 2;
+    }
+    oneof destination {
+        Redirect redirect = 1;
+        Response response = 2;
+    }
+}
+
+// AuthorizeHTTPReply contains the authorization decision.
+message AuthorizeHTTPReply {
+    oneof decision {
+        Allow allow = 1;
+        Deny deny = 2;
+    }
 }

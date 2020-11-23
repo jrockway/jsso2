@@ -9,6 +9,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
 	"github.com/jrockway/jsso2/pkg/jsso/login"
+	"github.com/jrockway/jsso2/pkg/jsso/session"
 	"github.com/jrockway/jsso2/pkg/jsso/user"
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/jtesting"
@@ -67,6 +68,7 @@ func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{DB: db, Permissions: s.Permissions, Linker: linker, Webauthn: webauthnConfig}))
 	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, Linker: linker}))
 	jssopb.RegisterLoginService(server, jssopb.NewLoginService(&login.Service{DB: db, Permissions: s.Permissions, Webauthn: webauthnConfig}))
+	jssopb.RegisterSessionService(server, jssopb.NewSessionService(&session.Service{}))
 }
 
 // OK, maybe I went overboard with single-letter type names.

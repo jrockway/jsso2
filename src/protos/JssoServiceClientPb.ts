@@ -157,6 +157,67 @@ export class UserClient {
 
 }
 
+export class SessionClient {
+  client_: grpcWeb.AbstractClientBase;
+  hostname_: string;
+  credentials_: null | { [index: string]: string; };
+  options_: null | { [index: string]: any; };
+
+  constructor (hostname: string,
+               credentials?: null | { [index: string]: string; },
+               options?: null | { [index: string]: any; }) {
+    if (!options) options = {};
+    if (!credentials) credentials = {};
+    options['format'] = 'text';
+
+    this.client_ = new grpcWeb.GrpcWebClientBase(options);
+    this.hostname_ = hostname;
+    this.credentials_ = credentials;
+    this.options_ = options;
+  }
+
+  methodInfoAuthorizeHTTP = new grpcWeb.AbstractClientBase.MethodInfo(
+    jsso_pb.AuthorizeHTTPReply,
+    (request: jsso_pb.AuthorizeHTTPRequest) => {
+      return request.serializeBinary();
+    },
+    jsso_pb.AuthorizeHTTPReply.deserializeBinary
+  );
+
+  authorizeHTTP(
+    request: jsso_pb.AuthorizeHTTPRequest,
+    metadata: grpcWeb.Metadata | null): Promise<jsso_pb.AuthorizeHTTPReply>;
+
+  authorizeHTTP(
+    request: jsso_pb.AuthorizeHTTPRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: jsso_pb.AuthorizeHTTPReply) => void): grpcWeb.ClientReadableStream<jsso_pb.AuthorizeHTTPReply>;
+
+  authorizeHTTP(
+    request: jsso_pb.AuthorizeHTTPRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: jsso_pb.AuthorizeHTTPReply) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/jsso.Session/AuthorizeHTTP',
+        request,
+        metadata || {},
+        this.methodInfoAuthorizeHTTP,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/jsso.Session/AuthorizeHTTP',
+    request,
+    metadata || {},
+    this.methodInfoAuthorizeHTTP);
+  }
+
+}
+
 export class LoginClient {
   client_: grpcWeb.AbstractClientBase;
   hostname_: string;

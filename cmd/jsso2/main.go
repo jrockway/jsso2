@@ -10,6 +10,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
 	"github.com/jrockway/jsso2/pkg/jsso/login"
+	"github.com/jrockway/jsso2/pkg/jsso/session"
 	"github.com/jrockway/jsso2/pkg/jsso/user"
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/logout"
@@ -96,6 +97,8 @@ func main() {
 		Cookies:     cookieConfig,
 	}
 
+	sessionService := &session.Service{}
+
 	logoutHandler := &logout.Handler{
 		Linker:  linker,
 		Cookies: cookieConfig,
@@ -111,6 +114,7 @@ func main() {
 		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(enrollmentService))
 		jssopb.RegisterUserService(s, jssopb.NewUserService(userService))
 		jssopb.RegisterLoginService(s, jssopb.NewLoginService(loginService))
+		jssopb.RegisterSessionService(s, jssopb.NewSessionService(sessionService))
 	})
 
 	server.SetStartupCallback(func(info server.Info) {

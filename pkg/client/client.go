@@ -10,8 +10,9 @@ import (
 
 // Set is a set of connected JSSO clients.
 type Set struct {
-	cc         *grpc.ClientConn
-	UserClient jssopb.UserClient
+	cc            *grpc.ClientConn
+	UserClient    jssopb.UserClient
+	SessionClient jssopb.SessionClient
 }
 
 // Credentials authenticates requests to the JSSO server.
@@ -43,8 +44,9 @@ func (c *Credentials) RequireTransportSecurity() bool {
 // FromCC returns a clientset based on an existing client connection.
 func FromCC(cc *grpc.ClientConn) *Set {
 	return &Set{
-		cc:         cc,
-		UserClient: jssopb.NewUserClient(cc),
+		cc:            cc,
+		UserClient:    jssopb.NewUserClient(cc),
+		SessionClient: jssopb.NewSessionClient(cc),
 	}
 }
 

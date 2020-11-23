@@ -59,6 +59,9 @@ func NewFromConfig(c *Config, s *store.Connection) *Permissions {
 			"/jsso.User/WhoAmI": {
 				Tolerations: []string{sessions.TaintAnonymous},
 			},
+			"/jsso.Session/AuthorizeHTTP": {
+				Tolerations: []string{sessions.TaintAnonymous},
+			},
 			"/jsso.Enrollment/Start": {
 				Tolerations: []string{sessions.TaintEnrollment},
 			},

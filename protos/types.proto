@@ -30,7 +30,6 @@ message Session {
     SessionMetadata metadata = 3;
     google.protobuf.Timestamp created_at = 4;
     google.protobuf.Timestamp expires_at = 5;
-
     repeated string taints = 6;
 }
 
@@ -74,15 +73,19 @@ message Credential {
 }
 
 message SecureToken {
-    // We use an "any" here because it includes the type of the message, which
-    // acts as a "subject" and ensures that a piece of code is actually looking
-    // at the right kind of token.
+    // We use an Any here because it includes the type of the message.  This
+    // means that when we sign one of these tokens, we also sign the type of the
+    // token, ensuring that validation does not succeed on the wrong type of
+    // message.
     google.protobuf.Any message = 1;
 
-    // When this request was created.
+    // When this token was created.
     google.protobuf.Timestamp issued_at = 2;
 }
 
+// SetCookieRequest is a request to set a session cookie.  It's intended to be
+// wrapped in a SecureToken, so that a gRPC request can return a token and it
+// can be passed to a regular HTTP service that sets an HttpOnly cookie.
 message SetCookieRequest {
     // The session ID to set.
     bytes session_id = 1;
@@ -90,4 +93,17 @@ message SetCookieRequest {
     string redirect_url = 2;
     // When the session cookie should expire.
     google.protobuf.Timestamp session_expires_at = 3;
+}
+
+// Header is an HTTP header.
+message Header {
+    string key = 1;
+    string value = 2;
+}
+
+// BearerToken is information authenticating a single request.  It's intended to
+// be wrapped in a SecureToken.
+message BearerToken {
+    string username = 1;
+    string request_id = 2;
 }

@@ -53,7 +53,6 @@ func main() {
 		{"http://localhost:8280/metrics", http.StatusOK},
 		{"http://localhost:8281/metrics", http.StatusOK},
 		{"http://localhost:8280/", http.StatusOK},
-		{"http://localhost:4001/", http.StatusForbidden},
 		{"http://localhost:4000/protected", http.StatusForbidden},
 	}
 
