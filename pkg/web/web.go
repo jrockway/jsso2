@@ -36,7 +36,11 @@ func (l *Linker) EnrollmentPage(token string) string {
 }
 
 func (l *Linker) LoginPage() string {
-	return "#/login"
+	return l.BaseURL.String() + "#/login"
+}
+
+func (l *Linker) LoginPageWithRedirect(destination string) string {
+	return l.BaseURL.String() + "#/login/" + url.PathEscape(destination)
 }
 
 func (l *Linker) SetCookie(cookie string) string {

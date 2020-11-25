@@ -97,7 +97,12 @@ func main() {
 		Cookies:     cookieConfig,
 	}
 
-	sessionService := &session.Service{}
+	sessionService := &session.Service{
+		DB:          db,
+		Permissions: auth,
+		Cookies:     cookieConfig,
+		Linker:      linker,
+	}
 
 	logoutHandler := &logout.Handler{
 		Linker:  linker,

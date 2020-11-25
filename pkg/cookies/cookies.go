@@ -117,12 +117,7 @@ type UnusedCookie struct {
 // sessions that were found, a list of unused authorization headers, and a list of unused cookies.
 // md must not be nil.
 func (c *Config) SessionsFromMetadata(md metadata.MD) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
-	var result []*types.Session
-	ss, unusedAuth := c.SessionsFromAuthorization(md.Get("authorization")...)
-	result = append(result, ss...)
-	ss, unusedCookies := c.SessionsFromCookies(Cookies(md.Get("cookie")...))
-	result = append(result, ss...)
-	return result, unusedAuth, unusedCookies
+	return c.SessionsFromAny(md.Get("authorization"), md.Get("cookie"))
 }
 
 // SessionFromRequest extracts authentication material from the provided request, returning any
@@ -135,6 +130,17 @@ func (c *Config) SessionsFromRequest(req *http.Request) ([]*types.Session, []*Un
 	ss, unusedAuth := c.SessionsFromAuthorization(req.Header.Get("authorization"))
 	result = append(result, ss...)
 	ss, unusedCookies := c.SessionsFromCookies(req.Cookies())
+	result = append(result, ss...)
+	return result, unusedAuth, unusedCookies
+}
+
+// SessionFromAny takes a slice of Authorization headers and Cookie headers, and returns valid
+// sessions, a list of unused Authorization headers, and a list of unused cookies.
+func (c *Config) SessionsFromAny(headers, cookies []string) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
+	var result []*types.Session
+	ss, unusedAuth := c.SessionsFromAuthorization(headers...)
+	result = append(result, ss...)
+	ss, unusedCookies := c.SessionsFromCookies(Cookies(cookies...))
 	result = append(result, ss...)
 	return result, unusedAuth, unusedCookies
 }

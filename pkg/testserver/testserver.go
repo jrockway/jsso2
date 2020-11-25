@@ -6,6 +6,7 @@ import (
 
 	gzap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/jrockway/jsso2/pkg/client"
+	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
 	"github.com/jrockway/jsso2/pkg/jsso/login"
@@ -23,12 +24,25 @@ import (
 type S struct {
 	WantRootClient bool
 	Credentials    credentials.PerRPCCredentials
+	Cookies        *cookies.Config
 	Permissions    *internalauth.Permissions
+	Linker         *web.Linker
 }
 
 func New() *S {
+	linkerCfg := &web.Linker{
+		BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"},
+	}
+	cookiesCfg := &cookies.Config{
+		Domain: "jsso.example.com",
+		Linker: linkerCfg,
+	}
+	permissionsCfg := internalauth.NewFromConfig(&internalauth.Config{RootPassword: "root"}, nil)
+	permissionsCfg.Cookies = cookiesCfg
 	return &S{
-		Permissions: internalauth.NewFromConfig(&internalauth.Config{RootPassword: "root"}, nil),
+		Linker:      linkerCfg,
+		Cookies:     cookiesCfg,
+		Permissions: permissionsCfg,
 	}
 }
 
@@ -53,19 +67,16 @@ func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
 		}
 	}
 	s.Permissions.Store = db
-	linker := &web.Linker{
-		BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"},
-	}
 	webauthnConfig := &webauthn.Config{
-		RelyingPartyID:   linker.Domain(),
-		RelyingPartyName: linker.Domain(),
-		Origin:           linker.Origin(),
+		RelyingPartyID:   s.Linker.Domain(),
+		RelyingPartyName: s.Linker.Domain(),
+		Origin:           s.Linker.Origin(),
 	}
 
-	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{DB: db, Permissions: s.Permissions, Linker: linker, Webauthn: webauthnConfig}))
-	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, Linker: linker}))
+	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{DB: db, Permissions: s.Permissions, Linker: s.Linker, Webauthn: webauthnConfig}))
+	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, Linker: s.Linker}))
 	jssopb.RegisterLoginService(server, jssopb.NewLoginService(&login.Service{DB: db, Permissions: s.Permissions, Webauthn: webauthnConfig}))
-	jssopb.RegisterSessionService(server, jssopb.NewSessionService(&session.Service{}))
+	jssopb.RegisterSessionService(server, jssopb.NewSessionService(&session.Service{DB: db, Permissions: s.Permissions, Linker: s.Linker, Cookies: s.Cookies}))
 }
 
 // OK, maybe I went overboard with single-letter type names.

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"sort"
 	"time"
 
@@ -115,6 +116,41 @@ func (p *Permissions) isRoot(md metadata.MD) bool {
 	return false
 }
 
+func (p *Permissions) AuthenticateUser(ctx context.Context, ss []*types.Session, unusedHeader []*cookies.UnusedHeader, unusedCookies []*cookies.UnusedCookie) (*types.Session, error) {
+	// Check all parseable sessions for validity.
+	var errs []error
+	for i, s := range ss {
+		if err := p.Store.DoTx(ctx, ctxzap.Extract(ctx), true, func(tx *sqlx.Tx) error {
+			var err error
+			session, err := store.LookupSession(ctx, tx, s.GetId())
+			if err != nil {
+				return fmt.Errorf("lookup session: %w", err)
+			}
+			ss[i] = session
+			return nil
+		}); err != nil {
+			ss[i] = nil
+			errs = append(errs, fmt.Errorf("validate session %d/%d: %v", i+1, len(ss), err))
+		}
+	}
+	// Look for at least one valid session.
+	for _, s := range ss {
+		if s != nil {
+			return s, nil
+		}
+	}
+	// If after all that, there isn't a valid session, return a detailed error message.
+	for _, u := range unusedHeader {
+		errs = append(errs, fmt.Errorf("spurious unparseable authorization header %q: %v", u.Value, u.Err))
+	}
+	for _, u := range unusedCookies {
+		if u.Err != nil {
+			errs = append(errs, fmt.Errorf("spurious unparseable session cookie %q: %v", u.Cookie.String(), u.Err))
+		}
+	}
+	return nil, fmt.Errorf("look for a valid session: %d error(s): %v", len(errs), errs)
+}
+
 func (p *Permissions) getSession(ctx context.Context) (*types.Session, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -131,38 +167,7 @@ func (p *Permissions) getSession(ctx context.Context) (*types.Session, error) {
 		// No sessions found and no attempt to provide one, so authenticate as anonymous.
 		return sessions.Anonymous(), nil
 	}
-	// Check all parseable sessions for validity.
-	var errors []error
-	for i, s := range ss {
-		if err := p.Store.DoTx(ctx, ctxzap.Extract(ctx), true, func(tx *sqlx.Tx) error {
-			var err error
-			session, err := store.LookupSession(ctx, tx, s.GetId())
-			if err != nil {
-				return fmt.Errorf("lookup session: %w", err)
-			}
-			ss[i] = session
-			return nil
-		}); err != nil {
-			ss[i] = nil
-			errors = append(errors, fmt.Errorf("validate session %d/%d: %v", i+1, len(ss), err))
-		}
-	}
-	// Look for at least one valid session.
-	for _, s := range ss {
-		if s != nil {
-			return s, nil
-		}
-	}
-	// If after all that, there isn't a valid session, return a detailed error message.
-	for _, u := range unusedHeader {
-		errors = append(errors, fmt.Errorf("spurious unparseable authorization header %q: %v", u.Value, u.Err))
-	}
-	for _, u := range unusedCookies {
-		if u.Err != nil {
-			errors = append(errors, fmt.Errorf("spurious unparseable session cookie %q: %v", u.Cookie.String(), u.Err))
-		}
-	}
-	return nil, fmt.Errorf("look for a valid session: %d error(s): %v", len(errors), errors)
+	return p.AuthenticateUser(ctx, ss, unusedHeader, unusedCookies)
 }
 
 func (p *Permissions) StreamServerInterceptor() grpc.StreamServerInterceptor {
@@ -288,5 +293,16 @@ func (p *Permissions) AllowFinishEnrollment(ctx context.Context, target *types.S
 }
 
 func (p *Permissions) AllowStartLogin(ctx context.Context, target *types.User) error {
+	return nil
+}
+
+func (p *Permissions) AllowAuthorizeHTTP(ctx context.Context, proxyUser *types.User) error {
+	return nil
+}
+
+func (p *Permissions) AllowWebVisit(ctx context.Context, requestor *types.User, requestURL *url.URL) error {
+	if requestor.GetId() < 1 && requestor.GetId() != sessions.RootUser {
+		return status.Error(codes.PermissionDenied, "you must be logged in to visit this site")
+	}
 	return nil
 }

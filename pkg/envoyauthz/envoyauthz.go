@@ -71,9 +71,9 @@ func (s *Service) Check(ctx context.Context, req *envoy_auth.CheckRequest) (*env
 
 	requestID := headers["x-request-id"]
 	requestURL := &url.URL{
-		Scheme:  headers["x-forwarded-proto"],
-		Host:    httpReq.GetHost(),
-		RawPath: httpReq.GetPath(),
+		Scheme: headers["x-forwarded-proto"],
+		Host:   httpReq.GetHost(),
+		Path:   httpReq.GetPath(),
 	}
 
 	authorizeReq := &jssopb.AuthorizeHTTPRequest{

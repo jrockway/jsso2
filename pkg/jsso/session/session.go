@@ -2,24 +2,87 @@ package session
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 
+	"github.com/jrockway/jsso2/pkg/cookies"
+	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jssopb"
+	"github.com/jrockway/jsso2/pkg/sessions"
+	"github.com/jrockway/jsso2/pkg/store"
+	"github.com/jrockway/jsso2/pkg/types"
+	"github.com/jrockway/jsso2/pkg/web"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type Service struct {
+	DB          *store.Connection
+	Permissions *internalauth.Permissions
+	Linker      *web.Linker
+	Cookies     *cookies.Config
 }
 
 func (s *Service) AuthorizeHTTP(ctx context.Context, req *jssopb.AuthorizeHTTPRequest) (*jssopb.AuthorizeHTTPReply, error) {
 	reply := &jssopb.AuthorizeHTTPReply{
 		Decision: &jssopb.AuthorizeHTTPReply_Deny{
 			Deny: &jssopb.Deny{
-				Destination: &jssopb.Deny_Response_{
-					Response: &jssopb.Deny_Response{
-						ContentType: "text/plain",
-						Body:        "Unauthorized.",
+				Destination: &jssopb.Deny_Redirect_{
+					Redirect: &jssopb.Deny_Redirect{
+						RedirectUrl: s.Linker.LoginPage(),
 					},
 				},
 			},
+		},
+	}
+	// Check that the request URL is valid
+	parsedURL, err := url.Parse(req.GetRequestUri())
+	if err != nil {
+		return reply, status.Error(codes.InvalidArgument, fmt.Errorf("parse request uri: %w", err).Error())
+	}
+	reply.GetDeny().GetRedirect().RedirectUrl = s.Linker.LoginPageWithRedirect(parsedURL.String())
+
+	// Check is the proxy's user is allowed to perform this check.
+	if err := s.Permissions.AllowAuthorizeHTTP(ctx, sessions.MustFromContext(ctx).GetUser()); err != nil {
+		return reply, err
+	}
+
+	// Extract the end user's session from the request.
+	ss, unusedAuth, unusedCookies := s.Cookies.SessionsFromAny(req.GetAuthorizationHeaders(), req.GetCookies())
+	session, err := s.Permissions.AuthenticateUser(ctx, ss, unusedAuth, unusedCookies)
+	if err != nil {
+		reply.GetDeny().Reason = err.Error()
+		return reply, nil
+	}
+
+	// Check that the access control policy allows this user to visit the target website.
+	if err := s.Permissions.AllowWebVisit(ctx, session.GetUser(), parsedURL); err != nil {
+		reply.GetDeny().Reason = err.Error()
+		return reply, nil
+	}
+
+	allow := &jssopb.Allow{
+		Username: session.GetUser().GetUsername(),
+	}
+	for _, u := range unusedAuth {
+		if u.Err != nil {
+			allow.AddHeaders = append(allow.AddHeaders, &types.Header{
+				Key:   "Authorization",
+				Value: u.Value,
+			})
+		}
+	}
+	for _, u := range unusedCookies {
+		if u.Err != nil {
+			allow.AddHeaders = append(allow.AddHeaders, &types.Header{
+				Key:   "Cookie",
+				Value: u.Cookie.String(),
+			})
+		}
+	}
+	reply = &jssopb.AuthorizeHTTPReply{
+		Decision: &jssopb.AuthorizeHTTPReply_Allow{
+			Allow: allow,
 		},
 	}
 	return reply, nil

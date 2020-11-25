@@ -2890,7 +2890,7 @@ proto.jsso.AuthorizeHTTPRequest.prototype.setIpAddress = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.jsso.Allow.repeatedFields_ = [2,3];
+proto.jsso.Allow.repeatedFields_ = [2,4,5];
 
 
 
@@ -2923,7 +2923,9 @@ proto.jsso.Allow.prototype.toObject = function(opt_includeInstance) {
  */
 proto.jsso.Allow.toObject = function(includeInstance, msg) {
   var f, obj = {
-    bearerToken: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    username: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    groupsList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
+    bearerToken: jspb.Message.getFieldWithDefault(msg, 3, ""),
     addHeadersList: jspb.Message.toObjectList(msg.getAddHeadersList(),
     types_pb.Header.toObject, includeInstance),
     appendHeadersList: jspb.Message.toObjectList(msg.getAppendHeadersList(),
@@ -2966,14 +2968,22 @@ proto.jsso.Allow.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {string} */ (reader.readString());
-      msg.setBearerToken(value);
+      msg.setUsername(value);
       break;
     case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addGroups(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setBearerToken(value);
+      break;
+    case 4:
       var value = new types_pb.Header;
       reader.readMessage(value,types_pb.Header.deserializeBinaryFromReader);
       msg.addAddHeaders(value);
       break;
-    case 3:
+    case 5:
       var value = new types_pb.Header;
       reader.readMessage(value,types_pb.Header.deserializeBinaryFromReader);
       msg.addAppendHeaders(value);
@@ -3007,17 +3017,31 @@ proto.jsso.Allow.prototype.serializeBinary = function() {
  */
 proto.jsso.Allow.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getBearerToken();
+  f = message.getUsername();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
+  f = message.getGroupsList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      2,
+      f
+    );
+  }
+  f = message.getBearerToken();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
   f = message.getAddHeadersList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      2,
+      4,
       f,
       types_pb.Header.serializeBinaryToWriter
     );
@@ -3025,7 +3049,7 @@ proto.jsso.Allow.serializeBinaryToWriter = function(message, writer) {
   f = message.getAppendHeadersList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      3,
+      5,
       f,
       types_pb.Header.serializeBinaryToWriter
     );
@@ -3034,10 +3058,10 @@ proto.jsso.Allow.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string bearer_token = 1;
+ * optional string username = 1;
  * @return {string}
  */
-proto.jsso.Allow.prototype.getBearerToken = function() {
+proto.jsso.Allow.prototype.getUsername = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
@@ -3046,18 +3070,73 @@ proto.jsso.Allow.prototype.getBearerToken = function() {
  * @param {string} value
  * @return {!proto.jsso.Allow} returns this
  */
-proto.jsso.Allow.prototype.setBearerToken = function(value) {
+proto.jsso.Allow.prototype.setUsername = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
 /**
- * repeated types.Header add_headers = 2;
+ * repeated string groups = 2;
+ * @return {!Array<string>}
+ */
+proto.jsso.Allow.prototype.getGroupsList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 2));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.jsso.Allow} returns this
+ */
+proto.jsso.Allow.prototype.setGroupsList = function(value) {
+  return jspb.Message.setField(this, 2, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.jsso.Allow} returns this
+ */
+proto.jsso.Allow.prototype.addGroups = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.jsso.Allow} returns this
+ */
+proto.jsso.Allow.prototype.clearGroupsList = function() {
+  return this.setGroupsList([]);
+};
+
+
+/**
+ * optional string bearer_token = 3;
+ * @return {string}
+ */
+proto.jsso.Allow.prototype.getBearerToken = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.jsso.Allow} returns this
+ */
+proto.jsso.Allow.prototype.setBearerToken = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * repeated types.Header add_headers = 4;
  * @return {!Array<!proto.types.Header>}
  */
 proto.jsso.Allow.prototype.getAddHeadersList = function() {
   return /** @type{!Array<!proto.types.Header>} */ (
-    jspb.Message.getRepeatedWrapperField(this, types_pb.Header, 2));
+    jspb.Message.getRepeatedWrapperField(this, types_pb.Header, 4));
 };
 
 
@@ -3066,7 +3145,7 @@ proto.jsso.Allow.prototype.getAddHeadersList = function() {
  * @return {!proto.jsso.Allow} returns this
 */
 proto.jsso.Allow.prototype.setAddHeadersList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 2, value);
+  return jspb.Message.setRepeatedWrapperField(this, 4, value);
 };
 
 
@@ -3076,7 +3155,7 @@ proto.jsso.Allow.prototype.setAddHeadersList = function(value) {
  * @return {!proto.types.Header}
  */
 proto.jsso.Allow.prototype.addAddHeaders = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.types.Header, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.types.Header, opt_index);
 };
 
 
@@ -3090,12 +3169,12 @@ proto.jsso.Allow.prototype.clearAddHeadersList = function() {
 
 
 /**
- * repeated types.Header append_headers = 3;
+ * repeated types.Header append_headers = 5;
  * @return {!Array<!proto.types.Header>}
  */
 proto.jsso.Allow.prototype.getAppendHeadersList = function() {
   return /** @type{!Array<!proto.types.Header>} */ (
-    jspb.Message.getRepeatedWrapperField(this, types_pb.Header, 3));
+    jspb.Message.getRepeatedWrapperField(this, types_pb.Header, 5));
 };
 
 
@@ -3104,7 +3183,7 @@ proto.jsso.Allow.prototype.getAppendHeadersList = function() {
  * @return {!proto.jsso.Allow} returns this
 */
 proto.jsso.Allow.prototype.setAppendHeadersList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 3, value);
+  return jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
 
 
@@ -3114,7 +3193,7 @@ proto.jsso.Allow.prototype.setAppendHeadersList = function(value) {
  * @return {!proto.types.Header}
  */
 proto.jsso.Allow.prototype.addAppendHeaders = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.types.Header, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.types.Header, opt_index);
 };
 
 
@@ -3136,15 +3215,15 @@ proto.jsso.Allow.prototype.clearAppendHeadersList = function() {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.jsso.Deny.oneofGroups_ = [[1,2]];
+proto.jsso.Deny.oneofGroups_ = [[2,3]];
 
 /**
  * @enum {number}
  */
 proto.jsso.Deny.DestinationCase = {
   DESTINATION_NOT_SET: 0,
-  REDIRECT: 1,
-  RESPONSE: 2
+  REDIRECT: 2,
+  RESPONSE: 3
 };
 
 /**
@@ -3185,6 +3264,7 @@ proto.jsso.Deny.prototype.toObject = function(opt_includeInstance) {
  */
 proto.jsso.Deny.toObject = function(includeInstance, msg) {
   var f, obj = {
+    reason: jspb.Message.getFieldWithDefault(msg, 1, ""),
     redirect: (f = msg.getRedirect()) && proto.jsso.Deny.Redirect.toObject(includeInstance, f),
     response: (f = msg.getResponse()) && proto.jsso.Deny.Response.toObject(includeInstance, f)
   };
@@ -3224,11 +3304,15 @@ proto.jsso.Deny.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setReason(value);
+      break;
+    case 2:
       var value = new proto.jsso.Deny.Redirect;
       reader.readMessage(value,proto.jsso.Deny.Redirect.deserializeBinaryFromReader);
       msg.setRedirect(value);
       break;
-    case 2:
+    case 3:
       var value = new proto.jsso.Deny.Response;
       reader.readMessage(value,proto.jsso.Deny.Response.deserializeBinaryFromReader);
       msg.setResponse(value);
@@ -3262,10 +3346,17 @@ proto.jsso.Deny.prototype.serializeBinary = function() {
  */
 proto.jsso.Deny.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getReason();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
   f = message.getRedirect();
   if (f != null) {
     writer.writeMessage(
-      1,
+      2,
       f,
       proto.jsso.Deny.Redirect.serializeBinaryToWriter
     );
@@ -3273,7 +3364,7 @@ proto.jsso.Deny.serializeBinaryToWriter = function(message, writer) {
   f = message.getResponse();
   if (f != null) {
     writer.writeMessage(
-      2,
+      3,
       f,
       proto.jsso.Deny.Response.serializeBinaryToWriter
     );
@@ -3572,12 +3663,30 @@ proto.jsso.Deny.Response.prototype.setBody = function(value) {
 
 
 /**
- * optional Redirect redirect = 1;
+ * optional string reason = 1;
+ * @return {string}
+ */
+proto.jsso.Deny.prototype.getReason = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.jsso.Deny} returns this
+ */
+proto.jsso.Deny.prototype.setReason = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional Redirect redirect = 2;
  * @return {?proto.jsso.Deny.Redirect}
  */
 proto.jsso.Deny.prototype.getRedirect = function() {
   return /** @type{?proto.jsso.Deny.Redirect} */ (
-    jspb.Message.getWrapperField(this, proto.jsso.Deny.Redirect, 1));
+    jspb.Message.getWrapperField(this, proto.jsso.Deny.Redirect, 2));
 };
 
 
@@ -3586,7 +3695,7 @@ proto.jsso.Deny.prototype.getRedirect = function() {
  * @return {!proto.jsso.Deny} returns this
 */
 proto.jsso.Deny.prototype.setRedirect = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 1, proto.jsso.Deny.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 2, proto.jsso.Deny.oneofGroups_[0], value);
 };
 
 
@@ -3604,17 +3713,17 @@ proto.jsso.Deny.prototype.clearRedirect = function() {
  * @return {boolean}
  */
 proto.jsso.Deny.prototype.hasRedirect = function() {
-  return jspb.Message.getField(this, 1) != null;
+  return jspb.Message.getField(this, 2) != null;
 };
 
 
 /**
- * optional Response response = 2;
+ * optional Response response = 3;
  * @return {?proto.jsso.Deny.Response}
  */
 proto.jsso.Deny.prototype.getResponse = function() {
   return /** @type{?proto.jsso.Deny.Response} */ (
-    jspb.Message.getWrapperField(this, proto.jsso.Deny.Response, 2));
+    jspb.Message.getWrapperField(this, proto.jsso.Deny.Response, 3));
 };
 
 
@@ -3623,7 +3732,7 @@ proto.jsso.Deny.prototype.getResponse = function() {
  * @return {!proto.jsso.Deny} returns this
 */
 proto.jsso.Deny.prototype.setResponse = function(value) {
-  return jspb.Message.setOneofWrapperField(this, 2, proto.jsso.Deny.oneofGroups_[0], value);
+  return jspb.Message.setOneofWrapperField(this, 3, proto.jsso.Deny.oneofGroups_[0], value);
 };
 
 
@@ -3641,7 +3750,7 @@ proto.jsso.Deny.prototype.clearResponse = function() {
  * @return {boolean}
  */
 proto.jsso.Deny.prototype.hasResponse = function() {
-  return jspb.Message.getField(this, 2) != null;
+  return jspb.Message.getField(this, 3) != null;
 };
 
 

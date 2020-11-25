@@ -125,24 +125,27 @@ message AuthorizeHTTPRequest {
 
 // Allow allows a request through the proxy.
 message Allow {
+    string username = 1;
+    repeated string groups = 2;
     // A signed and encrypted token allowing the upstream application to
     // authorize this request without contacting an external system.  It is
     // scoped to this request and has a short duration, so capturing this token
     // only provides limited authenticated access.  This token is included here
     // for non-proxying API clients; the actual authorization header to pass
     // upstream is included in add_headers or append_headers fields below.
-    string bearer_token = 1;
+    string bearer_token = 3;
     // Headers to add (or replace) when sending the request upstream.  We will
     // always set Authorization and Cookie here.
-    repeated types.Header add_headers = 2;
+    repeated types.Header add_headers = 4;
     // Headers to append to (or add) when sending the requests upstream.
-    repeated types.Header append_headers = 3;
+    repeated types.Header append_headers = 5;
 }
 
 // Deny denies a request through the proxy.  An HTTP response can be included to
 // inform the end-user as to what went wrong.  (More likely, it will be a
 // temporary redirect to a login page.)
 message Deny {
+    string reason = 1;
     message Redirect {
         string redirect_url = 1;
     }
@@ -151,8 +154,8 @@ message Deny {
         string body = 2;
     }
     oneof destination {
-        Redirect redirect = 1;
-        Response response = 2;
+        Redirect redirect = 2;
+        Response response = 3;
     }
 }
 

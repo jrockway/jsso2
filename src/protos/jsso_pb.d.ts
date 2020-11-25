@@ -329,6 +329,14 @@ export namespace AuthorizeHTTPRequest {
 }
 
 export class Allow extends jspb.Message {
+  getUsername(): string;
+  setUsername(value: string): Allow;
+
+  getGroupsList(): Array<string>;
+  setGroupsList(value: Array<string>): Allow;
+  clearGroupsList(): Allow;
+  addGroups(value: string, index?: number): Allow;
+
   getBearerToken(): string;
   setBearerToken(value: string): Allow;
 
@@ -352,6 +360,8 @@ export class Allow extends jspb.Message {
 
 export namespace Allow {
   export type AsObject = {
+    username: string,
+    groupsList: Array<string>,
     bearerToken: string,
     addHeadersList: Array<types_pb.Header.AsObject>,
     appendHeadersList: Array<types_pb.Header.AsObject>,
@@ -359,6 +369,9 @@ export namespace Allow {
 }
 
 export class Deny extends jspb.Message {
+  getReason(): string;
+  setReason(value: string): Deny;
+
   getRedirect(): Deny.Redirect | undefined;
   setRedirect(value?: Deny.Redirect): Deny;
   hasRedirect(): boolean;
@@ -381,6 +394,7 @@ export class Deny extends jspb.Message {
 
 export namespace Deny {
   export type AsObject = {
+    reason: string,
     redirect?: Deny.Redirect.AsObject,
     response?: Deny.Response.AsObject,
   }
@@ -429,8 +443,8 @@ export namespace Deny {
 
   export enum DestinationCase { 
     DESTINATION_NOT_SET = 0,
-    REDIRECT = 1,
-    RESPONSE = 2,
+    REDIRECT = 2,
+    RESPONSE = 3,
   }
 }
 
