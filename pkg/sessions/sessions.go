@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/jrockway/jsso2/pkg/types"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -29,7 +30,10 @@ const (
 
 var encoder = base64.URLEncoding.WithPadding(base64.NoPadding)
 
-var ErrSessionMissing = errors.New("no session id")
+var (
+	ErrSessionMissing = errors.New("no session id")
+	ErrSessionZero    = errors.New("session id is 0 ([64]byte{0, ...})")
+)
 
 // GenerateID generates a valid session ID.
 func GenerateID() ([]byte, error) {
@@ -180,4 +184,9 @@ func HasTaint(s *types.Session, taint string) bool {
 		}
 	}
 	return false
+}
+
+// TransformToID returns a cmp.Option that transforms sessions to their ID.
+func TransformToID() cmp.Option {
+	return cmp.Transformer("SessionID", func(s *types.Session) []byte { return s.GetId() })
 }

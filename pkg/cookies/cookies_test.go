@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/types"
 	"github.com/jrockway/jsso2/pkg/web"
 	"google.golang.org/grpc/metadata"
@@ -55,11 +57,162 @@ func TestRoundTrip(t *testing.T) {
 	creq.AddCookie(cookies[0])
 	md := metadata.Pairs("cookie", creq.Header.Get("cookie"))
 
-	got, err := cfg.SessionFromMetadata(md)
+	got, unusedAuth, unusedCookies := cfg.SessionsFromMetadata(md)
+	if got, want := len(unusedAuth), 0; got != want {
+		t.Error("unexpectedly found unused authorization headers")
+	}
+	if got, want := len(unusedCookies), 0; got != want {
+		t.Error("unexpectedly found unused authorization cookies")
+	}
+	if diff := cmp.Diff(got, []*types.Session{session}, sessions.TransformToID()); diff != "" {
+		t.Error(diff)
+	}
+}
+
+func TestSessionsFromRequest(t *testing.T) {
+	cfg := &Config{
+		Domain: "localhost",
+		Name:   "jsso-session-id",
+		Linker: &web.Linker{
+			BaseURL: &url.URL{Host: "localhost", Scheme: "http"},
+		},
+	}
+	if err := cfg.SetKey([]byte("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")); err != nil {
+		t.Fatal(err)
+	}
+	id, err := sessions.GenerateID()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(got.GetId(), session.GetId()); diff != "" {
-		t.Error(diff)
+	s := &types.Session{Id: id}
+	token, err := cfg.NewSetCookieRequest(s, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cookie, _, err := cfg.cookieFromToken(token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	invalidSession := &types.Session{Id: make([]byte, 64)}
+	invalidCookie := &http.Cookie{
+		Name:  cfg.Name,
+		Value: sessions.ToBase64(invalidSession),
+	}
+
+	testData := []struct {
+		name              string
+		req               *http.Request
+		wantSessions      []*types.Session
+		wantUnusedAuth    []*UnusedHeader
+		wantUnusedCookies []*UnusedCookie
+	}{
+		{
+			name: "empty",
+			req:  nil,
+		},
+		{
+			name: "valid auth",
+			req: &http.Request{
+				Header: http.Header{
+					"Authorization": []string{sessions.ToHeaderString(s)},
+				},
+			},
+			wantSessions: []*types.Session{s},
+		},
+		{
+			name: "invalid auth",
+			req: &http.Request{
+				Header: http.Header{
+					"Authorization": []string{sessions.ToHeaderString(invalidSession)},
+				},
+			},
+			wantUnusedAuth: []*UnusedHeader{{Value: sessions.ToHeaderString(invalidSession)}},
+		},
+		{
+			name: "valid cookie",
+			req: func() *http.Request {
+				req := &http.Request{Header: http.Header{}}
+				req.AddCookie(cookie)
+				return req
+			}(),
+			wantSessions: []*types.Session{s},
+		},
+		{
+			name: "invalid cookie",
+			req: func() *http.Request {
+				req := &http.Request{Header: http.Header{}}
+				req.AddCookie(invalidCookie)
+				return req
+			}(),
+			wantUnusedCookies: []*UnusedCookie{{Cookie: invalidCookie}},
+		},
+		{
+			name: "valid auth and valid cookie",
+			req: func() *http.Request {
+				req := &http.Request{
+					Header: http.Header{
+						"Authorization": []string{sessions.ToHeaderString(s)},
+					},
+				}
+				req.AddCookie(cookie)
+				return req
+			}(),
+			wantSessions: []*types.Session{s, s},
+		},
+		{
+			name: "valid cookie twice",
+			req: func() *http.Request {
+				req := &http.Request{Header: http.Header{}}
+				req.AddCookie(cookie)
+				req.AddCookie(cookie)
+				return req
+			}(),
+			wantSessions: []*types.Session{s, s},
+		},
+		{
+			name: "valid cookie and invalid cookie",
+			req: func() *http.Request {
+				req := &http.Request{Header: http.Header{}}
+				req.AddCookie(cookie)
+				req.AddCookie(invalidCookie)
+				return req
+			}(),
+			wantSessions:      []*types.Session{s},
+			wantUnusedCookies: []*UnusedCookie{{Cookie: invalidCookie}},
+		},
+		{
+			name: "valid cookie and unrelated cookie",
+			req: func() *http.Request {
+				req := &http.Request{Header: http.Header{}}
+				req.AddCookie(cookie)
+				req.AddCookie(&http.Cookie{Name: "super-mega-tracker", Value: "hahaha"})
+				return req
+			}(),
+			wantSessions:      []*types.Session{s},
+			wantUnusedCookies: []*UnusedCookie{{Cookie: &http.Cookie{Name: "super-mega-tracker", Value: "hahaha"}}},
+		},
+		{
+			name: "unparseable session id",
+			req: func() *http.Request {
+				req := &http.Request{Header: http.Header{}}
+				req.AddCookie(&http.Cookie{Name: cfg.Name, Value: "foo"})
+				return req
+			}(),
+			wantUnusedCookies: []*UnusedCookie{{Cookie: &http.Cookie{Name: cfg.Name, Value: "foo"}}},
+		},
+	}
+	for _, test := range testData {
+		t.Run(test.name, func(t *testing.T) {
+			got, gotAuth, gotCookies := cfg.SessionsFromRequest(test.req)
+			if diff := cmp.Diff(got, test.wantSessions, sessions.TransformToID()); diff != "" {
+				t.Errorf("sessions:\n%s", diff)
+			}
+			if diff := cmp.Diff(gotAuth, test.wantUnusedAuth, cmp.Transformer("UnpackUnusedAuth", func(u *UnusedHeader) string { return u.Value }), cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("unused auth:\n%s", diff)
+			}
+			if diff := cmp.Diff(gotCookies, test.wantUnusedCookies, cmp.Transformer("UnpackUnusedCookie", func(u *UnusedCookie) *http.Cookie { return u.Cookie }), cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("unused cookies:\n%s", diff)
+			}
+		})
 	}
 }

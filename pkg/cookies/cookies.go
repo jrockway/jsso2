@@ -100,40 +100,94 @@ func Cookies(header ...string) []*http.Cookie {
 	return req.Cookies()
 }
 
-// SessionFromMetadata extracts cookies from the metadata, and calls SessionFromCookies.
-func (c *Config) SessionFromMetadata(md metadata.MD) (*types.Session, error) {
-	session, _, err := c.SessionFromCookies(Cookies(md.Get("cookie")...))
-	return session, err
+// UnusedHeader is a header we couldn't extract a session from, and the reason why.
+type UnusedHeader struct {
+	Value string
+	Err   error
 }
 
-// SessionFromRequest extracts cookies from the provided request, and calls SessionFromCookies.
-func (c *Config) SessionFromRequest(req *http.Request) (*types.Session, error) {
-	session, _, err := c.SessionFromCookies(req.Cookies())
-	return session, err
+// UnusedCookie is a cookie we couldn't extract a session from, and the reason why.  If Err is null,
+// then it simply wasn't a cookie we were looking for.
+type UnusedCookie struct {
+	Cookie *http.Cookie
+	Err    error
+}
+
+// SessionFromMetadata extracts authorization headers and cookies from the metadata, returning any
+// sessions that were found, a list of unused authorization headers, and a list of unused cookies.
+// md must not be nil.
+func (c *Config) SessionsFromMetadata(md metadata.MD) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
+	var result []*types.Session
+	ss, unusedAuth := c.SessionsFromAuthorization(md.Get("authorization")...)
+	result = append(result, ss...)
+	ss, unusedCookies := c.SessionsFromCookies(Cookies(md.Get("cookie")...))
+	result = append(result, ss...)
+	return result, unusedAuth, unusedCookies
+}
+
+// SessionFromRequest extracts authentication material from the provided request, returning any
+// sessions that were found, a list of unused authorization headers, and a list of unused cookies.
+func (c *Config) SessionsFromRequest(req *http.Request) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
+	var result []*types.Session
+	if req == nil || req.Header == nil {
+		return nil, nil, nil
+	}
+	ss, unusedAuth := c.SessionsFromAuthorization(req.Header.Get("authorization"))
+	result = append(result, ss...)
+	ss, unusedCookies := c.SessionsFromCookies(req.Cookies())
+	result = append(result, ss...)
+	return result, unusedAuth, unusedCookies
+}
+
+// SessionFromAuthorization extracts sessions from the authorization headers, returning
+// unused/invalid authorization headers.
+func (c *Config) SessionsFromAuthorization(auths ...string) ([]*types.Session, []*UnusedHeader) {
+	var result []*types.Session
+	var unused []*UnusedHeader
+	for _, a := range auths {
+		if a == "" {
+			// This doesn't count as unused.  It's mostly an artifact of how
+			// http.Request.Header.Get("foo") returns "" when there is no Foo header.
+			continue
+		}
+		s, err := sessions.FromHeaderString(a)
+		if err != nil {
+			unused = append(unused, &UnusedHeader{Value: a, Err: err})
+			continue
+		}
+		if sessions.IsZero(s.GetId()) {
+			unused = append(unused, &UnusedHeader{Value: a, Err: sessions.ErrSessionZero})
+			continue
+		}
+		result = append(result, s)
+	}
+	return result, unused
 }
 
 // SessionFromCookies looks through the provided cookies and returns the sessionID from a cookie
 // that looks like a session, and the list of cookies with all matching cookies removed.  An error
 // is returned if any invalid cookies are found.  sessions.ErrSessionMissing is returned if no
 // cookie is found.
-func (c *Config) SessionFromCookies(cookies []*http.Cookie) (*types.Session, []*http.Cookie, error) {
-	var rest []*http.Cookie
-	var session *types.Session
+func (c *Config) SessionsFromCookies(cookies []*http.Cookie) ([]*types.Session, []*UnusedCookie) {
+	var result []*types.Session
+	var unused []*UnusedCookie
 	for _, cookie := range cookies {
 		if cookie.Name == c.Name {
 			s, err := sessions.FromBase64(cookie.Value)
 			if err != nil {
-				return nil, nil, fmt.Errorf("investigating cookie %q: %w", cookie.Name, err)
+				unused = append(unused, &UnusedCookie{Cookie: cookie, Err: err})
+				continue
 			}
-			session = s
+			if sessions.IsZero(s.GetId()) {
+				unused = append(unused, &UnusedCookie{Cookie: cookie, Err: sessions.ErrSessionZero})
+				continue
+			}
+			result = append(result, s)
 		} else {
-			rest = append(rest, cookie)
+			unused = append(unused, &UnusedCookie{Cookie: cookie})
 		}
 	}
-	if sessions.IsZero(session.GetId()) {
-		return nil, rest, fmt.Errorf("no matching cookies found: %w", sessions.ErrSessionMissing)
-	}
-	return session, rest, nil
+	return result, unused
 }
 
 // LinkToSetCookie accepts a token from NewSetCookieRequest and returns the URL that will cause that

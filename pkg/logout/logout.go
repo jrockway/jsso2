@@ -22,17 +22,17 @@ type Handler struct {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	l := ctxzap.Extract(ctx)
-	if err := h.DB.DoTx(ctx, l, false, func(tx *sqlx.Tx) error {
-		session, err := h.Cookies.SessionFromRequest(req)
-		if err != nil {
-			return fmt.Errorf("session from request: %w", err)
+
+	ss, _, _ := h.Cookies.SessionsFromRequest(req)
+	for _, s := range ss {
+		if err := h.DB.DoTx(ctx, l, false, func(tx *sqlx.Tx) error {
+			if err := store.RevokeSession(ctx, tx, s.GetId(), "logout"); err != nil {
+				return fmt.Errorf("revoke session: %w", err)
+			}
+			return nil
+		}); err != nil {
+			l.Info("problem revoking session", zap.Error(err))
 		}
-		if err := store.RevokeSession(ctx, tx, session.GetId(), "logout"); err != nil {
-			return fmt.Errorf("revoke session: %w", err)
-		}
-		return nil
-	}); err != nil {
-		l.Info("problem revoking session", zap.Error(err))
 	}
 
 	http.SetCookie(w, &http.Cookie{
