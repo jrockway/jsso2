@@ -16,7 +16,6 @@ import (
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/web"
 	"github.com/jrockway/jsso2/pkg/webauthn"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -25,12 +24,10 @@ type S struct {
 	WantRootClient bool
 	Credentials    credentials.PerRPCCredentials
 	Permissions    *internalauth.Permissions
-	Logger         *zap.Logger
 }
 
 func New() *S {
 	return &S{
-		Logger:      zap.NewNop(),
 		Permissions: internalauth.NewFromConfig(&internalauth.Config{RootPassword: "root"}, nil),
 	}
 }
