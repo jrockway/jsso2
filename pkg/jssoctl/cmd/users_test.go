@@ -126,9 +126,9 @@ func TestUsers(t *testing.T) {
 				if creds == nil {
 					creds = defaultCreds
 				}
-				s.Credentials.(*client.Credentials).Root = creds.Root
-				s.Credentials.(*client.Credentials).Token = creds.Token
-				s.Credentials.(*client.Credentials).Bearer = creds.Bearer
+				s.Credentials.Root = creds.Root
+				s.Credentials.Token = creds.Token
+				s.Credentials.Bearer = creds.Bearer
 
 				if err := rootCmd.ExecuteContext(e.Context); !test.wantFail && err != nil {
 					t.Fatalf("execute: %v", err)

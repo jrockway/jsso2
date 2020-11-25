@@ -34,6 +34,7 @@ type R struct {
 	Timeout           time.Duration
 	Logger            bool
 	Database          bool
+	DatabaseReady     func(t *testing.T, e *E)
 	GRPC              func(t *testing.T, e *E, s *grpc.Server)
 	GRPCOptions       func(e *E) []grpc.ServerOption
 	GRPCClientOptions func(e *E) []grpc.DialOption
@@ -97,6 +98,9 @@ func Run(t *testing.T, name string, r R, f func(t *testing.T, e *E)) {
 				t.Fatalf("connect to test database: %v", err)
 			}
 			extras.DB = db
+			if r.DatabaseReady != nil {
+				r.DatabaseReady(t, extras)
+			}
 		}
 		if r.GRPC != nil {
 			gen := rand.New(rand.NewSource(time.Now().UnixNano()))

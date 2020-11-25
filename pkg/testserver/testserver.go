@@ -1,87 +1,72 @@
 package testserver
 
 import (
-	"net/url"
 	"testing"
 
 	gzap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/jrockway/jsso2/pkg/client"
-	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/internalauth"
-	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
-	"github.com/jrockway/jsso2/pkg/jsso/login"
-	"github.com/jrockway/jsso2/pkg/jsso/session"
-	"github.com/jrockway/jsso2/pkg/jsso/user"
+	"github.com/jrockway/jsso2/pkg/jsso/cmd"
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/jtesting"
 	"github.com/jrockway/jsso2/pkg/store"
-	"github.com/jrockway/jsso2/pkg/web"
-	"github.com/jrockway/jsso2/pkg/webauthn"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 type S struct {
+	AppConfig      *cmd.Config
+	AuthConfig     *internalauth.Config
 	WantRootClient bool
-	Credentials    credentials.PerRPCCredentials
-	Cookies        *cookies.Config
-	Permissions    *internalauth.Permissions
-	Linker         *web.Linker
+	Credentials    *client.Credentials
+	App            *cmd.App
 }
 
 func New() *S {
-	linkerCfg := &web.Linker{
-		BaseURL: &url.URL{Scheme: "http", Host: "jsso.example.com", Path: "/"},
-	}
-	cookiesCfg := &cookies.Config{
-		Domain: "jsso.example.com",
-		Linker: linkerCfg,
-	}
-	permissionsCfg := internalauth.NewFromConfig(&internalauth.Config{RootPassword: "root"}, nil)
-	permissionsCfg.Cookies = cookiesCfg
 	return &S{
-		Linker:      linkerCfg,
-		Cookies:     cookiesCfg,
-		Permissions: permissionsCfg,
-	}
-}
-
-func (s *S) Options(e *jtesting.E) []grpc.ServerOption {
-	return []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(
-			gzap.UnaryServerInterceptor(e.Logger.Named("server")),
-			s.Permissions.UnaryServerInterceptor(),
-		),
-		grpc.ChainStreamInterceptor(
-			gzap.StreamServerInterceptor(e.Logger.Named("server")),
-			s.Permissions.StreamServerInterceptor(),
-		),
+		AppConfig: &cmd.Config{
+			BaseURL:      "http://jsso.example.com/",
+			SetCookieKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+		},
+		AuthConfig: &internalauth.Config{
+			RootPassword: "root",
+		},
 	}
 }
 
 func (s *S) Setup(t *testing.T, e *jtesting.E, server *grpc.Server) {
-	db := store.MustGetTestDB(t, e)
-	if s.WantRootClient {
-		s.Credentials = &client.Credentials{
-			Root: "root",
-		}
-	}
-	s.Permissions.Store = db
-	webauthnConfig := &webauthn.Config{
-		RelyingPartyID:   s.Linker.Domain(),
-		RelyingPartyName: s.Linker.Domain(),
-		Origin:           s.Linker.Origin(),
-	}
-
-	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(&enrollment.Service{DB: db, Permissions: s.Permissions, Linker: s.Linker, Webauthn: webauthnConfig}))
-	jssopb.RegisterUserService(server, jssopb.NewUserService(&user.Service{DB: db, Permissions: s.Permissions, Linker: s.Linker}))
-	jssopb.RegisterLoginService(server, jssopb.NewLoginService(&login.Service{DB: db, Permissions: s.Permissions, Webauthn: webauthnConfig}))
-	jssopb.RegisterSessionService(server, jssopb.NewSessionService(&session.Service{DB: db, Permissions: s.Permissions, Linker: s.Linker, Cookies: s.Cookies}))
+	jssopb.RegisterEnrollmentService(server, jssopb.NewEnrollmentService(s.App.EnrollmentService))
+	jssopb.RegisterUserService(server, jssopb.NewUserService(s.App.UserService))
+	jssopb.RegisterLoginService(server, jssopb.NewLoginService(s.App.LoginService))
+	jssopb.RegisterSessionService(server, jssopb.NewSessionService(s.App.SessionService))
 }
 
 // OK, maybe I went overboard with single-letter type names.
 func (s *S) ToR(r *jtesting.R) {
-	r.GRPCOptions = s.Options
+	r.Database = true
+	r.Logger = true
+	if s.WantRootClient {
+		s.Credentials = &client.Credentials{Root: "root"}
+	}
+	r.DatabaseReady = func(t *testing.T, e *jtesting.E) {
+		db := store.MustGetTestDB(t, e)
+		var err error
+		s.App, err = cmd.Setup(s.AppConfig, s.AuthConfig, db)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	r.GRPCOptions = func(e *jtesting.E) []grpc.ServerOption {
+		return []grpc.ServerOption{
+			grpc.ChainUnaryInterceptor(
+				gzap.UnaryServerInterceptor(e.Logger.Named("server")),
+				s.App.Permissions.UnaryServerInterceptor(),
+			),
+			grpc.ChainStreamInterceptor(
+				gzap.StreamServerInterceptor(e.Logger.Named("server")),
+				s.App.Permissions.StreamServerInterceptor(),
+			),
+		}
+	}
 	r.GRPCClientOptions = func(e *jtesting.E) []grpc.DialOption {
 		result := []grpc.DialOption{
 			grpc.WithInsecure(),

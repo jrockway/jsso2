@@ -3,34 +3,21 @@ package main
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/fullstorydev/grpcui/standalone"
-	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/internalauth"
-	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
-	"github.com/jrockway/jsso2/pkg/jsso/login"
-	"github.com/jrockway/jsso2/pkg/jsso/session"
-	"github.com/jrockway/jsso2/pkg/jsso/user"
+	"github.com/jrockway/jsso2/pkg/jsso/cmd"
 	"github.com/jrockway/jsso2/pkg/jssopb"
-	"github.com/jrockway/jsso2/pkg/logout"
 	"github.com/jrockway/jsso2/pkg/store"
-	"github.com/jrockway/jsso2/pkg/web"
-	"github.com/jrockway/jsso2/pkg/webauthn"
 	"github.com/jrockway/opinionated-server/server"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
-type Config struct {
-	BaseURL      string `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
-	SetCookieKey string `long:"set_cookie_key" description:"32 bytes that are used to encrypt and sign set-cookie tokens." env:"SET_COOKIE_KEY"`
-}
-
 func main() {
 	server.AppName = "jsso2"
 
-	appConfig := &Config{}
+	appConfig := &cmd.Config{}
 	server.AddFlagGroup("application", appConfig)
 	dbConfig := &store.Config{}
 	server.AddFlagGroup("database", dbConfig)
@@ -38,88 +25,24 @@ func main() {
 	server.AddFlagGroup("authorization", authConfig)
 
 	server.Setup()
+	l := zap.L().Named("startup")
 
-	startupCtx, c := context.WithTimeout(context.Background(), time.Minute)
-	db, err := store.Connect(startupCtx, dbConfig.DatabaseURL)
+	db, err := cmd.ConnectDB(l, dbConfig)
 	if err != nil {
-		zap.L().Fatal("failed to connect to database", zap.String("database_url", dbConfig.DatabaseURL), zap.Error(err))
+		zap.L().Fatal("problem connecting to database", zap.Error(err))
 	}
-	if dbConfig.RunMigrations {
-		zap.L().Info("running database migrations")
-		if err := db.MigrateDB(startupCtx); err != nil {
-			zap.L().Warn("failed to run database migrations; continuing anyway", zap.Error(err))
-		}
-	}
-	c()
-
-	linker, err := web.NewLinker(appConfig.BaseURL)
+	app, err := cmd.Setup(appConfig, authConfig, db)
 	if err != nil {
-		zap.L().Fatal("failed to create linker", zap.String("base_url", appConfig.BaseURL), zap.Error(err))
+		zap.L().Fatal("problem initializing app", zap.Error(err))
 	}
-
-	cookieConfig := &cookies.Config{
-		Name:   "jsso-session-id",
-		Domain: linker.Domain(),
-		Linker: linker,
-	}
-	if err := cookieConfig.SetKey([]byte(appConfig.SetCookieKey)); err != nil {
-		zap.L().Fatal("failed to set set-cookie encryption key", zap.Error(err))
-	}
-
-	auth := internalauth.NewFromConfig(authConfig, db)
-	auth.Cookies = cookieConfig
-	server.AddUnaryInterceptor(auth.UnaryServerInterceptor())
-	server.AddStreamInterceptor(auth.StreamServerInterceptor())
-
-	webauthnConfig := &webauthn.Config{
-		RelyingPartyID:   linker.Domain(),
-		RelyingPartyName: linker.Domain(),
-		Origin:           linker.Origin(),
-	}
-
-	userService := &user.Service{
-		DB:          db,
-		Permissions: auth,
-		Linker:      linker,
-	}
-
-	enrollmentService := &enrollment.Service{
-		DB:          db,
-		Permissions: auth,
-		Linker:      linker,
-		Webauthn:    webauthnConfig,
-	}
-
-	loginService := &login.Service{
-		DB:          db,
-		Permissions: auth,
-		Webauthn:    webauthnConfig,
-		Cookies:     cookieConfig,
-	}
-
-	sessionService := &session.Service{
-		DB:          db,
-		Permissions: auth,
-		Cookies:     cookieConfig,
-		Linker:      linker,
-	}
-
-	logoutHandler := &logout.Handler{
-		Linker:  linker,
-		Cookies: cookieConfig,
-		DB:      db,
-	}
-
-	publicMux := new(http.ServeMux)
-	publicMux.HandleFunc("/set-cookie", cookieConfig.HandleSetCookie)
-	publicMux.Handle("/logout", logoutHandler)
-	server.SetHTTPHandler(publicMux)
-
+	server.AddUnaryInterceptor(app.Permissions.UnaryServerInterceptor())
+	server.AddStreamInterceptor(app.Permissions.StreamServerInterceptor())
+	server.SetHTTPHandler(app.PublicMux)
 	server.AddService(func(s *grpc.Server) {
-		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(enrollmentService))
-		jssopb.RegisterUserService(s, jssopb.NewUserService(userService))
-		jssopb.RegisterLoginService(s, jssopb.NewLoginService(loginService))
-		jssopb.RegisterSessionService(s, jssopb.NewSessionService(sessionService))
+		jssopb.RegisterEnrollmentService(s, jssopb.NewEnrollmentService(app.EnrollmentService))
+		jssopb.RegisterUserService(s, jssopb.NewUserService(app.UserService))
+		jssopb.RegisterLoginService(s, jssopb.NewLoginService(app.LoginService))
+		jssopb.RegisterSessionService(s, jssopb.NewSessionService(app.SessionService))
 	})
 
 	server.SetStartupCallback(func(info server.Info) {

@@ -104,9 +104,6 @@ func (p *Permissions) AuthorizeRPC(ctx context.Context, session *types.Session, 
 }
 
 func (p *Permissions) isRoot(md metadata.MD) bool {
-	if p.RootPassword == "" {
-		return false
-	}
 	want := fmt.Sprintf("root %s", p.RootPassword)
 	for _, auth := range md.Get("Authorization") {
 		if auth == want {
