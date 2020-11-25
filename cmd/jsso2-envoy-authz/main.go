@@ -26,7 +26,10 @@ func main() {
 	}
 	c()
 
-	svc := &envoyauthz.Service{SessionClient: cli.SessionClient}
+	svc := &envoyauthz.Service{
+		SessionClient:  cli.SessionClient,
+		UsernameHeader: authzCfg.AddPlaintextUsernameHeader,
+	}
 	server.AddService(func(s *grpc.Server) {
 		envoy_auth.RegisterAuthorizationServer(s, svc)
 	})

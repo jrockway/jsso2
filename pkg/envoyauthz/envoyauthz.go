@@ -24,11 +24,13 @@ const (
 )
 
 type Config struct {
-	Address string `long:"jsso_server_address" env:"JSSO_SERVER_ADDRESS" description:"The URL of JSSO's gRPC server."`
+	Address                    string `long:"jsso_server_address" env:"JSSO_SERVER_ADDRESS" description:"The URL of JSSO's gRPC server."`
+	AddPlaintextUsernameHeader string `long:"plaintext_username_header" env:"PLAINTEXT_USERNAME_HEADER" description:"If set, send the authenticated user's username in a header with this name."`
 }
 
 type Service struct {
-	SessionClient jssopb.SessionClient
+	UsernameHeader string
+	SessionClient  jssopb.SessionClient
 }
 
 func (s *Service) Check(ctx context.Context, req *envoy_auth.CheckRequest) (*envoy_auth.CheckResponse, error) {
@@ -115,6 +117,7 @@ func (s *Service) Check(ctx context.Context, req *envoy_auth.CheckRequest) (*env
 			reply.HttpResponse = &envoy_auth.CheckResponse_OkResponse{
 				OkResponse: allow,
 			}
+			allow.HeadersToRemove = []string{"authorization", "cookie"}
 			for _, h := range allowRes.GetAddHeaders() {
 				allow.Headers = append(allow.Headers, &envoy_config_core_v3.HeaderValueOption{
 					Append: &wrapperspb.BoolValue{
@@ -134,6 +137,17 @@ func (s *Service) Check(ctx context.Context, req *envoy_auth.CheckRequest) (*env
 					Header: &envoy_config_core_v3.HeaderValue{
 						Key:   h.GetKey(),
 						Value: h.GetValue(),
+					},
+				})
+			}
+			if h := s.UsernameHeader; h != "" {
+				allow.Headers = append(allow.Headers, &envoy_config_core_v3.HeaderValueOption{
+					Append: &wrapperspb.BoolValue{
+						Value: false,
+					},
+					Header: &envoy_config_core_v3.HeaderValue{
+						Key:   h,
+						Value: allowRes.GetUsername(),
 					},
 				})
 			}

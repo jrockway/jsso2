@@ -148,6 +148,9 @@ func (p *Permissions) AuthenticateUser(ctx context.Context, ss []*types.Session,
 			errs = append(errs, fmt.Errorf("spurious unparseable session cookie %q: %v", u.Cookie.String(), u.Err))
 		}
 	}
+	if len(ss) == 0 && len(errs) == 0 {
+		return nil, errors.New("no valid session found")
+	}
 	return nil, fmt.Errorf("look for a valid session: %d error(s): %v", len(errs), errs)
 }
 

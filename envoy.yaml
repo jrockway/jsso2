@@ -21,6 +21,8 @@ static_resources:
                                   path: /tmp/jsso2.log
                           route_config:
                               validate_clusters: true
+                              internal_only_headers:
+                                  - x-jsso2-username
                               virtual_hosts:
                                   - name: localhost
                                     domains: ["*"]
