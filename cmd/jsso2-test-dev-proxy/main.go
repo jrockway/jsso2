@@ -12,6 +12,12 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+var httpClient = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
+
 func Get(ctx context.Context, url string, code int) error {
 	fmt.Printf("get %s...", url)
 	t := time.Now()
@@ -20,7 +26,7 @@ func Get(ctx context.Context, url string, code int) error {
 		fmt.Println("FAIL", err)
 		return err
 	}
-	res, err := http.DefaultClient.Do(req)
+	res, err := httpClient.Do(req)
 	if err != nil {
 		fmt.Println("FAIL", err)
 		return err
@@ -44,8 +50,8 @@ func main() {
 		{"http://localhost:4000/envoy/ready", http.StatusOK},
 		{"http://localhost:4000/", http.StatusOK},
 		{"http://localhost:4000/build/bundle.js", http.StatusOK},
-		{"http://localhost:4000/logout", http.StatusOK},
-		{"http://localhost:4000/grpcui", http.StatusOK},
+		{"http://localhost:4000/logout", http.StatusTemporaryRedirect},
+		{"http://localhost:4000/grpcui/", http.StatusOK},
 		{"http://localhost:8081/metrics", http.StatusOK},
 		{"http://localhost:4000/backend-debug/metrics", http.StatusOK},
 		{"http://localhost:8181/metrics", http.StatusOK},
@@ -53,7 +59,7 @@ func main() {
 		{"http://localhost:8280/metrics", http.StatusOK},
 		{"http://localhost:8281/metrics", http.StatusOK},
 		{"http://localhost:8280/", http.StatusOK},
-		{"http://localhost:4000/protected", http.StatusForbidden},
+		{"http://localhost:4000/protected", http.StatusTemporaryRedirect},
 	}
 
 	errors := make(map[string]error)
