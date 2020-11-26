@@ -163,7 +163,18 @@ func (p *Permissions) getSession(ctx context.Context) (*types.Session, error) {
 
 	// Extract sessions from Authorization / Cookie headers.
 	ss, unusedHeader, unusedCookies := p.Cookies.SessionsFromMetadata(md)
-	if len(ss) == 0 && len(unusedHeader) == 0 && len(unusedCookies) == 0 {
+	var invalid int
+	for _, u := range unusedHeader {
+		if u.Err != nil {
+			invalid++
+		}
+	}
+	for _, u := range unusedCookies {
+		if u.Err != nil {
+			invalid++
+		}
+	}
+	if len(ss) == 0 && invalid == 0 {
 		// No sessions found and no attempt to provide one, so authenticate as anonymous.
 		return sessions.Anonymous(), nil
 	}
