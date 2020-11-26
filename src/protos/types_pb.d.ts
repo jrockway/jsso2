@@ -282,3 +282,21 @@ export namespace BearerToken {
   }
 }
 
+export class RedirectToken extends jspb.Message {
+  getUri(): string;
+  setUri(value: string): RedirectToken;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): RedirectToken.AsObject;
+  static toObject(includeInstance: boolean, msg: RedirectToken): RedirectToken.AsObject;
+  static serializeBinaryToWriter(message: RedirectToken, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RedirectToken;
+  static deserializeBinaryFromReader(message: RedirectToken, reader: jspb.BinaryReader): RedirectToken;
+}
+
+export namespace RedirectToken {
+  export type AsObject = {
+    uri: string,
+  }
+}
+

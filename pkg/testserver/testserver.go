@@ -24,8 +24,8 @@ type S struct {
 func New() *S {
 	return &S{
 		AppConfig: &cmd.Config{
-			BaseURL:      "http://jsso.example.com/",
-			SetCookieKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+			BaseURL:  "http://jsso.example.com/",
+			TokenKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 		},
 		AuthConfig: &internalauth.Config{
 			RootPassword: "root",

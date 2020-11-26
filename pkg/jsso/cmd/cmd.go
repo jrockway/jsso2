@@ -13,21 +13,24 @@ import (
 	"github.com/jrockway/jsso2/pkg/jsso/session"
 	"github.com/jrockway/jsso2/pkg/jsso/user"
 	"github.com/jrockway/jsso2/pkg/logout"
+	"github.com/jrockway/jsso2/pkg/redirecttokens"
 	"github.com/jrockway/jsso2/pkg/store"
+	"github.com/jrockway/jsso2/pkg/tokens"
 	"github.com/jrockway/jsso2/pkg/web"
 	"github.com/jrockway/jsso2/pkg/webauthn"
 	"go.uber.org/zap"
 )
 
 type Config struct {
-	BaseURL      string `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
-	SetCookieKey string `long:"set_cookie_key" description:"32 bytes that are used to encrypt and sign set-cookie tokens." env:"SET_COOKIE_KEY"`
+	BaseURL  string `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
+	TokenKey string `long:"token_key" description:"32 bytes that are used to encrypt and sign set-cookie and redirect tokens." env:"TOKEN_KEY"`
 }
 
 type App struct {
 	DB             *store.Connection
 	Linker         *web.Linker
 	Cookies        *cookies.Config
+	Redirects      *redirecttokens.Config
 	WebauthnConfig *webauthn.Config
 	Permissions    *internalauth.Permissions
 
@@ -47,15 +50,23 @@ func Setup(appConfig *Config, authConfig *internalauth.Config, db *store.Connect
 	}
 	app.Linker = linker
 
-	cookieConfig := &cookies.Config{
-		Name:   "jsso-session-id",
-		Domain: linker.Domain(),
-		Linker: linker,
+	tokenBase := &tokens.GeneratorConfig{}
+	if err := tokenBase.SetKey([]byte(appConfig.TokenKey)); err != nil {
+		return nil, fmt.Errorf("set token encryption key: %w", err)
 	}
-	if err := cookieConfig.SetKey([]byte(appConfig.SetCookieKey)); err != nil {
-		return nil, fmt.Errorf("set set-cookie encryption key: %w", err)
+
+	cookieConfig := &cookies.Config{
+		GeneratorConfig: *tokenBase,
+		Name:            "jsso-session-id",
+		Domain:          linker.Domain(),
+		Linker:          linker,
 	}
 	app.Cookies = cookieConfig
+
+	redirectConfig := &redirecttokens.Config{
+		GeneratorConfig: *tokenBase,
+	}
+	app.Redirects = redirectConfig
 
 	app.Permissions = internalauth.NewFromConfig(authConfig, db)
 	app.Permissions.Cookies = cookieConfig
@@ -83,12 +94,15 @@ func Setup(appConfig *Config, authConfig *internalauth.Config, db *store.Connect
 		Permissions: app.Permissions,
 		Webauthn:    webauthnConfig,
 		Cookies:     cookieConfig,
+		Redirects:   redirectConfig,
+		Linker:      linker,
 	}
 	app.SessionService = &session.Service{
 		DB:          db,
 		Permissions: app.Permissions,
 		Cookies:     cookieConfig,
 		Linker:      linker,
+		Redirects:   redirectConfig,
 	}
 
 	logoutHandler := &logout.Handler{

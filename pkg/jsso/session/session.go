@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jssopb"
+	"github.com/jrockway/jsso2/pkg/redirecttokens"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/types"
 	"github.com/jrockway/jsso2/pkg/web"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -21,6 +24,7 @@ type Service struct {
 	Permissions *internalauth.Permissions
 	Linker      *web.Linker
 	Cookies     *cookies.Config
+	Redirects   *redirecttokens.Config
 }
 
 func (s *Service) AuthorizeHTTP(ctx context.Context, req *jssopb.AuthorizeHTTPRequest) (*jssopb.AuthorizeHTTPReply, error) {
@@ -35,12 +39,19 @@ func (s *Service) AuthorizeHTTP(ctx context.Context, req *jssopb.AuthorizeHTTPRe
 			},
 		},
 	}
+	l := ctxzap.Extract(ctx)
 	// Check that the request URL is valid
 	parsedURL, err := url.Parse(req.GetRequestUri())
 	if err != nil {
 		return reply, status.Error(codes.InvalidArgument, fmt.Errorf("parse request uri: %w", err).Error())
 	}
-	reply.GetDeny().GetRedirect().RedirectUrl = s.Linker.LoginPageWithRedirect(parsedURL.String())
+
+	if redirectToken, err := s.Redirects.New(parsedURL.String()); err != nil {
+		l.Warn("could not mint redirect token", zap.String("url", parsedURL.String()), zap.Error(err))
+		reply.GetDeny().GetRedirect().RedirectUrl = s.Linker.LoginPage()
+	} else {
+		reply.GetDeny().GetRedirect().RedirectUrl = s.Linker.LoginPageWithRedirect(redirectToken)
+	}
 
 	// Check is the proxy's user is allowed to perform this check.
 	if err := s.Permissions.AllowAuthorizeHTTP(ctx, sessions.MustFromContext(ctx).GetUser()); err != nil {

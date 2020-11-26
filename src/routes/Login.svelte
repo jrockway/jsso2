@@ -36,11 +36,7 @@
             if (!(assertion instanceof PublicKeyCredential)) {
                 throw "not a public key credential";
             }
-            if (params.redirect == "") {
-                const loc = window.location;
-                params.redirect = loc.protocol + "//" + loc.host + "/";
-            }
-            finishReq.setRedirectTo(params.redirect);
+            finishReq.setRedirectToken(params.redirect);
             finishReq.setCredential(credentialFromJS(assertion));
         } catch (e) {
             finishReq.setError(e.toString());
@@ -52,7 +48,7 @@
         if (redirect != "") {
             window.setTimeout(() => {
                 window.location.href = redirect;
-            }, 1000);
+            }, 100);
         }
         return redirect;
     }

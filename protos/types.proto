@@ -107,3 +107,11 @@ message BearerToken {
     string username = 1;
     string request_id = 2;
 }
+
+// RedirectToken is a request to redirect to a new URI.  It is issued when
+// authentication fails to allow the user to immediately go to their original
+// destination after they log in, without allowing arbitrary sites on the
+// Internet to trick you into visiting them.
+message RedirectToken {
+    string uri = 1;
+}

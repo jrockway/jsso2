@@ -31,6 +31,10 @@ func (l *Linker) RPID() string {
 	return l.Domain()
 }
 
+func (l *Linker) Base() string {
+	return l.BaseURL.String()
+}
+
 func (l *Linker) EnrollmentPage(token string) string {
 	return l.BaseURL.String() + "#/enroll/" + token
 }

@@ -2,7 +2,6 @@
 package cookies
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -21,23 +20,10 @@ const SetCookieTokenLifetime = time.Minute
 
 // Config configures the session cookies (and set-cookie tokens) we produce.
 type Config struct {
+	tokens.GeneratorConfig
 	Name   string      // The name of the cookie (like "jsso-session-id").
 	Domain string      // The domain that the cookie should be valid on.  ("sso.example.com" might choose "example.com" here.)
 	Linker *web.Linker // A Linker for generating links to the set-cookie handler.
-	Key    []byte      // A key with which to sign and encrypt set-cookie tokens.  Must be exactly 32 bytes.
-}
-
-func (c *Config) SetKey(key []byte) error {
-	if n := len(key); n != 32 {
-		return fmt.Errorf("invalid key length; got %d bytes, want 32 bytes", n)
-	}
-	c.Key = key
-	for _, c := range c.Key {
-		if c != 0 {
-			return nil
-		}
-	}
-	return errors.New("key is entirely null bytes; probably a configuration problem")
 }
 
 // NewSetCookieRequest returns a paseto token (a "set-cookie token") that, when provided to the

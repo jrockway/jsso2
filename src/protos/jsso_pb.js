@@ -1416,7 +1416,7 @@ proto.jsso.FinishLoginRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     credential: (f = msg.getCredential()) && webauthn_pb.PublicKeyCredential.toObject(includeInstance, f),
     error: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    redirectTo: jspb.Message.getFieldWithDefault(msg, 3, "")
+    redirectToken: jspb.Message.getFieldWithDefault(msg, 3, "")
   };
 
   if (includeInstance) {
@@ -1464,7 +1464,7 @@ proto.jsso.FinishLoginRequest.deserializeBinaryFromReader = function(msg, reader
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
-      msg.setRedirectTo(value);
+      msg.setRedirectToken(value);
       break;
     default:
       reader.skipField();
@@ -1510,7 +1510,7 @@ proto.jsso.FinishLoginRequest.serializeBinaryToWriter = function(message, writer
       f
     );
   }
-  f = message.getRedirectTo();
+  f = message.getRedirectToken();
   if (f.length > 0) {
     writer.writeString(
       3,
@@ -1576,10 +1576,10 @@ proto.jsso.FinishLoginRequest.prototype.setError = function(value) {
 
 
 /**
- * optional string redirect_to = 3;
+ * optional string redirect_token = 3;
  * @return {string}
  */
-proto.jsso.FinishLoginRequest.prototype.getRedirectTo = function() {
+proto.jsso.FinishLoginRequest.prototype.getRedirectToken = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
@@ -1588,7 +1588,7 @@ proto.jsso.FinishLoginRequest.prototype.getRedirectTo = function() {
  * @param {string} value
  * @return {!proto.jsso.FinishLoginRequest} returns this
  */
-proto.jsso.FinishLoginRequest.prototype.setRedirectTo = function(value) {
+proto.jsso.FinishLoginRequest.prototype.setRedirectToken = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
 };
 

@@ -25,7 +25,7 @@
         "cover:go": "go test ./... -coverprofile=cover.out -covermode=atomic -coverpkg=github.com/jrockway/jsso2/pkg/... && go tool cover -html cover.out -o coverage.html",
         "test:ts": "jest",
         "cover:ts": "jest --collectCoverage",
-        "test": "concurrently --raw -m 1 npm:test:go npm:test:ts",
+        "test": "concurrently --raw -m 1 npm:test:go npm:test:ts npm:lint",
         "cover": "concurrently --raw -m 1 npm:cover:go npm:cover:ts",
         "tern:new": "tern new -m migrations",
         "lint:svelte": "svelte-check",

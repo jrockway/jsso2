@@ -10,9 +10,11 @@ import (
 	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jssopb"
+	"github.com/jrockway/jsso2/pkg/redirecttokens"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/types"
+	"github.com/jrockway/jsso2/pkg/web"
 	"github.com/jrockway/jsso2/pkg/webauthn"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -24,6 +26,8 @@ type Service struct {
 	Permissions *internalauth.Permissions
 	Webauthn    *webauthn.Config
 	Cookies     *cookies.Config
+	Redirects   *redirecttokens.Config
+	Linker      *web.Linker
 }
 
 func (s *Service) Start(ctx context.Context, req *jssopb.StartLoginRequest) (*jssopb.StartLoginReply, error) {
@@ -79,7 +83,7 @@ func (s *Service) Start(ctx context.Context, req *jssopb.StartLoginRequest) (*js
 	reply, err := s.Webauthn.BeginLogin(session, creds)
 	if err != nil {
 		if errors.Is(err, webauthn.ErrNoCredentials) {
-			return emptyReply, status.Error(codes.FailedPrecondition, fmt.Sprintf("begin login: %s", err.Error()))
+			return emptyReply, status.Error(codes.InvalidArgument, fmt.Sprintf("begin login: %s", err.Error()))
 		}
 		return emptyReply, fmt.Errorf("begin login: %w", err)
 	}
@@ -134,15 +138,28 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishLoginRequest) (*
 	if err := untaintSession(ctx, l, s.DB, id); err != nil {
 		return reply, err
 	}
-	redirectTo := req.GetRedirectTo()
-	if err := s.Permissions.AllowRedirect(redirectTo); err != nil {
-		l.Warn("not allowed to redirect user", zap.String("redirect_to", redirectTo))
-		redirectTo = ""
+
+	var redirectTo string
+	if token := req.GetRedirectToken(); token != "" {
+		if dest, err := s.Redirects.Unmarshal(token); err != nil {
+			l.Warn("invalid redirect token", zap.String("token", token), zap.Error(err))
+			redirectTo = ""
+		} else if err := s.Permissions.AllowRedirect(redirectTo); err != nil {
+			l.Warn("not allowed to redirect user", zap.String("redirect_to", redirectTo))
+			redirectTo = ""
+		} else {
+			redirectTo = dest
+		}
 	}
+	if redirectTo == "" {
+		redirectTo = s.Linker.Base()
+	}
+
 	token, err := s.Cookies.NewSetCookieRequest(session, redirectTo)
 	if err != nil {
 		return reply, fmt.Errorf("get set-cookie token: %w", err)
 	}
+
 	reply.RedirectUrl = s.Cookies.LinkToSetCookie(token)
 	return reply, nil
 }

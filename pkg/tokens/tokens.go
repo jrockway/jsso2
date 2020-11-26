@@ -21,6 +21,23 @@ var (
 	ErrTooOld     = errors.New("secure message is too old")
 )
 
+type GeneratorConfig struct {
+	Key []byte // A key with which to sign and encrypt tokens.  Must be exactly 32 bytes.
+}
+
+func (c *GeneratorConfig) SetKey(key []byte) error {
+	if n := len(key); n != 32 {
+		return fmt.Errorf("invalid key length; got %d bytes, want 32 bytes", n)
+	}
+	c.Key = key
+	for _, c := range c.Key {
+		if c != 0 {
+			return nil
+		}
+	}
+	return errors.New("key is entirely null bytes; probably a configuration problem")
+}
+
 // New generates a token from the provided protocol message, encrypting and signing it with the
 // provided 32-byte symmetric key.
 func New(msg proto.Message, key []byte) (string, error) {

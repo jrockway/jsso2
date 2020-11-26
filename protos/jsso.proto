@@ -78,7 +78,7 @@ message StartLoginReply {
 message FinishLoginRequest {
     webauthn.PublicKeyCredential credential = 1;
     string error = 2;
-    string redirect_to = 3;
+    string redirect_token = 3;
 }
 message FinishLoginReply {
     string redirect_url = 1;

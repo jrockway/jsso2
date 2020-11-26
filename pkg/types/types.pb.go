@@ -632,6 +632,57 @@ func (x *BearerToken) GetRequestId() string {
 	return ""
 }
 
+// RedirectToken is a request to redirect to a new URI.  It is issued when
+// authentication fails to allow the user to immediately go to their original
+// destination after they log in, without allowing arbitrary sites on the
+// Internet to trick you into visiting them.
+type RedirectToken struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Uri string `protobuf:"bytes,1,opt,name=uri,proto3" json:"uri,omitempty"`
+}
+
+func (x *RedirectToken) Reset() {
+	*x = RedirectToken{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_types_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RedirectToken) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RedirectToken) ProtoMessage() {}
+
+func (x *RedirectToken) ProtoReflect() protoreflect.Message {
+	mi := &file_types_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RedirectToken.ProtoReflect.Descriptor instead.
+func (*RedirectToken) Descriptor() ([]byte, []int) {
+	return file_types_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *RedirectToken) GetUri() string {
+	if x != nil {
+		return x.Uri
+	}
+	return ""
+}
+
 var File_types_proto protoreflect.FileDescriptor
 
 var file_types_proto_rawDesc = []byte{
@@ -723,10 +774,12 @@ var file_types_proto_rawDesc = []byte{
 	0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
 	0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x72, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x42, 0x25, 0x5a, 0x23, 0x67, 0x69, 0x74, 0x68, 0x75,
-	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x72, 0x6f, 0x63, 0x6b, 0x77, 0x61, 0x79, 0x2f, 0x6a,
-	0x73, 0x73, 0x6f, 0x32, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x22, 0x21, 0x0a, 0x0d, 0x52, 0x65, 0x64, 0x69, 0x72,
+	0x65, 0x63, 0x74, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x72, 0x69, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x69, 0x42, 0x25, 0x5a, 0x23, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6a, 0x72, 0x6f, 0x63, 0x6b, 0x77, 0x61,
+	0x79, 0x2f, 0x6a, 0x73, 0x73, 0x6f, 0x32, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x74, 0x79, 0x70, 0x65,
+	0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -741,7 +794,7 @@ func file_types_proto_rawDescGZIP() []byte {
 	return file_types_proto_rawDescData
 }
 
-var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_types_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_types_proto_goTypes = []interface{}{
 	(*User)(nil),                // 0: types.User
 	(*SessionMetadata)(nil),     // 1: types.SessionMetadata
@@ -751,22 +804,23 @@ var file_types_proto_goTypes = []interface{}{
 	(*SetCookieRequest)(nil),    // 5: types.SetCookieRequest
 	(*Header)(nil),              // 6: types.Header
 	(*BearerToken)(nil),         // 7: types.BearerToken
-	(*timestamp.Timestamp)(nil), // 8: google.protobuf.Timestamp
-	(*any.Any)(nil),             // 9: google.protobuf.Any
+	(*RedirectToken)(nil),       // 8: types.RedirectToken
+	(*timestamp.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(*any.Any)(nil),             // 10: google.protobuf.Any
 }
 var file_types_proto_depIdxs = []int32{
-	8,  // 0: types.User.created_at:type_name -> google.protobuf.Timestamp
-	8,  // 1: types.User.disabled_at:type_name -> google.protobuf.Timestamp
+	9,  // 0: types.User.created_at:type_name -> google.protobuf.Timestamp
+	9,  // 1: types.User.disabled_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: types.Session.user:type_name -> types.User
 	1,  // 3: types.Session.metadata:type_name -> types.SessionMetadata
-	8,  // 4: types.Session.created_at:type_name -> google.protobuf.Timestamp
-	8,  // 5: types.Session.expires_at:type_name -> google.protobuf.Timestamp
+	9,  // 4: types.Session.created_at:type_name -> google.protobuf.Timestamp
+	9,  // 5: types.Session.expires_at:type_name -> google.protobuf.Timestamp
 	0,  // 6: types.Credential.user:type_name -> types.User
-	8,  // 7: types.Credential.created_at:type_name -> google.protobuf.Timestamp
-	8,  // 8: types.Credential.deleted_at:type_name -> google.protobuf.Timestamp
-	9,  // 9: types.SecureToken.message:type_name -> google.protobuf.Any
-	8,  // 10: types.SecureToken.issued_at:type_name -> google.protobuf.Timestamp
-	8,  // 11: types.SetCookieRequest.session_expires_at:type_name -> google.protobuf.Timestamp
+	9,  // 7: types.Credential.created_at:type_name -> google.protobuf.Timestamp
+	9,  // 8: types.Credential.deleted_at:type_name -> google.protobuf.Timestamp
+	10, // 9: types.SecureToken.message:type_name -> google.protobuf.Any
+	9,  // 10: types.SecureToken.issued_at:type_name -> google.protobuf.Timestamp
+	9,  // 11: types.SetCookieRequest.session_expires_at:type_name -> google.protobuf.Timestamp
 	12, // [12:12] is the sub-list for method output_type
 	12, // [12:12] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
@@ -876,6 +930,18 @@ func file_types_proto_init() {
 				return nil
 			}
 		}
+		file_types_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RedirectToken); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -883,7 +949,7 @@ func file_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_types_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
