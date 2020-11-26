@@ -1,17 +1,29 @@
 package zapwriter
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"go.uber.org/zap/zaptest"
 )
 
+type buffer struct {
+	c chan []byte
+}
+
+func (w *buffer) Write(b []byte) (int, error) {
+	w.c <- b
+	return len(b), nil
+}
+
+func (w *buffer) Sync() error {
+	return nil
+}
+
 func TestWriter(t *testing.T) {
-	buf := new(zaptest.Buffer)
+	buf := &buffer{c: make(chan []byte)}
 	c := zapcore.NewCore(
 		zapcore.NewJSONEncoder(zapcore.EncoderConfig{
 			MessageKey: "msg",
@@ -34,15 +46,16 @@ func TestWriter(t *testing.T) {
 	if err := w.Close(); err != nil {
 		t.Fatalf("close: %v", err)
 	}
-	var got []string
-	for i := 0; i < 100; i++ {
-		got = buf.Lines()
-		if len(got) > 0 {
-			break
-		}
-		time.Sleep(time.Millisecond)
+
+	var got []byte
+	select {
+	case <-time.After(time.Second):
+		t.Fatal("timeout waiting for write")
+	case got = <-buf.c:
 	}
-	if diff := cmp.Diff(got, []string{`{"msg":"foobar"}`}); diff != "" {
-		t.Errorf("output:\n%s", diff)
+
+	if want := []byte(`{"msg":"foobar"}` + "\n"); !bytes.Equal(got, want) {
+		t.Errorf("line:\n  got: %q\n want: %q", got, want)
 	}
+
 }
