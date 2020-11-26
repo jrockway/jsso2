@@ -57,5 +57,4 @@ func TestWriter(t *testing.T) {
 	if want := []byte(`{"msg":"foobar"}` + "\n"); !bytes.Equal(got, want) {
 		t.Errorf("line:\n  got: %q\n want: %q", got, want)
 	}
-
 }

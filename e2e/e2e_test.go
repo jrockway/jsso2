@@ -28,6 +28,7 @@ func checkServer(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("do: %w", err)
 	}
+	res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("non-200 response: %s", res.Status)
 	}
@@ -121,7 +122,7 @@ func TestLiveServer(t *testing.T) {
 			}
 		}
 
-		sigCh := make(chan os.Signal)
+		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 		select {
 		case <-sigCh:
