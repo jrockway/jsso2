@@ -33,7 +33,12 @@
         "lint": "concurrently --raw -m 1 npm:lint:svelte npm:lint:go",
         "jssoctl": "env-path -p env.jsso2-backend.dev go run ./cmd/jssoctl",
         "regenerate-database": "env-path -p env.jsso2-backend.dev go run ./cmd/jsso-regenerate-db 2>&1 | jlog -C -l",
-        "regenerate-database:raw": "env-path -p env.jsso2-backend.dev go run ./cmd/jsso-regenerate-db"
+        "regenerate-database:raw": "env-path -p env.jsso2-backend.dev go run ./cmd/jsso-regenerate-db",
+        "cypress:open": "cypress open",
+        "cypress:run": "DISPLAY=:1 cypress run -b chromium",
+        "test:e2e-go": "TEST_E2E=1 go test ./e2e -count 1 -v",
+        "xvfb": "Xvfb :1",
+        "test:e2e": "concurrently -s first -k npm:xvfb npm:test:e2e-go"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^16.0.0",
@@ -42,7 +47,10 @@
         "@tsconfig/svelte": "^1.0.10",
         "@types/google-protobuf": "^3.7.4",
         "@types/jest": "^26.0.15",
+        "chrome-remote-interface": "^0.28.2",
         "concurrently": "^5.3.0",
+        "cypress": "^6.0.0",
+        "cypress-log-to-output": "^1.1.2",
         "env-path": "^1.0.7",
         "jest": "^26.6.3",
         "prettier": "^2.2.0",

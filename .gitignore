@@ -24,3 +24,7 @@ public/build/
 
 # Jest
 coverage/
+
+# Cypress
+cypress/videos
+cypress/screenshots
