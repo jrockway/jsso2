@@ -58,7 +58,7 @@
             have, but it ignores them until you do the auth dance.
         </p>
         {#if !clicked}
-            <button on:click={() => (clicked = true)}>Enroll</button>
+            <button id="enroll" on:click={() => (clicked = true)}>Enroll</button>
         {:else}
             <AddCredential token={params.token} opts={reply.opts} />
         {/if}

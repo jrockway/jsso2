@@ -66,7 +66,9 @@
     {#if showLogin}
         <p>
             Enter your username:
-            <input type="text" bind:value={username} on:keydown={handleKeypress} /><button
+            <input id="username" type="text" bind:value={username} on:keydown={handleKeypress} />
+            <button
+                id="login"
                 on:click={() => {
                     showLogin = false;
                 }}>Login</button>

@@ -6,7 +6,7 @@
 </style>
 
 {#if error.message !== undefined && error.code !== undefined}
-    <p>{error.message} ({error.code})</p>
+    <p class="error">{error.message} ({error.code})</p>
 {:else}
-    <p>{error}</p>
+    <p class="error">{error}</p>
 {/if}
