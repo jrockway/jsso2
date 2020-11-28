@@ -41,6 +41,8 @@ jobs:
                 bump: patch
           - task: build-frontend
             privileged: true
+            output_mapping:
+                image: image-frontend
             config:
                 platform: linux
                 image_resource:
@@ -49,14 +51,16 @@ jobs:
                         repository: vito/oci-build-task
                 params:
                     CONTEXT: source
-                    DOCKERFILE: Dockerfile-frontend
+                    DOCKERFILE: source/Dockerfile-frontend
                 inputs:
                     - name: source
                 outputs:
-                    - name: image-frontend
+                    - name: image
                 run:
                     path: build
           - task: build-backend
+            output_mapping:
+                image: image-backend
             privileged: true
             config:
                 platform: linux
@@ -66,11 +70,11 @@ jobs:
                         repository: vito/oci-build-task
                 params:
                     CONTEXT: source
-                    DOCKERFILE: Dockerfile-backend
+                    DOCKERFILE: source/Dockerfile-backend
                 inputs:
                     - name: source
                 outputs:
-                    - name: image-backend
+                    - name: image
                 run:
                     path: build
           - put: jsso2-frontend-container
