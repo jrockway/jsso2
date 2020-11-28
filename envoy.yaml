@@ -197,7 +197,7 @@ static_resources:
           lb_policy: random
           connect_timeout: 1s
           load_assignment:
-              cluster_name: localhost:backend:debug
+              cluster_name: localhost:backend:public
               endpoints:
                   - lb_endpoints:
                         - endpoint:
