@@ -2058,7 +2058,8 @@ proto.jsso.FinishEnrollmentRequest.prototype.toObject = function(opt_includeInst
  */
 proto.jsso.FinishEnrollmentRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    credential: (f = msg.getCredential()) && webauthn_pb.PublicKeyCredential.toObject(includeInstance, f)
+    credential: (f = msg.getCredential()) && webauthn_pb.PublicKeyCredential.toObject(includeInstance, f),
+    name: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -2100,6 +2101,10 @@ proto.jsso.FinishEnrollmentRequest.deserializeBinaryFromReader = function(msg, r
       reader.readMessage(value,webauthn_pb.PublicKeyCredential.deserializeBinaryFromReader);
       msg.setCredential(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setName(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -2135,6 +2140,13 @@ proto.jsso.FinishEnrollmentRequest.serializeBinaryToWriter = function(message, w
       1,
       f,
       webauthn_pb.PublicKeyCredential.serializeBinaryToWriter
+    );
+  }
+  f = message.getName();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
     );
   }
 };
@@ -2174,6 +2186,24 @@ proto.jsso.FinishEnrollmentRequest.prototype.clearCredential = function() {
  */
 proto.jsso.FinishEnrollmentRequest.prototype.hasCredential = function() {
   return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional string name = 2;
+ * @return {string}
+ */
+proto.jsso.FinishEnrollmentRequest.prototype.getName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.jsso.FinishEnrollmentRequest} returns this
+ */
+proto.jsso.FinishEnrollmentRequest.prototype.setName = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 

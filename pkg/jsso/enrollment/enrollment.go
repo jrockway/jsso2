@@ -3,6 +3,7 @@ package enrollment
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jmoiron/sqlx"
@@ -65,7 +66,7 @@ func (s *Service) Finish(ctx context.Context, req *jssopb.FinishEnrollmentReques
 		return reply, fmt.Errorf("validate credential: %w", err)
 	}
 	credential.Id = 0
-	credential.Name = "unnamed"
+	credential.Name = strings.TrimSpace(req.GetName())
 	credential.User = session.GetUser()
 	credential.CreatedAt = timestamppb.Now()
 	credential.CreatedBySessionId = session.GetId()

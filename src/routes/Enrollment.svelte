@@ -12,6 +12,7 @@
         token: "",
     };
     let clicked = false;
+    let name = "";
 
     const metadata: Metadata = {};
     if (params.token != "") {
@@ -57,9 +58,11 @@
             have, but it ignores them until you do the auth dance.
         </p>
         {#if !clicked}
+            Name your credential:
+            <input id="name" type="text" bind:value={name} />
             <button id="enroll" on:click={() => (clicked = true)}>Enroll</button>
         {:else}
-            <AddCredential token={params.token} opts={reply.opts} />
+            <AddCredential token={params.token} opts={reply.opts} {name} />
         {/if}
     {:catch error}
         <p>There was a problem validating your token.</p>

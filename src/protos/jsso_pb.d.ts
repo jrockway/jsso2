@@ -220,6 +220,9 @@ export class FinishEnrollmentRequest extends jspb.Message {
   hasCredential(): boolean;
   clearCredential(): FinishEnrollmentRequest;
 
+  getName(): string;
+  setName(value: string): FinishEnrollmentRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): FinishEnrollmentRequest.AsObject;
   static toObject(includeInstance: boolean, msg: FinishEnrollmentRequest): FinishEnrollmentRequest.AsObject;
@@ -231,6 +234,7 @@ export class FinishEnrollmentRequest extends jspb.Message {
 export namespace FinishEnrollmentRequest {
   export type AsObject = {
     credential?: webauthn_pb.PublicKeyCredential.AsObject,
+    name: string,
   }
 }
 

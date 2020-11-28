@@ -94,6 +94,7 @@ message StartEnrollmentReply {
 
 message FinishEnrollmentRequest {
     webauthn.PublicKeyCredential credential = 1;
+    string name = 2;
 }
 
 message FinishEnrollmentReply {

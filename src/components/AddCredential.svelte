@@ -7,6 +7,7 @@
 
     export let opts: PublicKeyCredentialCreationOptions;
     export let token: string;
+    export let name: string;
 
     const enrollmentClient = new EnrollmentClient("", null, null);
     async function create() {
@@ -14,7 +15,9 @@
         if (!(credential instanceof PublicKeyCredential)) {
             throw "not a public key credential";
         }
-        const req = new FinishEnrollmentRequest().setCredential(credentialFromJS(credential));
+        const req = new FinishEnrollmentRequest()
+            .setCredential(credentialFromJS(credential))
+            .setName(name);
         const metadata: Metadata = {};
         if (token != "") {
             metadata.authorization = "SessionID " + token;

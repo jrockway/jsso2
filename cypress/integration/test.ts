@@ -11,10 +11,14 @@ describe("Enrolls, logs in, visits a protected web page", () => {
                 cy.visit(enrollmentLink);
                 cy.get(".error").should("not.exist");
                 cy.contains("Welcome, the-tests");
-                cy.get("#enroll")
-                    .click()
+                cy.get("#name")
+                    .type("test key")
                     .then(() => {
-                        cy.contains("Successfully added").should("exist");
+                        cy.get("#enroll")
+                            .click()
+                            .then(() => {
+                                cy.contains("Successfully added").should("exist");
+                            });
                     });
             });
         });
