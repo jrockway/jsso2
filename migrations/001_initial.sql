@@ -1,5 +1,5 @@
 -- Write your migrate up statements here
-create extension citext;
+create extension if not exists citext;
 
 create table "user" (
     id bigserial primary key not null,
