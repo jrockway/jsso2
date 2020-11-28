@@ -1,0 +1,30 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool.
+*.out
+coverage.html
+cover.html
+
+# Node
+node_modules/
+
+# Svelte
+public/build/
+
+# Typescript
+.log/
+
+# Jest
+coverage/
+
+# Cypress
+cypress/videos
+cypress/screenshots

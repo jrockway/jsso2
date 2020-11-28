@@ -1,0 +1,14 @@
+FROM golang:1.15 AS build
+WORKDIR /jsso2
+
+COPY go.mod go.sum /jsso2/
+RUN go mod download
+
+COPY . /jsso2/
+ARG version="unversioned-docker-build"
+RUN CGO_ENABLED=0 go install -ldflags "-X github.com/jrockway/opinionated-server/server.AppVersion=${version}" ./cmd/jsso2
+
+FROM gcr.io/distroless/static-debian10
+WORKDIR /
+COPY --from=build /go/bin/jsso2 /go/bin/jsso2
+ENTRYPOINT ["/go/bin/jsso2"]
