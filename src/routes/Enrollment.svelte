@@ -18,20 +18,19 @@
         metadata.authorization = "SessionID " + params.token;
     }
 
-    let getUser = enrollmentClient
-        .start(new StartEnrollmentRequest(), metadata)
-        .then((response) => {
-            if (response == null || !response.hasUser()) {
-                throw "server error: no user in response";
-            }
-            if (response == null || !response.hasCredentialCreationOptions()) {
-                throw "server error: no credential creation options in response";
-            }
-            return {
-                username: response.getUser().getUsername(),
-                opts: creationOptionsFromProto(response.getCredentialCreationOptions()),
-            };
-        });
+    async function getUser() {
+        const reply = await enrollmentClient.start(new StartEnrollmentRequest(), metadata);
+        if (reply == null || !reply.hasUser()) {
+            throw "server error: no user in response";
+        }
+        if (reply == null || !reply.hasCredentialCreationOptions()) {
+            throw "server error: no credential creation options in response";
+        }
+        return {
+            username: reply.getUser().getUsername(),
+            opts: creationOptionsFromProto(reply.getCredentialCreationOptions()),
+        };
+    }
 </script>
 
 <style>
@@ -39,10 +38,10 @@
 
 <main>
     <h1>Enroll</h1>
-    {#await getUser}
+    {#await getUser()}
         <p>Validating your token.</p>
     {:then reply}
-        <p>Welcome, {reply.username}!</p>
+        <p>Welcome, <b>{reply.username}</b>!</p>
         <p>
             When you click the button below, your OS or browser will ask you to enroll a WebAuthn
             credential. We can't pick which one will be selected, but if you don't see the one you
@@ -63,7 +62,7 @@
             <AddCredential token={params.token} opts={reply.opts} />
         {/if}
     {:catch error}
-        <p>There was a problem validating your token:</p>
+        <p>There was a problem validating your token.</p>
         <GrpcError {error} />
     {/await}
 </main>
