@@ -1,0 +1,86 @@
+resources:
+    - name: source
+      type: git
+      icon: github-circle
+      source:
+          uri: https://github.com/jrockway/jsso2
+    - name: jsso2-version
+      type: semver
+      icon: counter
+      source:
+          driver: s3
+          bucket: ((versions.bucket))
+          access_key_id: ((versions.access_key_id))
+          secret_access_key: ((versions.secret_access_key))
+          region_name: ((versions.region_name))
+          endpoint: ((versions.endpoint))
+          key: jsso2-version
+          initial_version: 0.0.0
+    - name: jsso2-frontend-container
+      type: registry-image
+      icon: docker
+      source:
+          repository: registry.jrock.us/jsso2-frontend
+          username: ((registry.username))
+          password: ((registry.password))
+    - name: jsso2-backend-container
+      type: registry-image
+      icon: docker
+      source:
+          repository: registry.jrock.us/jsso2-backend
+          username: ((registry.username))
+          password: ((registry.password))
+jobs:
+    - name: container
+      public: true
+      plan:
+          - get: source
+            trigger: true
+          - get: jsso2-version
+            params:
+                bump: patch
+          - task: build-frontend
+            privileged: true
+            config:
+                platform: linux
+                image_resource:
+                    type: registry-image
+                    source:
+                        repository: vito/oci-build-task
+                params:
+                    CONTEXT: source
+                    DOCKERFILE: Dockerfile-frontend
+                inputs:
+                    - name: source
+                outputs:
+                    - name: image-frontend
+                run:
+                    path: build
+          - task: build-backend
+            privileged: true
+            config:
+                platform: linux
+                image_resource:
+                    type: registry-image
+                    source:
+                        repository: vito/oci-build-task
+                params:
+                    CONTEXT: source
+                    DOCKERFILE: Dockerfile-backend
+                inputs:
+                    - name: source
+                outputs:
+                    - name: image-backend
+                run:
+                    path: build
+          - put: jsso2-frontend-container
+            params:
+                image: image-frontend/image.tar
+                additional_tags: jsso2-version/version
+          - put: jsso2-backend-container
+            params:
+                image: image-backend/image.tar
+                additional_tags: jsso2-version/version
+          - put: jsso2-version
+            params:
+                file: jsso2-version/version
