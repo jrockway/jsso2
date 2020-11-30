@@ -5,6 +5,6 @@ export default function () {
         redirects: 0,
     });
     check(res, {
-        "response code was 307": (res) => res.status == 307,
+        "response code was 303": (res) => res.status == 303,
     });
 }

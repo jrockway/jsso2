@@ -3,7 +3,6 @@ package logout
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jmoiron/sqlx"
@@ -35,12 +34,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     h.Cookies.Name,
-		Value:    "",
-		Expires:  time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC).In(time.UTC),
-		SameSite: http.SameSiteLaxMode,
-		HttpOnly: true,
-	})
-	http.Redirect(w, req, h.Linker.LoginPage(), http.StatusTemporaryRedirect)
+	http.SetCookie(w, h.Cookies.EmptyCookie())
+	http.Redirect(w, req, h.Linker.LoginPage(), http.StatusSeeOther)
 }

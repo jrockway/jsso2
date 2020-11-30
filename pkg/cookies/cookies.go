@@ -61,7 +61,18 @@ func (c *Config) HandleSetCookie(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte("ok"))
 		return
 	}
-	http.Redirect(w, req, redirect, http.StatusTemporaryRedirect)
+	http.Redirect(w, req, redirect, http.StatusSeeOther)
+}
+
+func (c *Config) EmptyCookie() *http.Cookie {
+	return &http.Cookie{
+		Domain:   c.Domain,
+		Expires:  time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC).In(time.UTC),
+		HttpOnly: true,
+		Name:     c.Name,
+		SameSite: http.SameSiteLaxMode,
+		Value:    "",
+	}
 }
 
 func (c *Config) cookieFromToken(token string) (*http.Cookie, string, error) {
@@ -69,14 +80,9 @@ func (c *Config) cookieFromToken(token string) (*http.Cookie, string, error) {
 	if err := tokens.VerifyAndUnmarshal(req, token, SetCookieTokenLifetime, c.Key); err != nil {
 		return nil, "", fmt.Errorf("verify and unmarshal set-cookie token: %w", err)
 	}
-	cookie := &http.Cookie{
-		Domain:   c.Domain,
-		Expires:  req.GetSessionExpiresAt().AsTime(),
-		HttpOnly: true,
-		Name:     c.Name,
-		SameSite: http.SameSiteLaxMode,
-		Value:    sessions.ToBase64(&types.Session{Id: req.GetSessionId()}),
-	}
+	cookie := c.EmptyCookie()
+	cookie.Expires = req.GetSessionExpiresAt().AsTime()
+	cookie.Value = sessions.ToBase64(&types.Session{Id: req.GetSessionId()})
 	return cookie, req.GetRedirectUrl(), nil
 }
 
