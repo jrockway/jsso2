@@ -3,6 +3,7 @@ package web
 import (
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 type Linker struct {
@@ -14,6 +15,7 @@ func NewLinker(base string) (*Linker, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parse base url: %w", err)
 	}
+	baseURL.Path = strings.TrimSuffix(baseURL.Path, "/")
 	return &Linker{
 		BaseURL: baseURL,
 	}, nil
@@ -36,15 +38,15 @@ func (l *Linker) Base() string {
 }
 
 func (l *Linker) EnrollmentPage(token string) string {
-	return l.BaseURL.String() + "#/enroll/" + token
+	return l.BaseURL.String() + "/#/enroll/" + token
 }
 
 func (l *Linker) LoginPage() string {
-	return l.BaseURL.String() + "#/login"
+	return l.BaseURL.String() + "/#/login"
 }
 
 func (l *Linker) LoginPageWithRedirect(destination string) string {
-	return l.BaseURL.String() + "#/login/" + url.PathEscape(destination)
+	return l.BaseURL.String() + "/#/login/" + url.PathEscape(destination)
 }
 
 func (l *Linker) SetCookie(cookie string) string {
