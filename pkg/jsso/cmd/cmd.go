@@ -22,8 +22,9 @@ import (
 )
 
 type Config struct {
-	BaseURL  string `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
-	TokenKey string `long:"token_key" description:"32 bytes that are used to encrypt and sign set-cookie and redirect tokens." env:"TOKEN_KEY"`
+	BaseURL      string `long:"base_url" description:"Where the app's public resources are available; used for generating links and cookies." env:"BASE_URL" default:"http://localhost:4000"`
+	TokenKey     string `long:"token_key" description:"32 bytes that are used to encrypt and sign set-cookie and redirect tokens." env:"TOKEN_KEY"`
+	CookieDomain string `long:"cookie_domain" description:"Domain to set cookies for" env:"COOKIE_DOMAIN"`
 }
 
 type App struct {
@@ -55,10 +56,15 @@ func Setup(appConfig *Config, authConfig *internalauth.Config, db *store.Connect
 		return nil, fmt.Errorf("set token encryption key: %w", err)
 	}
 
+	cookieDomain := linker.Domain()
+	if d := appConfig.CookieDomain; d != "" {
+		cookieDomain = appConfig.CookieDomain
+	}
+
 	cookieConfig := &cookies.Config{
 		GeneratorConfig: *tokenBase,
 		Name:            "jsso-session-id",
-		Domain:          linker.Domain(),
+		Domain:          cookieDomain,
 		Linker:          linker,
 	}
 	app.Cookies = cookieConfig

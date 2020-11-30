@@ -4,10 +4,12 @@
     import { credentialFromJS, requestOptionsFromProto } from "../lib/webauthn";
     import GrpcError from "../components/GrpcError.svelte";
 
+    const USERNAME_KEY = "jsso-last-username";
+
     export let params = {
         redirect: "",
     };
-    let username = "";
+    let username = window.localStorage.getItem(USERNAME_KEY);
     let showLogin = true;
 
     const loginClient = new LoginClient("", null, null);
@@ -44,6 +46,7 @@
         const finishReply = await loginClient.finish(finishReq, {
             Authorization: "SessionID " + startReply.getToken(),
         });
+        window.localStorage.setItem(USERNAME_KEY, username);
         const redirect = finishReply.getRedirectUrl();
         if (redirect != "") {
             window.setTimeout(() => {
