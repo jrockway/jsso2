@@ -7,7 +7,6 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jmoiron/sqlx"
-	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jssopb"
 	"github.com/jrockway/jsso2/pkg/redirecttokens"
@@ -25,7 +24,7 @@ type Service struct {
 	DB          *store.Connection
 	Permissions *internalauth.Permissions
 	Webauthn    *webauthn.Config
-	Cookies     *cookies.Config
+	Cookies     *sessions.CookieConfig
 	Redirects   *redirecttokens.Config
 	Linker      *web.Linker
 }

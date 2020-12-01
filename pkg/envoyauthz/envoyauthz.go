@@ -10,8 +10,8 @@ import (
 	envoy_config_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	envoy_type_v3 "github.com/envoyproxy/go-control-plane/envoy/type/v3"
-	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/jssopb"
+	"github.com/jrockway/jsso2/pkg/sessions"
 	protostatus "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -66,7 +66,7 @@ func (s *Service) Check(ctx context.Context, req *envoy_auth.CheckRequest) (*env
 	var authorizationHeaders []string
 	authorizationHeaders = append(authorizationHeaders, strings.Split(headers["authorization"], ",")...)
 	var requestCookies []string
-	for _, c := range cookies.Cookies(headers["cookie"]) {
+	for _, c := range sessions.Cookies(headers["cookie"]) {
 		// I doubt this does well with cookies that contain ",".
 		requestCookies = append(requestCookies, c.String())
 	}

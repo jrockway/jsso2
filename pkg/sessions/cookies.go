@@ -1,12 +1,10 @@
-// Package cookies provides utilities for working with session cookies.
-package cookies
+package sessions
 
 import (
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/tokens"
 	"github.com/jrockway/jsso2/pkg/types"
 	"github.com/jrockway/jsso2/pkg/web"
@@ -18,8 +16,8 @@ import (
 // skew issues.
 const SetCookieTokenLifetime = time.Minute
 
-// Config configures the session cookies (and set-cookie tokens) we produce.
-type Config struct {
+// CookieConfig configures the session cookies (and set-cookie tokens) we produce.
+type CookieConfig struct {
 	tokens.GeneratorConfig
 	Name   string      // The name of the cookie (like "jsso-session-id").
 	Domain string      // The domain that the cookie should be valid on.  ("sso.example.com" might choose "example.com" here.)
@@ -32,7 +30,7 @@ type Config struct {
 // that random people on the Internet can't induce the handler to set an arbitrary cookie.  We do
 // not care about replay attacks -- while one of these tokens can't be revoked, the underlying
 // session can be, so a compromised token is not particularly harmful.
-func (c *Config) NewSetCookieRequest(s *types.Session, redirectURL string) (string, error) {
+func (c *CookieConfig) NewSetCookieRequest(s *types.Session, redirectURL string) (string, error) {
 	req := &types.SetCookieRequest{
 		SessionId:        s.GetId(),
 		SessionExpiresAt: s.GetExpiresAt(),
@@ -48,7 +46,7 @@ func (c *Config) NewSetCookieRequest(s *types.Session, redirectURL string) (stri
 // HandleSetCookie responds to an HTTP GET request with a set-cookie token from NewSetCookieRequest
 // in the "set" query parameter with a Set-Cookie header and a redirect to the redirect_url inside
 // the token.  If the redirect_url is empty, we just respond with "ok".
-func (c *Config) HandleSetCookie(w http.ResponseWriter, req *http.Request) {
+func (c *CookieConfig) HandleSetCookie(w http.ResponseWriter, req *http.Request) {
 	cookie, redirect, err := c.cookieFromToken(req.URL.Query().Get("set"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -64,7 +62,7 @@ func (c *Config) HandleSetCookie(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, redirect, http.StatusSeeOther)
 }
 
-func (c *Config) EmptyCookie() *http.Cookie {
+func (c *CookieConfig) EmptyCookie() *http.Cookie {
 	return &http.Cookie{
 		Domain:   c.Domain,
 		Expires:  time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC).In(time.UTC),
@@ -75,14 +73,14 @@ func (c *Config) EmptyCookie() *http.Cookie {
 	}
 }
 
-func (c *Config) cookieFromToken(token string) (*http.Cookie, string, error) {
+func (c *CookieConfig) cookieFromToken(token string) (*http.Cookie, string, error) {
 	req := &types.SetCookieRequest{}
 	if err := tokens.VerifyAndUnmarshal(req, token, SetCookieTokenLifetime, c.Key); err != nil {
 		return nil, "", fmt.Errorf("verify and unmarshal set-cookie token: %w", err)
 	}
 	cookie := c.EmptyCookie()
 	cookie.Expires = req.GetSessionExpiresAt().AsTime()
-	cookie.Value = sessions.ToBase64(&types.Session{Id: req.GetSessionId()})
+	cookie.Value = ToBase64(&types.Session{Id: req.GetSessionId()})
 	return cookie, req.GetRedirectUrl(), nil
 }
 
@@ -108,13 +106,13 @@ type UnusedCookie struct {
 // SessionFromMetadata extracts authorization headers and cookies from the metadata, returning any
 // sessions that were found, a list of unused authorization headers, and a list of unused cookies.
 // md must not be nil.
-func (c *Config) SessionsFromMetadata(md metadata.MD) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
+func (c *CookieConfig) SessionsFromMetadata(md metadata.MD) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
 	return c.SessionsFromAny(md.Get("authorization"), md.Get("cookie"))
 }
 
 // SessionFromRequest extracts authentication material from the provided request, returning any
 // sessions that were found, a list of unused authorization headers, and a list of unused cookies.
-func (c *Config) SessionsFromRequest(req *http.Request) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
+func (c *CookieConfig) SessionsFromRequest(req *http.Request) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
 	var result []*types.Session
 	if req == nil || req.Header == nil {
 		return nil, nil, nil
@@ -128,7 +126,7 @@ func (c *Config) SessionsFromRequest(req *http.Request) ([]*types.Session, []*Un
 
 // SessionFromAny takes a slice of Authorization headers and Cookie headers, and returns valid
 // sessions, a list of unused Authorization headers, and a list of unused cookies.
-func (c *Config) SessionsFromAny(headers, cookies []string) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
+func (c *CookieConfig) SessionsFromAny(headers, cookies []string) ([]*types.Session, []*UnusedHeader, []*UnusedCookie) {
 	var result []*types.Session
 	ss, unusedAuth := c.SessionsFromAuthorization(headers...)
 	result = append(result, ss...)
@@ -139,7 +137,7 @@ func (c *Config) SessionsFromAny(headers, cookies []string) ([]*types.Session, [
 
 // SessionFromAuthorization extracts sessions from the authorization headers, returning
 // unused/invalid authorization headers.
-func (c *Config) SessionsFromAuthorization(auths ...string) ([]*types.Session, []*UnusedHeader) {
+func (c *CookieConfig) SessionsFromAuthorization(auths ...string) ([]*types.Session, []*UnusedHeader) {
 	var result []*types.Session
 	var unused []*UnusedHeader
 	for _, a := range auths {
@@ -148,13 +146,13 @@ func (c *Config) SessionsFromAuthorization(auths ...string) ([]*types.Session, [
 			// http.Request.Header.Get("foo") returns "" when there is no Foo header.
 			continue
 		}
-		s, err := sessions.FromHeaderString(a)
+		s, err := FromHeaderString(a)
 		if err != nil {
 			unused = append(unused, &UnusedHeader{Value: a, Err: err})
 			continue
 		}
-		if sessions.IsZero(s.GetId()) {
-			unused = append(unused, &UnusedHeader{Value: a, Err: sessions.ErrSessionZero})
+		if IsZero(s.GetId()) {
+			unused = append(unused, &UnusedHeader{Value: a, Err: ErrSessionZero})
 			continue
 		}
 		result = append(result, s)
@@ -162,22 +160,21 @@ func (c *Config) SessionsFromAuthorization(auths ...string) ([]*types.Session, [
 	return result, unused
 }
 
-// SessionFromCookies looks through the provided cookies and returns the sessionID from a cookie
-// that looks like a session, and the list of cookies with all matching cookies removed.  An error
-// is returned if any invalid cookies are found.  sessions.ErrSessionMissing is returned if no
-// cookie is found.
-func (c *Config) SessionsFromCookies(cookies []*http.Cookie) ([]*types.Session, []*UnusedCookie) {
+// SessionFromCookies looks through the provided cookies and returns the sessionID from cookies that
+// look like a session, and the list of cookies with all matching cookies removed (along with a
+// reason for not considering it a session cookie).
+func (c *CookieConfig) SessionsFromCookies(cookies []*http.Cookie) ([]*types.Session, []*UnusedCookie) {
 	var result []*types.Session
 	var unused []*UnusedCookie
 	for _, cookie := range cookies {
 		if cookie.Name == c.Name {
-			s, err := sessions.FromBase64(cookie.Value)
+			s, err := FromBase64(cookie.Value)
 			if err != nil {
 				unused = append(unused, &UnusedCookie{Cookie: cookie, Err: err})
 				continue
 			}
-			if sessions.IsZero(s.GetId()) {
-				unused = append(unused, &UnusedCookie{Cookie: cookie, Err: sessions.ErrSessionZero})
+			if IsZero(s.GetId()) {
+				unused = append(unused, &UnusedCookie{Cookie: cookie, Err: ErrSessionZero})
 				continue
 			}
 			result = append(result, s)
@@ -190,6 +187,6 @@ func (c *Config) SessionsFromCookies(cookies []*http.Cookie) ([]*types.Session, 
 
 // LinkToSetCookie accepts a token from NewSetCookieRequest and returns the URL that will cause that
 // token to actually set a cookie.
-func (c *Config) LinkToSetCookie(token string) string {
+func (c *CookieConfig) LinkToSetCookie(token string) string {
 	return c.Linker.SetCookie(token)
 }

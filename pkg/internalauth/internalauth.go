@@ -11,7 +11,6 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jmoiron/sqlx"
-	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/types"
@@ -39,7 +38,7 @@ type Permissions struct {
 	RootPassword string
 	RPCConfig    map[string]*RPCConfig
 	Store        *store.Connection
-	Cookies      *cookies.Config
+	Cookies      *sessions.CookieConfig
 }
 
 // NewFromConfig builds a Permissions object from configuration.
@@ -113,7 +112,7 @@ func (p *Permissions) isRoot(md metadata.MD) bool {
 	return false
 }
 
-func (p *Permissions) AuthenticateUser(ctx context.Context, ss []*types.Session, unusedHeader []*cookies.UnusedHeader, unusedCookies []*cookies.UnusedCookie) (*types.Session, error) {
+func (p *Permissions) AuthenticateUser(ctx context.Context, ss []*types.Session, unusedHeader []*sessions.UnusedHeader, unusedCookies []*sessions.UnusedCookie) (*types.Session, error) {
 	// Check all parseable sessions for validity.
 	var errs []error
 	for i, s := range ss {

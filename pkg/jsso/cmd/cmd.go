@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jrockway/jsso2/pkg/cookies"
 	"github.com/jrockway/jsso2/pkg/internalauth"
 	"github.com/jrockway/jsso2/pkg/jsso/enrollment"
 	"github.com/jrockway/jsso2/pkg/jsso/login"
@@ -14,6 +13,7 @@ import (
 	"github.com/jrockway/jsso2/pkg/jsso/user"
 	"github.com/jrockway/jsso2/pkg/logout"
 	"github.com/jrockway/jsso2/pkg/redirecttokens"
+	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/tokens"
 	"github.com/jrockway/jsso2/pkg/web"
@@ -30,7 +30,7 @@ type Config struct {
 type App struct {
 	DB             *store.Connection
 	Linker         *web.Linker
-	Cookies        *cookies.Config
+	Cookies        *sessions.CookieConfig
 	Redirects      *redirecttokens.Config
 	WebauthnConfig *webauthn.Config
 	Permissions    *internalauth.Permissions
@@ -61,7 +61,7 @@ func Setup(appConfig *Config, authConfig *internalauth.Config, db *store.Connect
 		cookieDomain = appConfig.CookieDomain
 	}
 
-	cookieConfig := &cookies.Config{
+	cookieConfig := &sessions.CookieConfig{
 		GeneratorConfig: *tokenBase,
 		Name:            "jsso-session-id",
 		Domain:          cookieDomain,

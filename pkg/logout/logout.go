@@ -6,7 +6,7 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/jmoiron/sqlx"
-	"github.com/jrockway/jsso2/pkg/cookies"
+	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/web"
 	"go.uber.org/zap"
@@ -14,7 +14,7 @@ import (
 
 type Handler struct {
 	Linker  *web.Linker
-	Cookies *cookies.Config
+	Cookies *sessions.CookieConfig
 	DB      *store.Connection
 }
 
