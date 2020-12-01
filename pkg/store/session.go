@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/types"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -134,6 +136,51 @@ func LookupSession(ctx context.Context, db sqlx.ExtContext, id []byte) (*types.S
 		return nil, ErrSessionNotYetCreated
 	}
 	return session, nil
+}
+
+// AuthenticateUser checks the database for a valid session in the provided sessions.  The provided
+// sessions need only contain a session ID.  Each lookup is done in a separate transaction.
+func (c *Connection) AuthenticateUser(ctx context.Context, l *zap.Logger, ss []*types.Session, unusedHeaders []*sessions.UnusedHeader, unusedCookies []*sessions.UnusedCookie) (*types.Session, []error) {
+	var errs []error
+
+	// Collect errors about unused authentication material.
+	for _, u := range unusedHeaders {
+		if u.Err != nil {
+			errs = append(errs, fmt.Errorf("spurious unparseable authorization header %q: %v", u.Value, u.Err))
+		}
+	}
+	for _, u := range unusedCookies {
+		if u.Err != nil {
+			errs = append(errs, fmt.Errorf("spurious unparseable session cookie %q: %v", u.Cookie.String(), u.Err))
+		}
+	}
+	if len(ss) == 0 {
+		errs = append(errs, errors.New("no sessions provided"))
+		return nil, errs
+	}
+
+	// Check for all sessions for validity.
+	for i, s := range ss {
+		if err := c.DoTx(ctx, l, true, func(tx *sqlx.Tx) error {
+			var err error
+			session, err := LookupSession(ctx, tx, s.GetId())
+			if err != nil {
+				return fmt.Errorf("lookup session: %w", err)
+			}
+			ss[i] = session
+			return nil
+		}); err != nil {
+			ss[i] = nil
+			errs = append(errs, fmt.Errorf("validate session %d/%d: %v", i+1, len(ss), err))
+		}
+	}
+	// Look for at least one valid session.
+	for _, s := range ss {
+		if s != nil {
+			return s, nil
+		}
+	}
+	return nil, errs
 }
 
 // RevokeSession will revoke the provided session.

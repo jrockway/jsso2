@@ -104,8 +104,9 @@ func TestUsers(t *testing.T) {
 				creds: &client.Credentials{
 					Token: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa",
 				},
-				args:     []string{"users", "whoami"},
-				wantFail: true,
+				args:         []string{"users", "whoami"},
+				wantOutProto: &jssopb.WhoAmIReply{},
+				wantErr:      "OK\n",
 			},
 		}
 

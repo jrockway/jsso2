@@ -94,7 +94,11 @@ func TestSessions(t *testing.T) {
 		if err := UpdateSession(e.Context, c.db, session); err != nil {
 			t.Fatal(err)
 		}
-		got, err := LookupSession(e.Context, c.db, id)
+		got, errs := c.AuthenticateUser(e.Context, e.Logger, []*types.Session{{Id: id}}, nil, nil)
+		if got == nil || len(errs) > 0 {
+			t.Fatalf("%v", errs)
+		}
+		got, err = LookupSession(e.Context, c.db, id)
 		if err != nil {
 			t.Fatal(err)
 		}

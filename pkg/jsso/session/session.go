@@ -59,10 +59,17 @@ func (s *Service) AuthorizeHTTP(ctx context.Context, req *jssopb.AuthorizeHTTPRe
 
 	// Extract the end user's session from the request.
 	ss, unusedAuth, unusedCookies := s.Cookies.SessionsFromAny(req.GetAuthorizationHeaders(), req.GetCookies())
-	session, err := s.Permissions.AuthenticateUser(ctx, ss, unusedAuth, unusedCookies)
-	if err != nil {
-		reply.GetDeny().Reason = err.Error()
-		return reply, nil
+	session, errs := s.DB.AuthenticateUser(ctx, l, ss, unusedAuth, unusedCookies)
+	if session == nil {
+		switch len(errs) {
+		case 0:
+			reply.GetDeny().Reason = "no authentication material provided"
+		case 1:
+			reply.GetDeny().Reason = fmt.Sprintf("%v", errs[0])
+		default:
+			reply.GetDeny().Reason = fmt.Sprintf("%d errors: %v", len(errs), errs)
+			return reply, nil
+		}
 	}
 
 	// Check that the access control policy allows this user to visit the target website.
@@ -75,12 +82,12 @@ func (s *Service) AuthorizeHTTP(ctx context.Context, req *jssopb.AuthorizeHTTPRe
 		Username: session.GetUser().GetUsername(),
 	}
 	for _, u := range unusedAuth {
-		if u.Err != nil {
-			allow.AddHeaders = append(allow.AddHeaders, &types.Header{
-				Key:   "Authorization",
-				Value: u.Value,
-			})
-		}
+		// We can't really tell which authorization headers were intended for us if they are
+		// malformed, so pass all authorization headers along.
+		allow.AddHeaders = append(allow.AddHeaders, &types.Header{
+			Key:   "Authorization",
+			Value: u.Value,
+		})
 	}
 	for _, u := range unusedCookies {
 		if u.Err != nil {

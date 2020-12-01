@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
-	"github.com/jmoiron/sqlx"
 	"github.com/jrockway/jsso2/pkg/sessions"
 	"github.com/jrockway/jsso2/pkg/store"
 	"github.com/jrockway/jsso2/pkg/types"
@@ -112,45 +111,8 @@ func (p *Permissions) isRoot(md metadata.MD) bool {
 	return false
 }
 
-func (p *Permissions) AuthenticateUser(ctx context.Context, ss []*types.Session, unusedHeader []*sessions.UnusedHeader, unusedCookies []*sessions.UnusedCookie) (*types.Session, error) {
-	// Check all parseable sessions for validity.
-	var errs []error
-	for i, s := range ss {
-		if err := p.Store.DoTx(ctx, ctxzap.Extract(ctx), true, func(tx *sqlx.Tx) error {
-			var err error
-			session, err := store.LookupSession(ctx, tx, s.GetId())
-			if err != nil {
-				return fmt.Errorf("lookup session: %w", err)
-			}
-			ss[i] = session
-			return nil
-		}); err != nil {
-			ss[i] = nil
-			errs = append(errs, fmt.Errorf("validate session %d/%d: %v", i+1, len(ss), err))
-		}
-	}
-	// Look for at least one valid session.
-	for _, s := range ss {
-		if s != nil {
-			return s, nil
-		}
-	}
-	// If after all that, there isn't a valid session, return a detailed error message.
-	for _, u := range unusedHeader {
-		errs = append(errs, fmt.Errorf("spurious unparseable authorization header %q: %v", u.Value, u.Err))
-	}
-	for _, u := range unusedCookies {
-		if u.Err != nil {
-			errs = append(errs, fmt.Errorf("spurious unparseable session cookie %q: %v", u.Cookie.String(), u.Err))
-		}
-	}
-	if len(ss) == 0 && len(errs) == 0 {
-		return nil, errors.New("no valid session found")
-	}
-	return nil, fmt.Errorf("look for a valid session: %d error(s): %v", len(errs), errs)
-}
-
 func (p *Permissions) getSession(ctx context.Context) (*types.Session, error) {
+	l := ctxzap.Extract(ctx).Named("internalauth")
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errors.New("no metadata in incoming context")
@@ -161,23 +123,15 @@ func (p *Permissions) getSession(ctx context.Context) (*types.Session, error) {
 	}
 
 	// Extract sessions from Authorization / Cookie headers.
-	ss, unusedHeader, unusedCookies := p.Cookies.SessionsFromMetadata(md)
-	var invalid int
-	for _, u := range unusedHeader {
-		if u.Err != nil {
-			invalid++
-		}
+	ss, unusedHeaders, unusedCookies := p.Cookies.SessionsFromMetadata(md)
+	session, errs := p.Store.AuthenticateUser(ctx, l, ss, unusedHeaders, unusedCookies)
+	if len(errs) > 0 && (len(unusedHeaders) > 0 || len(unusedCookies) > 0) {
+		l.Debug("errors may prevent the use of a provided credential", zap.Errors("error", errs))
 	}
-	for _, u := range unusedCookies {
-		if u.Err != nil {
-			invalid++
-		}
+	if session != nil {
+		return session, nil
 	}
-	if len(ss) == 0 && invalid == 0 {
-		// No sessions found and no attempt to provide one, so authenticate as anonymous.
-		return sessions.Anonymous(), nil
-	}
-	return p.AuthenticateUser(ctx, ss, unusedHeader, unusedCookies)
+	return sessions.Anonymous(), nil
 }
 
 func (p *Permissions) StreamServerInterceptor() grpc.StreamServerInterceptor {
