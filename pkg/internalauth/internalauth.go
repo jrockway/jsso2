@@ -310,9 +310,12 @@ func (p *Permissions) AllowAuthorizeHTTP(ctx context.Context, proxyUser *types.U
 	return nil
 }
 
-func (p *Permissions) AllowWebVisit(ctx context.Context, requestor *types.User, requestURL *url.URL) error {
-	if requestor.GetId() < 1 && requestor.GetId() != sessions.RootUser {
-		return status.Error(codes.PermissionDenied, "you must be logged in to visit this site")
+func (p *Permissions) AllowWebVisit(ctx context.Context, session *types.Session, requestURL *url.URL) error {
+	if ts := session.GetTaints(); len(ts) > 0 {
+		return fmt.Errorf("session is tainted: %v", ts)
+	}
+	if id := session.GetUser().GetId(); id < 1 {
+		return errors.New("you must be logged in to visit this site")
 	}
 	return nil
 }

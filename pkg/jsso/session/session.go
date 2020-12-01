@@ -66,7 +66,7 @@ func (s *Service) AuthorizeHTTP(ctx context.Context, req *jssopb.AuthorizeHTTPRe
 	}
 
 	// Check that the access control policy allows this user to visit the target website.
-	if err := s.Permissions.AllowWebVisit(ctx, session.GetUser(), parsedURL); err != nil {
+	if err := s.Permissions.AllowWebVisit(ctx, session, parsedURL); err != nil {
 		reply.GetDeny().Reason = err.Error()
 		return reply, nil
 	}
