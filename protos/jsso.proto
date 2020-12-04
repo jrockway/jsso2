@@ -135,11 +135,9 @@ message Allow {
     // for non-proxying API clients; the actual authorization header to pass
     // upstream is included in add_headers or append_headers fields below.
     string bearer_token = 3;
-    // Headers to add (or replace) when sending the request upstream.  We will
-    // always set Authorization and Cookie here.
+    // Headers to replace when sending the request upstream.  If Authorization
+    // or Cookie are unset, they should be cleared.
     repeated types.Header add_headers = 4;
-    // Headers to append to (or add) when sending the requests upstream.
-    repeated types.Header append_headers = 5;
 }
 
 // Deny denies a request through the proxy.  An HTTP response can be included to

@@ -2920,7 +2920,7 @@ proto.jsso.AuthorizeHTTPRequest.prototype.setIpAddress = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.jsso.Allow.repeatedFields_ = [2,4,5];
+proto.jsso.Allow.repeatedFields_ = [2,4];
 
 
 
@@ -2957,8 +2957,6 @@ proto.jsso.Allow.toObject = function(includeInstance, msg) {
     groupsList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
     bearerToken: jspb.Message.getFieldWithDefault(msg, 3, ""),
     addHeadersList: jspb.Message.toObjectList(msg.getAddHeadersList(),
-    types_pb.Header.toObject, includeInstance),
-    appendHeadersList: jspb.Message.toObjectList(msg.getAppendHeadersList(),
     types_pb.Header.toObject, includeInstance)
   };
 
@@ -3012,11 +3010,6 @@ proto.jsso.Allow.deserializeBinaryFromReader = function(msg, reader) {
       var value = new types_pb.Header;
       reader.readMessage(value,types_pb.Header.deserializeBinaryFromReader);
       msg.addAddHeaders(value);
-      break;
-    case 5:
-      var value = new types_pb.Header;
-      reader.readMessage(value,types_pb.Header.deserializeBinaryFromReader);
-      msg.addAppendHeaders(value);
       break;
     default:
       reader.skipField();
@@ -3072,14 +3065,6 @@ proto.jsso.Allow.serializeBinaryToWriter = function(message, writer) {
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       4,
-      f,
-      types_pb.Header.serializeBinaryToWriter
-    );
-  }
-  f = message.getAppendHeadersList();
-  if (f.length > 0) {
-    writer.writeRepeatedMessage(
-      5,
       f,
       types_pb.Header.serializeBinaryToWriter
     );
@@ -3195,44 +3180,6 @@ proto.jsso.Allow.prototype.addAddHeaders = function(opt_value, opt_index) {
  */
 proto.jsso.Allow.prototype.clearAddHeadersList = function() {
   return this.setAddHeadersList([]);
-};
-
-
-/**
- * repeated types.Header append_headers = 5;
- * @return {!Array<!proto.types.Header>}
- */
-proto.jsso.Allow.prototype.getAppendHeadersList = function() {
-  return /** @type{!Array<!proto.types.Header>} */ (
-    jspb.Message.getRepeatedWrapperField(this, types_pb.Header, 5));
-};
-
-
-/**
- * @param {!Array<!proto.types.Header>} value
- * @return {!proto.jsso.Allow} returns this
-*/
-proto.jsso.Allow.prototype.setAppendHeadersList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 5, value);
-};
-
-
-/**
- * @param {!proto.types.Header=} opt_value
- * @param {number=} opt_index
- * @return {!proto.types.Header}
- */
-proto.jsso.Allow.prototype.addAppendHeaders = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.types.Header, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.jsso.Allow} returns this
- */
-proto.jsso.Allow.prototype.clearAppendHeadersList = function() {
-  return this.setAppendHeadersList([]);
 };
 
 

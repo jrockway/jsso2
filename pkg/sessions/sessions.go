@@ -31,8 +31,9 @@ const (
 var encoder = base64.URLEncoding.WithPadding(base64.NoPadding)
 
 var (
-	ErrSessionMissing = errors.New("no session id")
-	ErrSessionZero    = errors.New("session id is 0 ([64]byte{0, ...})")
+	ErrSessionMissing  = errors.New("no session id")
+	ErrSessionZero     = errors.New("session id is 0 ([64]byte{0, ...})")
+	ErrUnknownAuthType = errors.New("unknown authorization header type")
 )
 
 // GenerateID generates a valid session ID.
@@ -86,7 +87,7 @@ func ToBase64(s *types.Session) string {
 func FromHeaderString(header string) (*types.Session, error) {
 	parts := strings.SplitN(header, " ", 2)
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("header %q did not contain a type and a token; got %d parts, want 2 parts", header, len(parts))
+		return nil, fmt.Errorf("%w: header %q did not contain a type and a token; got %d parts, want 2 parts", ErrUnknownAuthType, header, len(parts))
 	}
 	typ, tok := parts[0], parts[1]
 	switch typ {
@@ -97,7 +98,7 @@ func FromHeaderString(header string) (*types.Session, error) {
 		}
 		return session, nil
 	default:
-		return nil, fmt.Errorf("unknown token type %q", typ)
+		return nil, fmt.Errorf("%w %q", ErrUnknownAuthType, typ)
 	}
 }
 

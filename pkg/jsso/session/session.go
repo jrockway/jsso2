@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 
@@ -68,8 +69,8 @@ func (s *Service) AuthorizeHTTP(ctx context.Context, req *jssopb.AuthorizeHTTPRe
 			reply.GetDeny().Reason = fmt.Sprintf("%v", errs[0])
 		default:
 			reply.GetDeny().Reason = fmt.Sprintf("%d errors: %v", len(errs), errs)
-			return reply, nil
 		}
+		return reply, nil
 	}
 
 	// Check that the access control policy allows this user to visit the target website.
@@ -82,17 +83,17 @@ func (s *Service) AuthorizeHTTP(ctx context.Context, req *jssopb.AuthorizeHTTPRe
 		Username: session.GetUser().GetUsername(),
 	}
 	for _, u := range unusedAuth {
-		// We can't really tell which authorization headers were intended for us if they are
-		// malformed, so pass all authorization headers along.
-		allow.AddHeaders = append(allow.AddHeaders, &types.Header{
-			Key:   "Authorization",
-			Value: u.Value,
-		})
+		if u.Err == nil || errors.Is(u.Err, sessions.ErrUnknownAuthType) {
+			allow.AddHeaders = append(allow.AddHeaders, &types.Header{
+				Key:   "authorization",
+				Value: u.Value,
+			})
+		}
 	}
 	for _, u := range unusedCookies {
-		if u.Err != nil {
+		if u.Err == nil {
 			allow.AddHeaders = append(allow.AddHeaders, &types.Header{
-				Key:   "Cookie",
+				Key:   "cookie",
 				Value: u.Cookie.String(),
 			})
 		}

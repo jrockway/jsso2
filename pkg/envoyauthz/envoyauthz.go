@@ -3,6 +3,7 @@ package envoyauthz
 import (
 	"context"
 	"fmt"
+	"net/textproto"
 	"net/url"
 	"strings"
 	"time"
@@ -67,7 +68,6 @@ func (s *Service) Check(ctx context.Context, req *envoy_auth.CheckRequest) (*env
 	authorizationHeaders = append(authorizationHeaders, strings.Split(headers["authorization"], ",")...)
 	var requestCookies []string
 	for _, c := range sessions.Cookies(headers["cookie"]) {
-		// I doubt this does well with cookies that contain ",".
 		requestCookies = append(requestCookies, c.String())
 	}
 
@@ -117,26 +117,65 @@ func (s *Service) Check(ctx context.Context, req *envoy_auth.CheckRequest) (*env
 			reply.HttpResponse = &envoy_auth.CheckResponse_OkResponse{
 				OkResponse: allow,
 			}
-			allow.HeadersToRemove = []string{"authorization", "cookie"}
+			headers := map[string][]string{}
 			for _, h := range allowRes.GetAddHeaders() {
+				k := textproto.CanonicalMIMEHeaderKey(h.GetKey())
+				headers[k] = append(headers[k], h.GetValue())
+			}
+			if _, ok := headers["Cookie"]; !ok {
+				allow.HeadersToRemove = append(allow.HeadersToRemove, "cookie")
+			}
+			if _, ok := headers["Authorization"]; !ok {
+				allow.HeadersToRemove = append(allow.HeadersToRemove, "authorization")
+			}
+			for k, v := range headers {
+				// This needs some tweaking.  Envoy is happy to proxy multiple
+				// copies of a header, but it doesn't have a way to let us add
+				// multiple copies of a header.  We can only append with a , or set
+				// a single header.
+				//
+				// RFC2616 Section 4.2 says: Multiple message-header fields with the
+				// same field-name MAY be present in a message if and only if the
+				// entire field-value for that header field is defined as a
+				// comma-separated list [i.e., #(values)]. It MUST be possible to
+				// combine the multiple header fields into one "field-name:
+				// field-value" pair, without changing the semantics of the message,
+				// by appending each subsequent field-value to the first, each
+				// separated by a comma.
+				//
+				// But I haven't found anything that does that except Envoy when
+				// generating a CheckRequest.  Go's http server, for example, treats:
+				//
+				//   Authorization: foo,bar
+				//
+				// very differently from:
+				//
+				//   Authorization: foo
+				//   Authorization: bar
+				//
+				// I suppose this is unlikely to matter in any case that we care
+				// about.  Nobody is really sending multiple Authorization headers,
+				// and if one of them is for us, we consume that and only set a
+				// single Authorization header on the upstream request, so that case
+				// works OK.  Cookies we handle specially, because whoever invented
+				// Cookies did not care for RFC2616.  RFC7230 at least mentions that
+				// (and revises the above text about separators to make it somewhat
+				// clear you can't do it in general.)
+				joined := strings.Join(v, ",")
+				if k == "Cookie" {
+					// RFC 6265 4.2.1: ...the user agent will send a Cookie
+					// header that conforms to the following grammar:
+					// cookie-header = "Cookie:" OWS cookie-string OWS
+					// cookie-string = cookie-pair *( ";" SP cookie-pair )
+					joined = strings.Join(v, "; ")
+				}
 				allow.Headers = append(allow.Headers, &envoy_config_core_v3.HeaderValueOption{
 					Append: &wrapperspb.BoolValue{
 						Value: false,
 					},
 					Header: &envoy_config_core_v3.HeaderValue{
-						Key:   h.GetKey(),
-						Value: h.GetValue(),
-					},
-				})
-			}
-			for _, h := range allowRes.GetAppendHeaders() {
-				allow.Headers = append(allow.Headers, &envoy_config_core_v3.HeaderValueOption{
-					Append: &wrapperspb.BoolValue{
-						Value: true,
-					},
-					Header: &envoy_config_core_v3.HeaderValue{
-						Key:   h.GetKey(),
-						Value: h.GetValue(),
+						Key:   k,
+						Value: joined,
 					},
 				})
 			}

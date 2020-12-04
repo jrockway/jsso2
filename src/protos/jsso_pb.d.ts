@@ -349,11 +349,6 @@ export class Allow extends jspb.Message {
   clearAddHeadersList(): Allow;
   addAddHeaders(value?: types_pb.Header, index?: number): types_pb.Header;
 
-  getAppendHeadersList(): Array<types_pb.Header>;
-  setAppendHeadersList(value: Array<types_pb.Header>): Allow;
-  clearAppendHeadersList(): Allow;
-  addAppendHeaders(value?: types_pb.Header, index?: number): types_pb.Header;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Allow.AsObject;
   static toObject(includeInstance: boolean, msg: Allow): Allow.AsObject;
@@ -368,7 +363,6 @@ export namespace Allow {
     groupsList: Array<string>,
     bearerToken: string,
     addHeadersList: Array<types_pb.Header.AsObject>,
-    appendHeadersList: Array<types_pb.Header.AsObject>,
   }
 }
 

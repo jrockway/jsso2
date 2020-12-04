@@ -145,7 +145,7 @@ func (c *Connection) AuthenticateUser(ctx context.Context, l *zap.Logger, ss []*
 
 	// Collect errors about unused authentication material.
 	for _, u := range unusedHeaders {
-		if u.Err != nil {
+		if u.Err != nil && !errors.Is(u.Err, sessions.ErrUnknownAuthType) {
 			errs = append(errs, fmt.Errorf("spurious unparseable authorization header %q: %v", u.Value, u.Err))
 		}
 	}
