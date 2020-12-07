@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -54,6 +55,9 @@ func isRetryable(err error) bool {
 		return true
 	}
 	if strings.Contains(err.Error(), "SQLSTATE 57") { // "terminating connection due to administrator command", etc.
+		return true
+	}
+	if errors.Is(err, io.ErrUnexpectedEOF) {
 		return true
 	}
 	return false
